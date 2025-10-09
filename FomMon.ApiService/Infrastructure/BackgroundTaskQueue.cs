@@ -4,31 +4,31 @@ namespace FomMon.ApiService;
 
 public interface IBackgroundTaskQueue
 {
-    public ValueTask QueueWorkAsync(Func<IServiceProvider, CancellationToken, Task> workItem);
-    public ValueTask<Func<IServiceProvider, CancellationToken, Task>> DequeueWorkAsync(CancellationToken cancellationToken);
+    public ValueTask QueueWorkAsync(WorkItem workItem);
+    public ValueTask<WorkItem> DequeueWorkAsync(CancellationToken cancellationToken);
 }
 
-// TODO replace with real job queue library like Hangfire or Quartz
+public record class WorkItem(string Name, Func<IServiceProvider, CancellationToken, Task> execute);
 
 public class BackgroundTaskQueue : IBackgroundTaskQueue
 {
-    private readonly Channel<Func<IServiceProvider, CancellationToken, Task>> _queue;
+    private readonly Channel<WorkItem> _queue;
     public BackgroundTaskQueue()
     {
         var options = new UnboundedChannelOptions()
         {
             SingleReader = true
         };
-        _queue = Channel.CreateUnbounded<Func<IServiceProvider, CancellationToken, Task>>(options);
+        _queue = Channel.CreateUnbounded<WorkItem>(options);
     }
 
-    public async ValueTask QueueWorkAsync(Func<IServiceProvider, CancellationToken, Task> workItem)
+    public async ValueTask QueueWorkAsync(WorkItem workItem)
     {
         if (workItem is null) throw new ArgumentNullException(nameof(workItem));
         await _queue.Writer.WriteAsync(workItem);
     }
 
-    public async ValueTask<Func<IServiceProvider, CancellationToken, Task>> DequeueWorkAsync(CancellationToken cancellationToken)
+    public async ValueTask<WorkItem> DequeueWorkAsync(CancellationToken cancellationToken)
     {
         var workItem = await _queue.Reader.ReadAsync(cancellationToken);
         return workItem;

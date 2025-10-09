@@ -26,7 +26,5 @@ public sealed class AreaAlert
     [ForeignKey(nameof(FeatureId))]
     public FeatureReference FeatureReference { get; set; } = null!; // Navigation property
     
-    //public int ReportId { get; set; }
-    //public required Report Report { get; set; } = null!; // TODO
 }
 

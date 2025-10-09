@@ -18,7 +18,7 @@ public interface IClockService
 }
 
 
-public class ClockService : IClockService // TODO allow setting date for testing
+public class ClockService : IClockService 
 {
     private readonly IClock _clock;
 

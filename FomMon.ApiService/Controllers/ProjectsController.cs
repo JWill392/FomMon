@@ -16,8 +16,7 @@ public class ProjectsController(AppDbContext db, IMapper mapper) : ControllerBas
     
     [HttpGet][AllowAnonymous]
     public async Task<ActionResult<IEnumerable<ProjectDto>>> GetProjects()
-    {
-        // TODO change to feature service 
+    { 
         var projects = await db.Projects
             .AsNoTracking()
             .Include(p => p.PublicNotice)

@@ -25,10 +25,6 @@ public static class GdalWfsDownloaderExtensions
         services.AddScoped<IWfsDownloader, GdalWfsDownloader>();
 
         services.ConfigureOpenTelemetryTracerProvider(t => { t.AddSource(GdalWfsDownloader.ActivitySourceName); });
-        services.ConfigureOpenTelemetryMeterProvider(m =>
-        {
-            // TODO
-        });
 
         return services;
     }
@@ -45,7 +41,12 @@ public interface IWfsDownloader
 public sealed class WfsDownloaderSettings
 {
     public long TimeoutSeconds { get; set; }
-    public string Ogr2OgrPath { get; set; } =  string.Empty;
+    /// <summary>
+    /// Path to ogr2ogr bin, or just name if installed on PATH.  Note must be installed on host image.
+    /// </summary>
+    public string Ogr2OgrPath { get; set; } = string.Empty;
+    public int OgrWfsPageSize { get; set; }
+    public bool OgrWfsPagingAllowed { get; set; }
 }
 
 public class GdalWfsDownloader(
@@ -96,8 +97,8 @@ public class GdalWfsDownloader(
         // Build ogr2ogr arguments
         var args = new List<string>
         {
-            "--config", "OGR_WFS_PAGE_SIZE", "10000", // TODO configure
-            "--config", "OGR_WFS_PAGING_ALLOWED", "ON",
+            "--config", "OGR_WFS_PAGE_SIZE", _settings.OgrWfsPageSize.ToString(), // TODO configure
+            "--config", "OGR_WFS_PAGING_ALLOWED", _settings.OgrWfsPagingAllowed ? "ON" : "OFF",
             "-f", "PostgreSQL",
             pgString,
             $"WFS:{layerCfg.WfsUrl}",
@@ -109,7 +110,7 @@ public class GdalWfsDownloader(
             "-lco", $"SCHEMA={LayerRegistry.Schema}",
             "-lco", $"DESCRIPTION={layerCfg.Description}",
             
-        }; // TODO rename id column, specify type (currently double, but should be int)
+        };
         if (limit.HasValue)
         {
             args.Add("-limit");

@@ -11,22 +11,25 @@ public class WfsController(
     IConfiguration config,
     IWfsDownloader wfs) : ControllerBase
 {
-    // private readonly string _downloadPath = config["DownloadPath"] ?? Path.GetTempPath();
 
+    /// <summary>
+    /// Admin manual layer download.  Should typically be executed as scheduled job.
+    /// TODO role back security
+    /// </summary>
     [HttpPost("download")]
     public async Task<IActionResult> DownloadWfsLayer([FromQuery] LayerKind kind, int? limit, CancellationToken c = default)
     {
-        // try
-        // {
+        try
+        {
             await wfs.DownloadToDbAsync(kind, limit, c);
 
             logger.LogInformation("Downloaded {kind}", kind);
             return Ok();
-        // }
-        // catch (Exception ex)
-        // {
-        //     logger.LogError(ex, "Failed to download WFS layer");
-        //     return StatusCode(500, ex.Message);
-        // }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to download WFS layer");
+            return StatusCode(500, ex.Message);
+        }
     }
 }

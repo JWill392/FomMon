@@ -7,6 +7,7 @@ using FomMon.ServiceDefaults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Mapster;
+using NodaTime;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
@@ -77,8 +78,11 @@ public sealed class FomDownloader(
 
     public async Task GetProjects(CancellationToken c)
     {
+        using var activity = ActivitySource.StartActivity(ActivityKind.Internal);
+        activity?.SetTag("api_call", nameof(apiClient.ProjectController_findPublicSummaryAsync));
         
-        var projects = await DownloadProjects(c);
+        logger.LogDebug("Getting projects");
+        var projects = await DownloadProjects(activity, c);
 
 
         var existingProjects = (await dbContext.Projects
@@ -108,29 +112,25 @@ public sealed class FomDownloader(
         }
 
         dbContext.AddRange(pAddedList);
+        logger.LogDebug("Added {count} projects", pAddedList.Count);
+        logger.LogDebug("Maybe updated {count} projects", pMayChangeList.Count);
+        
         await dbContext.SaveChangesAsync(c);
-
         // Call public notice API to get additional project info
-        await queue.QueueWorkAsync((s, ct) => s.GetRequiredService<IFomDownloader>().GetPublicNotices(ct));
-
-
-        // TODO mark FeatureType.Downloaded once all tasks complete (prob need better job library first)
+        await queue.QueueWorkAsync(new WorkItem("FomDownloader.GetPublicNotices", (s, ct) => s.GetRequiredService<IFomDownloader>().GetPublicNotices(ct)));
     }
 
-    private async Task<List<Project>> DownloadProjects(CancellationToken c)
+    private async Task<List<Project>> DownloadProjects(Activity? activity, CancellationToken c)
     {
-        using var activity = ActivitySource.StartActivity(ActivityKind.Client);
-        activity?.SetTag("api_call", nameof(apiClient.ProjectController_findPublicSummaryAsync));
         var apiCalled = clock.Now;
 
-        List<Project> projects;
         try
         {
+            
             var apiResult = await apiClient.ProjectController_findPublicSummaryAsync("", includeCommentOpen: "true",
                 includePostCommentOpen: "true", forestClientName: "", openedOnOrAfter: "",
                 cancellationToken: c);
-            
-            projects = apiResult.Select(p =>
+            var projects = apiResult.Select(p =>
             {
                 var state = ParseWorkflowState(p.WorkflowStateName);
                 return new Project()
@@ -144,6 +144,8 @@ public sealed class FomDownloader(
                     Closed = state == Project.WorkflowState.Finalized ? apiCalled : null
                 };
             }).ToList();
+            
+            return projects;
         }
         catch (Exception e)
         {
@@ -152,14 +154,16 @@ public sealed class FomDownloader(
             logger.LogError(e, "Error occurred while fetching projects from FOM API");
             throw;
         }
-        return projects;
     }
 
 
     public async Task GetPublicNotices(CancellationToken c)
     {
+        using var activity = ActivitySource.StartActivity(ActivityKind.Client);
+        activity?.SetTag("api_call", nameof(apiClient.PublicNoticeController_findListForPublicFrontEndAsync));
+        
         var apiCalled = clock.Now;
-        var noticeDtoList = await DownloadPublicNotices(c);
+        var noticeDtoList = await DownloadPublicNotices(activity, c);
 
         // get project record for notices
         var projects = (await dbContext.Projects
@@ -172,18 +176,33 @@ public sealed class FomDownloader(
             .ToListAsync(c))
             .ToDictionary(n => n.ProjectId);
 
-        var noticeList = new List<PublicNotice>();
+        var addNotices = new List<PublicNotice>();
+        var countUpdate = 0;
         foreach (var noticeDto in noticeDtoList)
         {
             if (!projects.ContainsKey(noticeDto.ProjectId))
             {
-                logger.LogWarning("Public Notice found without Project: project {ProjectId}", noticeDto.ProjectId);
+                if ((clock.LocalNow.Date - noticeDto.PostDate).Days > 2)
+                {
+                    logger.LogWarning("Old Public Notice found without Project: project {ProjectId}.  " +
+                                          "This shouldn't happen after projects have a few days to appear in api, " +
+                                          "but there's no real system impact to us.", 
+                        noticeDto.ProjectId);   
+                }
+                else
+                {
+                    logger.LogInformation("New Public Notice found without Project: project {ProjectId}.  " +
+                                          "This is common for projects under a day old; their publishing timings are different", 
+                        noticeDto.ProjectId);   
+                }
+                
                 continue;
             }
             
             if (existingNotices.TryGetValue(noticeDto.ProjectId, out var dbNotice))
             {
                 // Update existing notice
+                countUpdate++;
                 dbNotice.CompanyId = noticeDto.CompanyId;
                 dbNotice.CompanyName = noticeDto.CompanyName;
                 dbNotice.Description = noticeDto.Description;
@@ -198,24 +217,23 @@ public sealed class FomDownloader(
                 var notice = noticeDto.Adapt<PublicNotice>();
                 notice.Refreshed = apiCalled;
                 
-                noticeList.Add(notice);
+                addNotices.Add(notice);
             }
         }
 
-        await dbContext.PublicNotices.AddRangeAsync(noticeList, c);
+        await dbContext.PublicNotices.AddRangeAsync(addNotices, c);
         await dbContext.SaveChangesAsync(c);
+        logger.LogDebug("Added {countAdd} notices, Updated {countUpdate} notices", addNotices.Count, countUpdate);
     }
 
-    private async Task<List<PublicNoticeDto>> DownloadPublicNotices(CancellationToken stoppingToken)
+    private async Task<List<PublicNoticeDto>> DownloadPublicNotices(Activity? activity, CancellationToken stoppingToken)
     {
-        using var activity = ActivitySource.StartActivity(ActivityKind.Client);
-        activity?.SetTag("api_call", nameof(apiClient.PublicNoticeController_findListForPublicFrontEndAsync));
 
         try
         {
-            logger.LogInformation("Fetching public notices {clock.Now}", clock.Now);
             var apiResult = await apiClient.PublicNoticeController_findListForPublicFrontEndAsync(stoppingToken);
-            return apiResult.Select(a => new PublicNoticeDto()
+            
+            var notices = apiResult.Select(a => new PublicNoticeDto()
             {
                 ProjectId = (int)a.ProjectId,
                 CompanyId = a.Project.ForestClient.Id,
@@ -225,6 +243,8 @@ public sealed class FomDownloader(
                 OperationEndYear = (int)a.Project.OperationEndYear,
                 PostDate = a.PostDate,
             }).ToList();
+            
+            return notices;
         }
         catch (Exception e)
         {
@@ -233,6 +253,7 @@ public sealed class FomDownloader(
             logger.LogError(e, "Error occurred while fetching project notices from FOM API");
             throw;
         }
+
     }
 
     private static Project.WorkflowState ParseWorkflowState(string state)

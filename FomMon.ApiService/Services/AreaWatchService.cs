@@ -108,7 +108,7 @@ public sealed class AreaWatchService(
     
     public async Task<IReadOnlyList<AreaAlert>?> GetAlertsAsync(Guid userId, CancellationToken c = default)
     {
-        // TODO filter
+        // TODO support filtering to new alerts
         var watches = await db.AreaWatches
             .Include(aw => aw.Alerts)
             .Where(a => a.UserId == userId)

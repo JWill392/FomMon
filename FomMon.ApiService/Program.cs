@@ -2,6 +2,7 @@ using FomMon.ApiService;
 using FomMon.ApiService.FomApi;
 using FomMon.ApiService.Infrastructure;
 using FomMon.ApiService.Services;
+using FomMon.ApiService.Shared;
 using FomMon.Data.Contexts;
 using FomMon.ServiceDefaults;
 using Mapster;
@@ -17,16 +18,7 @@ builder.Services.AddProblemDetails();
 //builder.Services.AddOpenApi(); does not play nicely with NetTopology
 
 // Mapping
-var config = new TypeAdapterConfig();
-config.Scan(AppDomain.CurrentDomain.GetAssemblies());
-
-config.NewConfig<Geometry, Geometry>()
-    .MapWith(g => g.Copy()); //  MapContext.Current.GetService<GeometryFactory>().CreateGeometry(g)
-
-builder.Services.AddSingleton(config);
-builder.Services.AddMapster();
-    // TODO move to MappingConfig 
-
+builder.Services.AddMappings();
 
 // Auth
 builder.Services.AddHttpContextAccessor();
@@ -51,8 +43,6 @@ builder.Services.AddAuthentication()
 builder.Services.AddAppDbContext(builder.Configuration, builder.Environment.IsDevelopment());
 
 // Outgoing API
-// TODO get from apphost external service "fom"?
-
 builder.Services.AddHttpClient<FomApiClient>(c => c.BaseAddress = new Uri("https://fom.nrs.gov.bc.ca/")); // TODO put in config
 
 builder.Services.AddFomDownloader();
@@ -102,7 +92,7 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
 }
 
-app.UseAuthentication(); // TODO pipeline order?
+app.UseAuthentication();
 app.UseAuthorization();
 
 

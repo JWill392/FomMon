@@ -90,7 +90,6 @@ public sealed class FeatureService(
     {
         addDto = WithoutAttributesProperty(addDto, LayerRegistry.GeometryColumn); // redundant
         
-        // TODO this will be subject to deadlocking when multithreading areawatch eval.  should perhaps run separately with intersects any.
         var existing = await db.FeatureReferences
             .FirstOrDefaultAsync(f => 
                 f.LayerKind == addDto.LayerKind && 

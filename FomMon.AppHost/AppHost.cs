@@ -37,37 +37,14 @@ var tileserver = builder.AddMapLibreMartin("tileserver",
     .WaitForCompletion(migrations)
     .WithCacheSizeMb(1024)
     .WithPgDefaultSrid(4326)
-    .WithAutoPublishSchemas(["layers"]) // TODO get from Data.LayerRegistry.Schema.. or rather pass down to it? 
-    //
-    // .AddTable("fom_cutblock",
-    //     table: "fom_cutblock",
-    //     idColumn: "objectid",
-    //     geometryColumn: "shape", 
-    //     properties: new() {
-    //         {"planned_development_date", "date"}
-    //     })
-    // .AddTable("fom_road",
-    //     table: "fom_road",
-    //     idColumn: "objectid",
-    //     geometryColumn: "shape", 
-    //     properties: new() {
-    //         {"planned_development_date", "date"}
-    //     })
-    // .AddTable("fom_retention",
-    //     table: "fom_retention",
-    //     idColumn: "objectid",
-    //     geometryColumn: "shape", 
-    //     properties: new())
-    // TODO probably just make a TileServer schema with views
-    
+    .WithAutoPublishSchemas(["layers"]) // all layers stored in this schema, auto published
+                                        // TODO get from Data.LayerRegistry.Schema.. or rather pass down to it?
     .WithLifetime(ContainerLifetime.Persistent); // but requires restart on schema changes
 
 if (builder.Environment.IsDevelopment())
 {
     tileserver.WithWebUi("enable-for-all");
 }
-
-// TODO tileserver config for all tables.  
     
     
 // TODO martin implements prometheus metrics at /_/metrics	

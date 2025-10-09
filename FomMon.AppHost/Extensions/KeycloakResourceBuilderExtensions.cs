@@ -21,9 +21,9 @@ internal static class KeycloakResourceBuilderExtensions
             .WithEnvironment("KC_DB_PASSWORD", pgServer.PasswordParameter)
             .WithEnvironment("KC_DB_URL_HOST", pgServer.PrimaryEndpoint.Property(EndpointProperty.Host))
             .WithEnvironment("KC_DB_URL_PORT", pgServer.PrimaryEndpoint.Property(EndpointProperty.Port))
-            .WithEnvironment("KC_DB_URL_DATABASE", pgDb.Resource.DatabaseName)
-            .WithArgs("--verbose"); // TODO remove me
-        
+            .WithEnvironment("KC_DB_URL_DATABASE", pgDb.Resource.DatabaseName);
+        //.WithArgs("--verbose"); 
+
     }
     
 }
