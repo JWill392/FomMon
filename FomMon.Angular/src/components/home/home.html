@@ -1,0 +1,32 @@
+<div class="section">
+  <header>
+    <h1>Welcome to the Forest Operations Map Monitor App</h1>
+    <p class="description">This is the public homepage of your application.</p>
+  </header>
+
+  <main>
+    <section>
+      <p class="description">To access the application, use the following credentials for testing:</p>
+      <ul class="credentials">
+        <li>
+          <strong>User:</strong> <code>test&#64;local.test</code>
+          <button class="copy-btn" (click)="copyToClipboard('test@local.test')" aria-label="Copy User">
+            <i class="copy-icon">📋</i>
+          </button>
+        </li>
+        <li>
+          <strong>Password:</strong> <code>hunter</code>
+          <button class="copy-btn" (click)="copyToClipboard('hunter')" aria-label="Copy Password">
+            <i class="copy-icon">📋</i>
+          </button>
+        </li>
+      </ul>
+    </section>
+
+    @if (copyMessage$ | async) {
+    <div class="message-box">
+      {{ copyMessage$ | async }}
+    </div>
+    }
+  </main>
+</div>

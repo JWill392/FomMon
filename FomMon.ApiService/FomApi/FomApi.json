@@ -1,0 +1,644 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/project/publicSummary": {
+      "get": {
+        "operationId": "ProjectController_findPublicSummary",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeCommentOpen",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includePostCommentOpen",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "forestClientName",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "openedOnOrAfter",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectPublicSummaryResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "project"
+        ]
+      }
+    },
+    "/api/public-notice": {
+      "get": {
+        "operationId": "PublicNoticeController_findListForPublicFrontEnd",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicNoticePublicFrontEndResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public-notice"
+        ]
+      }
+    },
+    "/api/spatial-feature": {
+      "get": {
+        "operationId": "SpatialFeatureController_getForProject",
+        "parameters": [
+          {
+            "name": "projectId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SpatialFeaturePublicResponse"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "spatial-feature"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "FOM API",
+    "description": "API for FOM backend",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "ProjectPublicSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "geojson": {
+            "$ref": "#/components/schemas/Point"
+          },
+          "projectPlanCode": {
+            "type": "string"
+          },
+          "fspId": {
+            "type": "number"
+          },
+          "woodlotLicenseNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "forestClientName": {
+            "type": "string"
+          },
+          "workflowStateName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "geojson",
+          "projectPlanCode",
+          "forestClientName",
+          "workflowStateName"
+        ]
+      },
+      "DistrictResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "ForestClientResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "WorkflowStateCode": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "description"
+        ]
+      },
+      "ProjectResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "commentingOpenDate": {
+            "type": "string",
+            "format":  "date",
+            "description": "ISO-formatted date"
+          },
+          "commentingClosedDate": {
+            "type": "string",
+            "format": "date",
+            "description": "ISO-formatted date"
+          },
+          "validityEndDate": {
+            "type": "string",
+            "format": "date",
+            "description": "ISO-formatted date"
+          },
+          "projectPlanCode": {
+            "type": "string"
+          },
+          "fspId": {
+            "type": "number"
+          },
+          "woodlotLicenseNumber": {
+            "type": "string"
+          },
+          "district": {
+            "$ref": "#/components/schemas/DistrictResponse"
+          },
+          "forestClient": {
+            "$ref": "#/components/schemas/ForestClientResponse"
+          },
+          "workflowState": {
+            "$ref": "#/components/schemas/WorkflowStateCode"
+          },
+          "revisionCount": {
+            "type": "number"
+          },
+          "createTimestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO-formatted timestamp"
+          },
+          "commentClassificationMandatory": {
+            "type": "boolean",
+            "default": true
+          },
+          "publicNoticeId": {
+            "type": "number"
+          },
+          "noticePostDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "operationStartYear": {
+            "type": "number"
+          },
+          "operationEndYear": {
+            "type": "number"
+          },
+          "bctsMgrName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "commentingOpenDate",
+          "commentingClosedDate",
+          "validityEndDate",
+          "projectPlanCode",
+          "district",
+          "forestClient",
+          "workflowState",
+          "revisionCount",
+          "createTimestamp",
+          "commentClassificationMandatory",
+          "publicNoticeId",
+          "noticePostDate",
+          "operationStartYear",
+          "operationEndYear",
+          "bctsMgrName"
+        ]
+      },
+      "PublicNoticePublicFrontEndResponse": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "number"
+          },
+          "reviewAddress": {
+            "type": "string"
+          },
+          "reviewBusinessHours": {
+            "type": "string"
+          },
+          "receiveCommentsAddress": {
+            "type": "string"
+          },
+          "receiveCommentsBusinessHours": {
+            "type": "string"
+          },
+          "isReceiveCommentsSameAsReview": {
+            "type": "boolean"
+          },
+          "mailingAddress": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "postDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date planed for online public notice posted."
+          },
+          "project": {
+            "$ref": "#/components/schemas/ProjectResponse"
+          }
+        },
+        "required": [
+          "projectId",
+          "reviewAddress",
+          "reviewBusinessHours",
+          "receiveCommentsAddress",
+          "receiveCommentsBusinessHours",
+          "isReceiveCommentsSameAsReview",
+          "mailingAddress",
+          "email",
+          "postDate",
+          "project"
+        ]
+      },
+      "SubmissionTypeCode": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "description"
+        ]
+      },
+      "FeatureTypeCode": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "description"
+        ]
+      },
+      "SpatialFeaturePublicResponse": {
+        "type": "object",
+        "properties": {
+          "featureType": {
+            "$ref": "#/components/schemas/FeatureTypeCode"
+          },
+          "featureId": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "geometry": {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          "centroid": {
+            "$ref": "#/components/schemas/Point"
+          },
+          "plannedDevelopmentDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Format: YYYY-MM-DD"
+          },
+          "plannedAreaHa": {
+            "type": "string",
+            "description":  "JW: Mistakenly sent as string; original spec is number"
+          },
+          "plannedLengthKm": {
+            "type": "string",
+            "description": "JW: Mistakenly sent as string; original spec is number"
+          },
+          "submissionType": {
+            "$ref": "#/components/schemas/SubmissionTypeCode"
+          }
+        },
+        "required": [
+          "featureType",
+          "featureId",
+          "name",
+          "geometry",
+          "centroid",
+          "plannedDevelopmentDate",
+          "plannedAreaHa",
+          "plannedLengthKm",
+          "submissionType"
+        ]
+      },
+      "Geometry": {
+        "type": "object",
+        "description": "GeoJSon geometry",
+        "discriminator": {
+          "propertyName": "type"
+        },
+        "required": [
+          "type"
+        ],
+        "externalDocs": {
+          "url": "http://geojson.org/geojson-spec.html#geometry-objects"
+        },
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "Point",
+              "LineString",
+              "Polygon",
+              "MultiPoint",
+              "MultiLineString",
+              "MultiPolygon"
+            ],
+            "description": "the geometry type"
+          }
+        }
+      },
+      "Point2D": {
+        "type": "array",
+        "maxItems": 2,
+        "minItems": 2,
+        "items": {
+          "type": "number"
+        }
+      },
+      "Point": {
+        "type": "object",
+        "description": "GeoJSon geometry",
+        "externalDocs": {
+          "url": "http://geojson.org/geojson-spec.html#id2"
+        },
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          {
+            "properties": {
+              "coordinates": {
+                "$ref": "#/components/schemas/Point2D"
+              }
+            }
+          }
+        ]
+      },
+      "LineString": {
+        "type": "object",
+        "description": "GeoJSon geometry",
+        "externalDocs": {
+          "url": "http://geojson.org/geojson-spec.html#id3"
+        },
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          {
+            "properties": {
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Point2D"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "Polygon": {
+        "type": "object",
+        "description": "GeoJSon geometry",
+        "externalDocs": {
+          "url": "http://geojson.org/geojson-spec.html#id4"
+        },
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          {
+            "properties": {
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Point2D"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "MultiPoint": {
+        "type": "object",
+        "description": "GeoJSon geometry",
+        "externalDocs": {
+          "url": "http://geojson.org/geojson-spec.html#id5"
+        },
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          {
+            "properties": {
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Point2D"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "MultiLineString": {
+        "type": "object",
+        "description": "GeoJSon geometry",
+        "externalDocs": {
+          "url": "http://geojson.org/geojson-spec.html#id6"
+        },
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          {
+            "properties": {
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Point2D"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "MultiPolygon": {
+        "type": "object",
+        "description": "GeoJSon geometry",
+        "externalDocs": {
+          "url": "http://geojson.org/geojson-spec.html#id6"
+        },
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          {
+            "properties": {
+              "coordinates": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/Point2D"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "GeometryCollection": {
+        "type": "object",
+        "description": "GeoJSon geometry collection",
+        "required": [
+          "type",
+          "geometries"
+        ],
+        "externalDocs": {
+          "url": "http://geojson.org/geojson-spec.html#geometrycollection"
+        },
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "GeometryCollection"
+            ]
+          },
+          "geometries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Geometry"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Sdk Name="Aspire.AppHost.Sdk" Version="9.5.0" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>e717c2cd-84e7-4c2b-bbcf-cb6688d932f8</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FomMon.ApiService\FomMon.ApiService.csproj" />
+    <ProjectReference Include="..\FomMon.MigrationService\FomMon.MigrationService.csproj" />
+    <ProjectReference Include="..\MapLibre.Martin.Hosting\MapLibre.Martin.Hosting.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" Version="9.5.0" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.5.0" />
+    <PackageReference Include="Aspire.Hosting.Keycloak" Version="9.5.0-preview.1.25474.7" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.5.0" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="9.5.0" />
+    <PackageReference Include="CommunityToolkit.Aspire.Hosting.MailPit" Version="9.8.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.9" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="9.0.4" />
+    <PackageReference Include="Npgsql.NodaTime" Version="9.0.3" />
+    <PackageReference Include="Aspire.Hosting.NodeJs" Version="9.5.0" />
+  </ItemGroup>
+  <ItemGroup>
+	  <PackageJsons Include="..\*\package.json" />
+	  <PackageJsons Remove="..\FomMon.Angular\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="appsettings.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+
+  <Target Name="RestoreNpm" BeforeTargets="Build" Condition=" '$(DesignTimeBuild)' != 'true' ">
+	  <ItemGroup>
+		  <PackageJsons Include="..\*\package.json" />
+	  </ItemGroup>
+
+	  <!-- Install npm packages if node_modules is missing -->
+	  <Message Importance="Normal" Text="Installing npm packages for %(PackageJsons.RelativeDir)" Condition="!Exists('%(PackageJsons.RootDir)%(PackageJsons.Directory)/node_modules')" />
+	  <Exec Command="npm install" WorkingDirectory="%(PackageJsons.RootDir)%(PackageJsons.Directory)" Condition="!Exists('%(PackageJsons.RootDir)%(PackageJsons.Directory)/node_modules')" />
+  </Target>
+</Project>

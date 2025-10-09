@@ -1,0 +1,41 @@
+/* To learn more about this file see: https://angular.io/config/tsconfig. */
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "outDir": "./dist/out-tsc",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "strictNullChecks": false,
+    "skipLibCheck": true,
+    //"esModuleInterop": true,
+    "sourceMap": true,
+    "declaration": true,
+    "moduleResolution": "bundler",
+    "importHelpers": true,
+    "target": "ES2022",
+    //"module": "Node16",
+    "useDefineForClassFields": true,
+    "lib": [
+      "ES2022",
+      "dom"
+    ],
+    "baseUrl": ".", // workaround terradraw deep import issue
+    "paths": {
+      "node_modules/terra-draw/dist/store/store": [
+        "./node_modules/terra-draw/dist/store/store.d.ts",
+        "./node_modules/terra-draw/dist/store/store"
+      ]
+    }
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  }
+}

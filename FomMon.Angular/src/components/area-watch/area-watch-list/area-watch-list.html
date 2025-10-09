@@ -1,0 +1,18 @@
+<div class="header">
+  <h2>Watches</h2>
+  <a routerLink="/area-watch-add" class="action-item">Add</a>
+</div>
+<div>
+  @if (awService.state() === 'loading') {
+    <p>Loading...</p>
+  } @else if (awService.state() === 'error') {
+    <p>Error: {{ awService.error().message }}</p>
+  } @else if (awService.state() === 'ready') {
+    @for (aw of awService.data(); track aw.id) {
+      <app-area-watch-card [data]="aw" [class.item-odd]="$odd" />
+    } @empty {
+      <p class="empty">Add a watch to monitor an area</p>
+    }
+  }
+</div>
+<app-area-watch-add/>

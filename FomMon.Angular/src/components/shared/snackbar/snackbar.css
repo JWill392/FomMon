@@ -1,0 +1,35 @@
+.snackbar-container {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 10px;
+
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  z-index: 1000;
+}
+
+.snackbar {
+  flex: 1 0 auto;
+
+  color: white;
+  background-color: #333;
+
+
+  padding: 10px 20px;
+  border-radius: 4px;
+
+  font-size: 1em;
+  text-align: center;
+
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+  cursor: pointer;
+}
+
+.snackbar:hover {
+  background-color: #222;
+}

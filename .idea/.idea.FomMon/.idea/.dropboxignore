@@ -1,0 +1,17 @@
+# ----
+# Automatically Generated .dropboxignore file at Tue Sep 30 15:40:17 PDT 2025
+# ----
+﻿# Default ignored files
+/shelf/
+/workspace.xml
+# Rider ignored files
+/modules.xml
+/contentModel.xml
+/.idea.FomMon.iml
+/projectSettingsUpdater.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+# ----

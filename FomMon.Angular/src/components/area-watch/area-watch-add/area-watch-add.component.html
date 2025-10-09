@@ -1,0 +1,26 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div class="input-group">
+    <label for="watch-name">Name:</label>
+    <input type="text" id="watch-name" name="watch-name" formControlName="name" autocomplete="off" data-lpignore="true" data-form-type="other" >
+  </div>
+
+  <div class="input-group">
+    <label for="layers">Layers:</label>
+<!--    TODO multiselect that isn't garbage -->
+    <select name="layers" id="layers" formControlName="layers" multiple>
+      @for (layer of layerService.data(); track layer.kind) {
+        <option id="layer-{{ layer.kind" [value]="layer.kind">{{layer.name}}</option>
+      }
+    </select>
+  </div>
+  <div class="error-container">
+    @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+      <p class="error">Name is required</p>
+    }
+    @if (form.controls.layers.touched && form.controls.layers.hasError('required')) {
+      <p class="error">At least one layer is required</p>
+    }
+  </div>
+  <button type="submit">Add</button>
+
+</form>

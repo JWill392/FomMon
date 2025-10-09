@@ -1,0 +1,6 @@
+
+<div class="snackbar-container">
+@for (message of messages(); track message.id) {
+  <p class="snackbar" (click)="dismiss()">{{message.text}}</p>
+}
+</div>

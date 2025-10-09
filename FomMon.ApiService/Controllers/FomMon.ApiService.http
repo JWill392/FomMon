@@ -1,0 +1,115 @@
+﻿
+### User Get
+GET http://localhost:5389/User
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+### GET AUTH
+// 1. Get auth token before other calls.  Note: Keycloak testing setup - enable direct grants on client
+@username = test@local.test
+@password = hunter
+@client = angular-spa
+POST http://localhost:8080/realms/fom-mon/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{client}}&username={{username}}&password={{password}}&scope=openid
+
+> {%
+    const t = response.body.access_token;
+    client.global.set("access_token", t);
+    console.log(t);
+%}
+
+
+### AreaWatch Add
+POST http://localhost:5389/AreaWatch
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "id": "{{$uuid}}",
+  "name": "direct test",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [-122.42, 37.78],
+        [-122.41, 37.78],
+        [-122.41, 37.77],
+        [-122.42, 37.77],
+        [-122.42, 37.78]
+      ]
+    ]
+  }
+,
+  "layers": ["fomCutblock"]
+}
+
+### AreaWatch Get all
+GET http://localhost:5389/AreaWatch
+Authorization: Bearer {{access_token}}
+
+### AW Alerts Get
+@areaid = c259d338-a37d-499c-adb6-af8ad54ae698
+//@areaid = 666fa067-6124-41a8-96b2-fef8062f41bc
+GET http://localhost:5389/AreaWatch/{{areaid}}/alerts
+Authorization: Bearer {{access_token}}
+
+### AW All Alerts Get
+//@areaid = 666fa067-6124-41a8-96b2-fef8062f41bc
+GET http://localhost:5389/AreaWatch/alerts
+Authorization: Bearer {{access_token}}
+
+### AreaWatch Get
+GET http://localhost:5389/AreaWatch/{{areaid}}
+Authorization: Bearer {{access_token}}
+
+### AW Delete
+@deleteAwId = 666fa067-6124-41a8-96b2-fef8062f41bc
+DELETE http://localhost:5389/AreaWatch/{{deleteAwId}}
+Authorization: Bearer {{access_token}}
+
+### AreaWatch Patch
+PATCH http://localhost:5389/AreaWatch/{{areaid}}
+Authorization: Bearer {{access_token}}
+Content-Type: application/merge-patch+json
+
+{
+  "id": "some guid",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          -118.841354417,
+          50.08717514
+        ],
+        [
+          -118.847153831,
+          49.999917469
+        ],
+        [
+          -118.728680079,
+          50.077605827
+        ],
+        [
+          -118.841354417,
+          50.08717514
+        ]
+      ]
+    ]
+  },
+  "layers": "project"
+}
+
+### WFS Download
+@kind = FomRetention
+@limit = 1000000
+# @no-log
+# @timeout = 360000
+POST http://localhost:5389/Wfs/download?kind={{kind}}&limit={{limit}}
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+### Layers Get
+GET http://localhost:5389/layer
