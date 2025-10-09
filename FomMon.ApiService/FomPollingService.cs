@@ -36,8 +36,8 @@ public class FomPollingService(
         {
             try
             {
-                await taskQueue.QueueWorkAsync((s, c) =>
-                    s.GetRequiredService<IFomDownloader>().GetProjects(c));
+                await taskQueue.QueueWorkAsync(new WorkItem("FomDownloader.GetProjects", (s, c) =>
+                    s.GetRequiredService<IFomDownloader>().GetProjects(c)));
 
                 await Task.Delay(_settings.PollingInterval, stoppingToken);
             }
