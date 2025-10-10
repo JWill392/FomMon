@@ -21,7 +21,7 @@ import {UserService} from '../user/user.service';
 })
 export class MenuComponent {
   userService = inject(UserService)
-  isAuthenticated = this.userService.isAuthenticated;
+  isAuthenticated = this.userService.state.isReady;
   user : Signal<User | undefined> = this.userService.data;
 
 

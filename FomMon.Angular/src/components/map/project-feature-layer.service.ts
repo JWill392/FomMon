@@ -7,6 +7,7 @@ export const PROJECT_FEATURE_COLORS = {
   // retentionAreaFill: '#80D39B',
   defaultFill: '#808080',
   selectedLine: '#F58F00',
+  alertLine: '#f54a00',
   // roadSectionLine: '#7691BC',
   defaultLine: '#808080',
 };
@@ -74,11 +75,13 @@ export function addProjectFeatureLayers({
       'line-color': [
         'case',
         ['boolean', ['feature-state', 'selected'], false], PROJECT_FEATURE_COLORS.selectedLine,
+        ['boolean', ['feature-state', 'alert'], false], PROJECT_FEATURE_COLORS.alertLine,
         PROJECT_FEATURE_COLORS.defaultLine
       ],
       'line-width': [
         'case',
         ['boolean', ['feature-state', 'selected'], false], 2,
+        ['boolean', ['feature-state', 'alert'], false], 2,
         1
       ],
       //'line-dasharray': [2, 0.5],
@@ -86,6 +89,7 @@ export function addProjectFeatureLayers({
         'case',
         ['boolean', ['feature-state', 'hover'], false], 1,
         ['boolean', ['feature-state', 'selected'], false], 1,
+        ['boolean', ['feature-state', 'alert'], false], 1,
         0.4
       ]
     },
@@ -103,6 +107,7 @@ export function addProjectFeatureLayers({
       'line-color': [
         'case',
         ['boolean', ['feature-state', 'selected'], false], PROJECT_FEATURE_COLORS.selectedLine,
+        ['boolean', ['feature-state', 'alert'], false], PROJECT_FEATURE_COLORS.alertLine,
         layerColor
       ],
       'line-width': [

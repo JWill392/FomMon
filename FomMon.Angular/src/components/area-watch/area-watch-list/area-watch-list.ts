@@ -1,6 +1,5 @@
 import {Component, DestroyRef, inject, OnInit} from '@angular/core';
 import {AreaWatchService} from '../area-watch.service';
-import {AreaWatchDetail} from '../area-watch-detail/area-watch-detail';
 import {AreaWatchCard} from '../area-watch-card/area-watch-card';
 import {RouterLink} from '@angular/router';
 import {AreaWatchAddComponent} from '../area-watch-add/area-watch-add.component';

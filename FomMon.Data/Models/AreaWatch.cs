@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using FomMon.Data.Configuration.Layer;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
@@ -8,6 +9,7 @@ using NodaTime;
 namespace FomMon.Data.Models;
 
 [Index(nameof(UserId))]
+[DebuggerDisplay("{ToString()}")]
 public sealed class AreaWatch : IVersioned
 {
     [Key][DatabaseGenerated(DatabaseGeneratedOption.None)]
@@ -38,12 +40,12 @@ public sealed class AreaWatch : IVersioned
     
     public uint Version { get; set; }
     
+    
     public override string ToString()
     {
         return $"AreaWatch(Id={Id}, UserId={UserId}, FeatureKinds={String.Join(", ", Layers)}, Geometry={Geometry}, AddedDate={AddedDate})";
     }
 
-    
 }
 
 

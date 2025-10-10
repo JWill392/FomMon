@@ -33,7 +33,7 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {UserService} from '../user/user.service';
 import {LayerKind} from '../layer/layer.model';
 import {LayerService} from '../layer/layer.service';
-import {ServiceState} from '../shared/state';
+import {AreaAlertService} from "../area-alert/area-alert.service";
 
 interface LayerGroup {
   id: string;
@@ -67,11 +67,13 @@ export class MapComponent implements AfterViewInit {
   private mapState = signal<'idle' | 'ready' | 'loaded'>('idle');
 
 
-  private awService = inject(AreaWatchService);
+  private areaWatchService = inject(AreaWatchService);
+  private areaAlertService = inject(AreaAlertService);
   private layerService = inject(LayerService);
   private destroyRef = inject(DestroyRef);
   private userService = inject(UserService);
-  isAuthenticated = this.userService.isAuthenticated;
+
+  isAuthenticated = this.userService.state.isReady;
 
   //selectedItem = signal<any>(null);
 
@@ -142,7 +144,7 @@ export class MapComponent implements AfterViewInit {
 
     effect(() => {
       const mapReady = this.mapState() === "ready";
-      const configReady = this.layerService.state() === ServiceState.ready;
+      const configReady = this.layerService.state.isReady();
       if (!mapReady || !configReady) return;
 
       this.registerMapControls();
@@ -159,8 +161,8 @@ export class MapComponent implements AfterViewInit {
     // areawatch data updates after load
     effect(() => {
       const mapLoaded = this.mapState() === 'loaded';
-      const awReady = this.awService.state() === ServiceState.ready;
-      const awData = this.awService.data(); // Track data changes
+      const awReady = this.areaWatchService.state.isReady();
+      const awData = this.areaWatchService.data(); // Track data changes
 
       if (!mapLoaded || !awReady) return;
 
@@ -176,7 +178,31 @@ export class MapComponent implements AfterViewInit {
       AddUpdateProjectSource(proj, this.map, 'projects');
     });
 
-    http.get<any[]>('api/projects').pipe(
+    // set alert featurestate
+    effect(() => {
+      const mapLoaded = this.mapState() === 'loaded';
+      const configReady = this.layerService.state.isReady();
+      const alertReady = this.areaAlertService.state.isReady();
+      const alertLayers = this.areaAlertService.byLayer();
+
+      if (!mapLoaded || !alertReady || !configReady) return;
+
+      // TODO set featurestate alert from alertservice
+      for (const [layerKind, alerts] of alertLayers) {
+        const layer = this.layerService.byKind()[layerKind]
+        for (const alert of alerts) {
+          const featureId = {
+            source: layerKind,
+            sourceLayer: layer.tileSource,
+            id: alert.featureReference.sourceFeatureId,
+          }
+          this.map.setFeatureState(featureId, { alert: true });
+        }
+      }
+      // TODO unset featurestate alert when removed from alertservice
+    })
+
+    http.get<any[]>('api/projects').pipe( // TODO move projects to service
         map(body => body.map(ProjectFactory.fromJson))
     ).subscribe({
       next: result => this.projects.set(result),
@@ -247,14 +273,14 @@ export class MapComponent implements AfterViewInit {
       // TODO change flow.  currently saves immediately. instead allow tweaking shape before explicit save?
       const feature = draw.getSnapshotFeature(id);
 
-      const addAw = this.awService.createId({
+      const addAw = this.areaWatchService.createId({
         geometry: feature?.geometry,
         name: 'New Area Watch', // TODO set meaningful name
         layers: ["FomCutblock" as LayerKind, "FomRoad" as LayerKind] // TODO populate commalist from active layers
       });
       draw.removeFeatures([id]); // remove draw copy
 
-      this.awService.add$(addAw)
+      this.areaWatchService.add$(addAw)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe()
 
@@ -293,7 +319,7 @@ export class MapComponent implements AfterViewInit {
       addProjectFeatureLayers({
         map: this.map,
         url: `local://./tileserver/${lay.tileSource}/{z}/{x}/{y}`,
-        sourceId: lay.tileSource,
+        sourceId: lay.kind,
         sourceLayer: lay.tileSource,
         featureFillLayer: `${lay.tileSource}`,
         featureLineLayer: `${lay.tileSource}-lines`,
@@ -310,7 +336,7 @@ export class MapComponent implements AfterViewInit {
 
     addAreaWatchLayer({
       map: this.map,
-      areaWatches: this.awService.data(),
+      areaWatches: this.areaWatchService.data(),
       sourceId: 'area-watches',
       layerId: 'area-watch',
       nameLayerId: 'area-watch-name',

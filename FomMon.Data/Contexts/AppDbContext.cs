@@ -65,13 +65,6 @@ namespace FomMon.Data.Contexts
                     Kind = f.Kind, 
                     LastDownloaded = null,
                 }));
-            //
-            // builder.Entity<LayerType>()
-            //     .Property(p => p.Kind)
-            //     .HasConversion(
-            //         v => v.Value,
-            //         v => new LayerKind(v));
-            //
             
             // **** Area Watch **** //
             builder.Entity<AreaWatch>() // index intersection
@@ -84,10 +77,6 @@ namespace FomMon.Data.Contexts
                 .HasConversion<LayerKindConverter>();
                 
                 
-                
-                
-                
-            
             // **** FeatureReference **** //
             builder.Entity<FeatureReference>() // index intersection
                 .HasIndex(f => f.Geometry)
@@ -97,7 +86,7 @@ namespace FomMon.Data.Contexts
             builder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique()
-                .HasFilter("\"email\" IS NOT NULL"); // naming conventions make column lowercase 
+                .HasDatabaseName(User.Constraint.UniqueEmail); // used to disambiguate dup key exceptions
             
             // IVersioned
             foreach (var entityType in builder.Model.GetEntityTypes())

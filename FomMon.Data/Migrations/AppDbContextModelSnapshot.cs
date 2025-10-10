@@ -172,6 +172,10 @@ namespace FomMon.Data.Migrations
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Geometry"), "GIST");
 
+                    b.HasIndex("LayerKind", "SourceFeatureId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_feature_references_layer_kind_source_feature_id");
+
                     b.ToTable("feature_references", (string)null);
                 });
 

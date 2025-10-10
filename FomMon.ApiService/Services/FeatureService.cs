@@ -27,15 +27,11 @@ public sealed class FeatureService(
     IClockService clock, 
     IMapper mapper) : IFeatureService
 {
-    private record CreateFeatureReferenceDto(
-        string LayerKindValue, 
+    private record FeatureSourceRecord(
         string SourceFeatureId, 
         Geometry Geometry, 
         JsonDocument? AttributesSnapshot) : IDisposable
     {
-        [NotMapped] // EF Core 9 fails to map this from conventions in adhoc queries
-        public LayerKind LayerKind => LayerKind.From(LayerKindValue);
-
         public void Dispose() => AttributesSnapshot?.Dispose();
     }
     
@@ -49,10 +45,9 @@ public sealed class FeatureService(
         // find intersections
         var features = await db.Database
 #pragma warning disable EF1002
-            .SqlQueryRaw<CreateFeatureReferenceDto>(
+            .SqlQueryRaw<FeatureSourceRecord>(
                 $"""
-                SELECT @kind as layer_kind_value
-                     , cast({layerCfg.SourceIdColumn} as text) as source_feature_id
+                SELECT cast({layerCfg.SourceIdColumn} as text) as source_feature_id
                      , {LayerRegistry.GeometryColumn} as geometry
                      , row_to_json(t) as attributes_snapshot
                 FROM {LayerRegistry.Schema}.{layerCfg.TableName} as t
@@ -71,7 +66,7 @@ public sealed class FeatureService(
         var refs = new List<FeatureReference>();
         foreach (var f in features)
         {
-            var fr = await GetOrCreateAsync(f, c);
+            var fr = await GetOrCreateAsync(kind, f, c);
             refs.Add(fr);
             f.Dispose();
         }
@@ -85,15 +80,14 @@ public sealed class FeatureService(
     /// </summary>
     /// <returns>Found or created feature reference</returns>
     private async Task<FeatureReference> GetOrCreateAsync(
-        CreateFeatureReferenceDto addDto,
+        LayerKind kind,
+        FeatureSourceRecord featureSource,
         CancellationToken c)
     {
-        addDto = WithoutAttributesProperty(addDto, LayerRegistry.GeometryColumn); // redundant
-        
         var existing = await db.FeatureReferences
             .FirstOrDefaultAsync(f => 
-                f.LayerKind == addDto.LayerKind && 
-                f.SourceFeatureId == addDto.SourceFeatureId, c);
+                f.LayerKind == kind && 
+                f.SourceFeatureId == featureSource.SourceFeatureId, c);
     
         if (existing != null)
         {
@@ -105,16 +99,22 @@ public sealed class FeatureService(
             }
             return existing;
         }
-    
+
+
+        var newRef = new FeatureReference() 
+        {
+            LayerKind = kind,
+            SourceFeatureId = featureSource.SourceFeatureId,
+            Geometry = featureSource.Geometry,
+            AttributesSnapshot = featureSource.AttributesSnapshot?.WithRemovedProperty(LayerRegistry.GeometryColumn),
+            FirstSeenAt = clock.Now,
+            LastSeenAt = clock.Now
+        };
         
-        var newRef = mapper.Map<FeatureReference>(addDto);
     
         db.FeatureReferences.Add(newRef);
         await db.SaveChangesAsync(c);
         return newRef;
-
-
-
     }
     
     public async Task ReconcileAsync(LayerKind kind, CancellationToken c) // TODO reconcileasync as task
@@ -148,12 +148,4 @@ public sealed class FeatureService(
         await db.SaveChangesAsync(c);
     }
     
-    private static CreateFeatureReferenceDto WithoutAttributesProperty(CreateFeatureReferenceDto addDto, string property)
-    {
-        var attrib = addDto.AttributesSnapshot;
-        if (attrib is null) return addDto;
-        if (!attrib.HasProperty(property)) return addDto;
-
-        return addDto with { AttributesSnapshot = attrib.WithRemovedProperty(property) };
-    }
 }

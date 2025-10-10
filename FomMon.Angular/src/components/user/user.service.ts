@@ -13,73 +13,59 @@ import {HttpClient} from "@angular/common/http";
 import {catchError, map, tap} from "rxjs/operators";
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {throwError} from 'rxjs';
-import {ServiceBase} from '../shared/service-base';
-import {ServiceState} from '../shared/state';
+import {LoadState, ServiceWithState} from "../shared/service-state";
+import {ServiceLoadState} from "../shared/service-load-state";
 
 @Injectable({
   providedIn: 'root'
 })
-export class UserService extends ServiceBase<User> {
-  private readonly authenticated = signal(false);
-  isAuthenticated = this.authenticated.asReadonly();
-
-  private keycloakStatus: string | undefined;
+export class UserService implements ServiceWithState {
   private readonly keycloak = inject(Keycloak);
   private readonly keycloakSignal = inject(KEYCLOAK_EVENT_SIGNAL);
   private readonly http = inject(HttpClient);
+  private readonly destroyRef = inject(DestroyRef);
 
+  private _state = new ServiceLoadState();
+  readonly state = this._state.asReadonly();
+
+  private _data = signal<User | undefined>(undefined);
+  readonly data = this._data.asReadonly();
 
   constructor() {
-    super();
-
     effect(() => {
       const keycloakEvent = this.keycloakSignal();
-
-      this.keycloakStatus = keycloakEvent.type;
 
       if (keycloakEvent.type === KeycloakEventType.Ready) {
         const auth : boolean = typeEventArgs<ReadyArgs>(keycloakEvent.args);
 
         if (auth) {
           // initial API call to allow api to record keycloak user after registration
-          this.initialize$()
-            .subscribe({
-              complete: () => this.authenticated.set(true),
-              error: (error) => {
-                console.error('Failed to initialize user service', error);
-                this.logout();
-              }
-            });
+          this.load$()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe();
         }
-        // TODO add role guards spa-user / spa-admin
-
       }
 
       if (keycloakEvent.type === KeycloakEventType.AuthLogout) {
-        this.clearUser()
-        this._state.set(ServiceState.idle);
+        this._data.set(undefined);
+        this._state.reset();
       }
     });
   }
 
-  protected override load$(destroyRef : DestroyRef) {
+  private load$() {
     return this.http.get<User>('api/user')
       .pipe(
         catchError((error) => throwError(() => {
-          console.error(error);
-          this.clearUser()
-          this._state.set(ServiceState.error);
-          return new Error("Failed to get user")
+          this.logout();
+          return new Error("Failed to log in");
         })),
         map(u => UserFactory.fromJson(u)),
-        tap(u => this._data.set(u)),
-        takeUntilDestroyed(destroyRef)
+        tap({
+          next: u => this._data.set(u),
+        }),
+        this._state.loadState
       )
-  }
-
-  clearUser() {
-    this.authenticated.set(false);
-    this._data.set(undefined);
   }
 
   login() {

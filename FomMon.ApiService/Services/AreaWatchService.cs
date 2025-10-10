@@ -17,9 +17,6 @@ public interface IAreaWatchService
     Task<IReadOnlyList<AreaWatch>> ListAsync(Guid userId, CancellationToken c = default);
     
     Task<bool> DeleteAsync(Guid id, Guid userId, CancellationToken c = default);
-
-    Task<IReadOnlyList<AreaAlert>?> GetAlertsAsync(Guid id, Guid userId, CancellationToken c = default);
-    Task<IReadOnlyList<AreaAlert>?> GetAlertsAsync(Guid userId, CancellationToken c = default);
 }
 
 public sealed class AreaWatchService(
@@ -28,6 +25,7 @@ public sealed class AreaWatchService(
     IMapper mapper,
     IFeatureService featureService) : IAreaWatchService
 {
+
     public async Task<AreaWatch> CreateAsync(CreateAreaWatchRequest dto, Guid userId, CancellationToken c = default)
     {
         if (userId == Guid.Empty) throw new ArgumentException("UserId is required");
@@ -89,80 +87,4 @@ public sealed class AreaWatchService(
         await db.SaveChangesAsync(c);
         return true;
     }
-
-    
-    public async Task<IReadOnlyList<AreaAlert>?> GetAlertsAsync(Guid id, Guid userId, CancellationToken c = default)
-    {
-        var aw = await db.AreaWatches
-            .Include(aw => aw.Alerts)
-            .SingleOrDefaultAsync(a => a.Id == id && a.UserId == userId, c);
-
-        if (aw is null) return null; // invalid areawatch TODO error not exception
-
-        var alerts = await GetOrCreateAlertsAsync(aw, c);
-        
-        return alerts;
-    }
-    
-    
-    
-    public async Task<IReadOnlyList<AreaAlert>?> GetAlertsAsync(Guid userId, CancellationToken c = default)
-    {
-        // TODO support filtering to new alerts
-        var watches = await db.AreaWatches
-            .Include(aw => aw.Alerts)
-            .Where(a => a.UserId == userId)
-            .ToListAsync(c);
-
-        List<AreaAlert> alerts = [];
-        foreach (var aw in watches)
-        {
-            alerts.AddRange(await GetOrCreateAlertsAsync(aw, c));
-        }
-        
-        return alerts;
-    }
-
-    private async Task<List<AreaAlert>> GetOrCreateAlertsAsync(AreaWatch aw, CancellationToken c = default)
-    {
-        var oldAlerts = aw.Alerts.ToList();
-        var newAlerts = new List<AreaAlert>();
-        var layers = aw.Layers.Union(oldAlerts.Select(a => a.LayerKind)); // areaWatch.Layers can change over time
-        
-        
-        foreach (var kind in layers) 
-        {
-            var newFeatures = await featureService.GetIntersectingAsync(kind, aw.Geometry, c);
-            
-            var newFids = newFeatures.Select(f => f.Id).ToHashSet();
-            var oldAlertsByFeature = oldAlerts.ToDictionary(a => a.FeatureId);
-
-            var removedAlerts = oldAlerts.Where(a => !newFids.Contains(a.FeatureId)).ToList();
-            foreach (var a in removedAlerts)
-            {
-                var rem = a.FeatureReference; // TODO move to feature service?
-                rem.DeletedAt = clock.Now;
-                rem.IsDeleted = true;
-            }
-            
-            var notAlertedFeatures = newFeatures.Where(f => !oldAlertsByFeature.ContainsKey(f.Id)).ToList();
-            foreach (var f in notAlertedFeatures)
-            {
-                var a = new AreaAlert
-                {
-                    AreaWatch = aw,
-                    FeatureReference = f,
-                    LayerKind = f.LayerKind,
-                    TriggeredAt = clock.Now,
-                };
-                newAlerts.Add(a);
-            }
-        }
-
-        await db.AreaWatchAlerts.AddRangeAsync(newAlerts, c);
-        await db.SaveChangesAsync(c);
-        return oldAlerts.Union(newAlerts).ToList();
-    }
-    
-    
 }

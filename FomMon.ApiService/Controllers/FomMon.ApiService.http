@@ -49,16 +49,6 @@ Content-Type: application/json
 GET http://localhost:5389/AreaWatch
 Authorization: Bearer {{access_token}}
 
-### AW Alerts Get
-@areaid = c259d338-a37d-499c-adb6-af8ad54ae698
-//@areaid = 666fa067-6124-41a8-96b2-fef8062f41bc
-GET http://localhost:5389/AreaWatch/{{areaid}}/alerts
-Authorization: Bearer {{access_token}}
-
-### AW All Alerts Get
-//@areaid = 666fa067-6124-41a8-96b2-fef8062f41bc
-GET http://localhost:5389/AreaWatch/alerts
-Authorization: Bearer {{access_token}}
 
 ### AreaWatch Get
 GET http://localhost:5389/AreaWatch/{{areaid}}
@@ -102,9 +92,19 @@ Content-Type: application/merge-patch+json
   "layers": "project"
 }
 
+### Alerts Get for id
+@areaid = 3d10305d-d0c7-45f3-aaa6-64c01cc0d8bb
+GET http://localhost:5389/Alert?areaWatchId={{areaid}}
+Authorization: Bearer {{access_token}}
+
+### Alerts Get
+//@areaid = 666fa067-6124-41a8-96b2-fef8062f41bc
+GET http://localhost:5389/Alert
+Authorization: Bearer {{access_token}}
+
 ### WFS Download
 @kind = FomRetention
-@limit = 1000000
+@limit = 100
 # @no-log
 # @timeout = 360000
 POST http://localhost:5389/Wfs/download?kind={{kind}}&limit={{limit}}

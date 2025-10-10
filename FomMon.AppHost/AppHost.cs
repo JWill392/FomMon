@@ -12,7 +12,8 @@ var postgres = builder.AddPostgres("postgres", pgUser, pgPwd)
     .WithImage("postgis/postgis")
     //.WithPgAdmin(pgAdmin => pgAdmin.WithHostPort(5050));
     .WithPgWeb(pgWeb => pgWeb.WithHostPort(5051))
-    .WithDataVolume(isReadOnly: false); // persist to subsequent debugging sessions
+    .WithDataVolume(isReadOnly: false) // persist to subsequent debugging sessions
+    .WithLifetime(ContainerLifetime.Persistent); 
 if (builder.Environment.IsDevelopment())
     postgres.WithHostPort(56298); // allow local access
 

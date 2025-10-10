@@ -58,7 +58,8 @@ builder.Services.AddOpenTelemetry()
     .WithTracing(tracing => tracing.AddSource(BackgroundTaskProcessorService.ActivitySourceName));
 
 // Business logic services
-builder.Services.AddScoped<IAreaWatchService, AreaWatchService>(); 
+builder.Services.AddScoped<IAreaWatchService, AreaWatchService>();
+builder.Services.AddScoped<IAlertService, AlertService>(); 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IFeatureService, FeatureService>();
 

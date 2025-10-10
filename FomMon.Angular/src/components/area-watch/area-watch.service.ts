@@ -1,38 +1,58 @@
-import {DestroyRef, inject, Injectable, signal} from '@angular/core';
+import {effect, inject, Injectable, signal} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {AreaWatch, AreaWatchAdd, AreaWatchDto} from './area-watch.model';
-import {catchError, ignoreElements, map, tap} from 'rxjs/operators';
-import {EMPTY, throwError} from 'rxjs';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import { v4 as uuidv4 } from 'uuid';
-import {LocalState, ServiceState} from '../shared/state';
-import {AuthServiceBase} from '../shared/auth-service-base';
+import {catchError, map, tap} from 'rxjs/operators';
+import {EMPTY, Observable, throwError} from 'rxjs';
+import {v4 as uuidv4} from 'uuid';
+import {ServiceLoadState} from "../shared/service-load-state";
+import {UserService} from "../user/user.service";
+import {LoadState, ServiceState, ServiceWithState} from "../shared/service-state";
+import {LocalState} from "../shared/local-state";
 
 
 @Injectable({providedIn: 'root'})
-export class AreaWatchService extends AuthServiceBase<AreaWatch[]> {
-  private loadUrl = 'api/areawatch';
+export class AreaWatchService implements ServiceWithState {
   private http = inject(HttpClient);
+  private userService = inject(UserService);
+
+  private _state = new ServiceLoadState();
+  readonly state = this._state.asReadonly();
+
+  private _data = signal<AreaWatch[]>(undefined);
+  readonly data = this._data.asReadonly();
 
   private featureToId = new Map<number, string>();
   private idToFeature = new Map<string, number>();
   private nextFeatureId = 1;
 
-  protected override load$(destroyRef : DestroyRef) {
-    return this.http.get<AreaWatch[]>(this.loadUrl)
+  public constructor() {
+    effect(() => {
+      const isLoggedOut = !this.userService.state.isReady();
+      const hasData = this.state.value() !== LoadState.idle;
+
+      if (isLoggedOut && hasData) {
+        this._state.reset();
+        this._data.set(undefined);
+      }
+    })
+  }
+
+  public initialize$() : Observable<never> {
+    const loadUrl = 'api/areawatch';
+    return this.http.get<AreaWatch[]>(loadUrl)
       .pipe(
         tap((body) => {
             if (!Array.isArray(body)) {
-              throw new Error(`Invalid response type @ GET ${this.loadUrl}; expected array, found ${typeof(body)}`);
+              throw new Error(`Invalid response type @ GET ${loadUrl}; expected array, found ${typeof (body)}`);
             }
             body.forEach(aw => {
               aw.localState = LocalState.added;
-              aw.featureId = this.getOrAddFeatureId(aw.id);
+              aw.featureId = this.mapToFeatureId(aw.id);
             });
             this._data.set(body)
           }
         ),
-        takeUntilDestroyed(destroyRef)
+        this._state.loadState
       );
   }
 
@@ -41,13 +61,28 @@ export class AreaWatchService extends AuthServiceBase<AreaWatch[]> {
 
     return ({
       id: id,
-      featureId: this.getOrAddFeatureId(id),
+      featureId: this.mapToFeatureId(id),
       ...aw
     })
   }
 
+  // maintain local numeric id for mapLibre usage
+  private mapToFeatureId(id : string) {
+    if (this.idToFeature.has(id)) {
+      return this.idToFeature.get(id)!;
+    }
+
+    const fid = this.nextFeatureId++;
+
+    this.featureToId.set(fid, id);
+    this.idToFeature.set(id, fid);
+
+    return fid;
+  }
+
+
   add$(addDto : AreaWatchDto) {
-    if (this._state() !== ServiceState.ready) {throw new Error('Service not ready')}
+    this._state.assertReady();
     const addAw = {...addDto, localState: LocalState.pending_add};
     if (this.find(addDto.id)) {
       // already exists
@@ -71,7 +106,7 @@ export class AreaWatchService extends AuthServiceBase<AreaWatch[]> {
   }
 
   delete$(del : AreaWatch) {
-    if (this._state() !== ServiceState.ready) {throw new Error('Service not ready')}
+    this._state.assertReady();
     if (!this.find(del.id)) {
       // already deleted
       return EMPTY;
@@ -92,7 +127,8 @@ export class AreaWatchService extends AuthServiceBase<AreaWatch[]> {
   }
 
   patch$(pat : Partial<AreaWatch>) {
-    if (this._state() !== ServiceState.ready) {throw new Error('Service not ready')}
+    this._state.assertReady();
+
     const original = {...this.find(pat.id)};
     if (!original) {
       // does not exist
@@ -113,19 +149,6 @@ export class AreaWatchService extends AuthServiceBase<AreaWatch[]> {
         map(result => ({...result, localState: LocalState.added})),
         tap(result => this.updateLocal(result))
       )
-  }
-
-  private getOrAddFeatureId(id : string) {
-    if (this.idToFeature.has(id)) {
-      return this.idToFeature.get(id)!;
-    }
-
-    const fid = this.nextFeatureId++;
-
-    this.featureToId.set(fid, id);
-    this.idToFeature.set(id, fid);
-
-    return fid;
   }
 
   public getByFeatureId(fid : number) {

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using FomMon.Data.Configuration.Layer;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
@@ -8,6 +9,7 @@ namespace FomMon.Data.Models;
 
 [Index(nameof(AreaWatchId))]
 [Index(nameof(FeatureId))]
+[DebuggerDisplay("{ToString()}")]
 public sealed class AreaAlert
 {
     [Key][DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -23,8 +25,10 @@ public sealed class AreaAlert
     [ForeignKey(nameof(AreaWatchId))]
     public AreaWatch AreaWatch { get; set; } = null!; // Navigation property
     
+    
     [ForeignKey(nameof(FeatureId))]
     public FeatureReference FeatureReference { get; set; } = null!; // Navigation property
-    
+
+    public override string ToString() => $"AreaAlert({Id}, {LayerKind}, {AreaWatchId}, {FeatureId})";
 }
 

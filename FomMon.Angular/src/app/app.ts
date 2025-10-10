@@ -8,6 +8,7 @@ import {NotificationService} from '../components/shared/snackbar/notification.se
 import {LayerService} from '../components/layer/layer.service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {UserService} from '../components/user/user.service';
+import {AreaAlertService} from "../components/area-alert/area-alert.service";
 
 @Injectable()
 @Component({
@@ -26,15 +27,19 @@ import {UserService} from '../components/user/user.service';
   `],
 })
 export class App {
+  private layerService = inject(LayerService)
+  private userService = inject(UserService)
+  private areaWatchService = inject(LayerService)
+  private areaAlertService = inject(AreaAlertService)
+
+  private errorService = inject(ErrorService)
+  private notService = inject(NotificationService)
+
   private destroyRef = inject(DestroyRef);
 
-  constructor(private layerService: LayerService,
-              private userService: UserService,
-              private awService: LayerService,
-              private errorService: ErrorService,
-              private notService: NotificationService) {
+  constructor() {
     // get config
-    layerService.initialize$()
+    this.layerService.initialize$()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
 
@@ -42,12 +47,16 @@ export class App {
 
     // Initialize area watches only when authenticated
     effect(() => {
-      const auth = this.userService.isAuthenticated();
+      const auth = this.userService.state.isReady();
       if (!auth) return;
 
-      this.awService.initialize$()
+      this.areaWatchService.initialize$()
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe();
+
+      this.areaAlertService.initialize$()
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe()
     });
   }
 }

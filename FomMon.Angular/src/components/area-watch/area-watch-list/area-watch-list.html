@@ -3,11 +3,13 @@
   <a routerLink="/area-watch-add" class="action-item">Add</a>
 </div>
 <div>
-  @if (awService.state() === 'loading') {
+  @if (awService.state.isLoading()) {
     <p>Loading...</p>
-  } @else if (awService.state() === 'error') {
-    <p>Error: {{ awService.error().message }}</p>
-  } @else if (awService.state() === 'ready') {
+
+  } @else if (awService.state.isError()) {
+    <p>Error: {{ awService.state.error().message }}</p>
+
+  } @else if (awService.state.isReady()) {
     @for (aw of awService.data(); track aw.id) {
       <app-area-watch-card [data]="aw" [class.item-odd]="$odd" />
     } @empty {

@@ -5,7 +5,7 @@
     <h3 class="name">{{ data().name }}</h3>
     <ul class="layers">
 
-      @if (layerService.state() === 'ready') {
+      @if (layerService.state.isReady()) {
         @for (l of data()?.layers; track l) {
           <li class="badge"><p>{{ layerService.byKind()[l].name }}</p></li>
         }

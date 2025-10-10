@@ -18,7 +18,7 @@ public sealed class User : IVersioned
     [Column(TypeName = "citext")] // case-insensitive
     [EmailAddress]
     [MaxLength(255)]
-    public string? Email { get; set; } // unique index in dbContext
+    public required string Email { get; set; } // unique index in dbContext
     
     [MaxLength(50)]
     public string Issuer { get; set; } = string.Empty;
@@ -33,7 +33,6 @@ public sealed class User : IVersioned
 
     public static class Constraint
     {
-        public const string UniqueIssuerSubject = "ix_users_issuer_subject";
         public const string UniqueEmail = "ix_users_email";
     }
 }

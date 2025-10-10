@@ -10,10 +10,9 @@ import {
 } from '@angular/core';
 import {AreaWatch} from '../area-watch.model';
 import {AreaWatchService} from '../area-watch.service';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {NotificationService} from '../../shared/snackbar/notification.service';
-import {LocalState} from '../../shared/state';
 import {LayerService} from '../../layer/layer.service';
+import {LocalState} from "../../shared/local-state";
 
 @Component({
   selector: 'app-area-watch-card',
@@ -25,16 +24,15 @@ export class AreaWatchCard implements AfterViewInit, OnInit {
   awService = inject(AreaWatchService);
   layerService = inject(LayerService);
   notService = inject(NotificationService);
-  destroyRef = inject(DestroyRef)
+
   data = input.required<AreaWatch>();
+
+  protected readonly LocalState = LocalState;
 
   @ViewChild('thumb') thumb!: ElementRef<HTMLImageElement>;
 
 
   ngOnInit(): void {
-    this.awService.initialize$()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe();
   }
 
   ngAfterViewInit() {
@@ -73,5 +71,4 @@ export class AreaWatchCard implements AfterViewInit, OnInit {
     // no destroyref; component is destroyed when deleted
   }
 
-  protected readonly LocalState = LocalState;
 }

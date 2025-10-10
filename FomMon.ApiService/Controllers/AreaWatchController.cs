@@ -14,7 +14,7 @@ public class AreaWatchController(
     ICurrentUser currentUser
     ) : ControllerBase
 {
-    
+
     [HttpPost]
     public async Task<ActionResult<AreaWatchDto>> Create([FromBody] CreateAreaWatchRequest dto, CancellationToken c = default)
     {
@@ -73,31 +73,4 @@ public class AreaWatchController(
 
         return Ok();
     }
-
-    [HttpGet("{id:Guid}/alerts")]
-    public async Task<ActionResult<IReadOnlyList<AreaAlertDto>>> GetAlerts(Guid id, CancellationToken c = default)
-    {
-        var found = await service.GetAlertsAsync(id, currentUser.Id!.Value, c);
-        if (found is null)
-            return NotFound();
-
-        var result = mapper.Map<IReadOnlyList<AreaAlertDto>>(found);
-
-        return Ok(result);
-    }
-    
-    
-
-    [HttpGet("alerts")]
-    public async Task<ActionResult<IReadOnlyList<AreaAlertDto>>> GetAlerts(CancellationToken c = default)
-    {
-        var found = await service.GetAlertsAsync(currentUser.Id!.Value, c);
-        if (found is null)
-            return NotFound();
-
-        var result = mapper.Map<IReadOnlyList<AreaAlertDto>>(found);
-
-        return Ok(result);
-    }
-
 }
