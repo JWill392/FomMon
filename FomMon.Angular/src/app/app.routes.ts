@@ -6,7 +6,8 @@ import {AreaWatchList} from '../components/area-watch/area-watch-list/area-watch
 import {AreaWatchAddComponent} from '../components/area-watch/area-watch-add/area-watch-add.component';
 
 export const routes: Routes = [
-  { path: '', component: HomeComponent},
+  { path: '', redirectTo: '/home', pathMatch: 'full'},
+  { path: 'home', component: HomeComponent},
   { path: 'map', component: MapComponent},
   { path: 'ngx-map', component: NgxMap },
   { path: 'area-watch-list', component: AreaWatchList}, // TODO auth

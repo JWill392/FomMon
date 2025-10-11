@@ -1,15 +1,17 @@
 <nav class="menu">
   <h1 class="title">FOM Monitor</h1>
   <div class="actions">
-    <a routerLink="/" class="action-item">Home</a>
-    <a routerLink="/map" class="action-item">Map</a>
-    <a routerLink="/ngx-map" class="action-item">Ngx Map</a>
+    <div class="action-item" routerLinkActive="action-item-active"><a routerLink="/home">Home</a></div>
+    <div class="action-item" routerLinkActive="action-item-active"><a routerLink="/map">Map</a></div>
+    <div class="action-item" routerLinkActive="action-item-active"><a routerLink="/ngx-map">Ngx Map</a></div>
 
 <!--    <a routerLink="/profile" class="action-item" *kaHasRoles="['view-profile']">My Profile</a>-->
+    <div class="action-item">
     @if (!isAuthenticated()) {
-      <button class="action-item action-login" (click)="login()">Login</button>
+      <button class="action-login" (click)="login()">Login</button>
     } @else {
-      <button class="action-item action-logout" (click)="logout()">Logout {{user()?.displayName}}</button>
+      <button class="action-logout" (click)="logout()">Logout</button>
     }
+    </div>
   </div>
 </nav>
