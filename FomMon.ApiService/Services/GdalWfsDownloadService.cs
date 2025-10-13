@@ -14,17 +14,17 @@ namespace FomMon.ApiService.Services;
 public static class GdalWfsDownloaderExtensions
 {
     public static IServiceCollection AddWfsDownloader(this IServiceCollection services,
-        Action<WfsDownloaderSettings>? configure = null)
+        Action<WfsDownloadServiceSettings>? configure = null)
     {
-        services.AddOptions<WfsDownloaderSettings>()
+        services.AddOptions<WfsDownloadServiceSettings>()
             .BindConfiguration("WfsDownloader")
             .PostConfigure(configure ?? (o => { }))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddScoped<IWfsDownloader, GdalWfsDownloader>();
+        services.AddScoped<IWfsDownloader, GdalWfsDownloadService>();
 
-        services.ConfigureOpenTelemetryTracerProvider(t => { t.AddSource(GdalWfsDownloader.ActivitySourceName); });
+        services.ConfigureOpenTelemetryTracerProvider(t => { t.AddSource(GdalWfsDownloadService.ActivitySourceName); });
 
         return services;
     }
@@ -38,7 +38,7 @@ public interface IWfsDownloader
         CancellationToken c);
 }
 
-public sealed class WfsDownloaderSettings
+public sealed class WfsDownloadServiceSettings
 {
     public long TimeoutSeconds { get; set; }
     /// <summary>
@@ -49,18 +49,18 @@ public sealed class WfsDownloaderSettings
     public bool OgrWfsPagingAllowed { get; set; }
 }
 
-public class GdalWfsDownloader(
+public class GdalWfsDownloadService(
     AppDbContext db, 
     IClockService clock, 
     IProcessRunner processRunner,
     IConfiguration configuration,
-    ILogger<GdalWfsDownloader> logger,
-    IOptions<WfsDownloaderSettings> options) : IWfsDownloader
+    ILogger<GdalWfsDownloadService> logger,
+    IOptions<WfsDownloadServiceSettings> options) : IWfsDownloader
 {
     public const string ActivitySourceName = "FomMon.WfsDownloader";
     
     private static readonly ActivitySource ActivitySource = new(ActivitySourceName);
-    private readonly WfsDownloaderSettings _settings = options.Value;
+    private readonly WfsDownloadServiceSettings _settings = options.Value;
     
     private readonly string _pgConnectionString = 
         configuration.GetConnectionString("application") ??

@@ -17,10 +17,6 @@
 	  <Content Remove="FomApi.json" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <None Include="FomApi\FomApi.json" />
-	</ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\FomMon.Data\FomMon.Data.csproj" />
     <ProjectReference Include="..\FomMon.ServiceDefaults\FomMon.ServiceDefaults.csproj" />

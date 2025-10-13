@@ -78,14 +78,14 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
 
-// Hosted APIs
-if (app.Environment.IsDevelopment())
+// TESTING: Simulate network latency
+if (app.Environment.IsDevelopment() && builder.Configuration.GetSection("Testing:IncomingDelay") is {} delayCfg)
 {
-    //app.UseOpenApi();
+    Int32.TryParse(delayCfg["FromMs"], out var fromMs);
+    Int32.TryParse(delayCfg["ToMs"], out var toMs);
     app.Use(async (context, next) =>
     {
-        // Generate a random delay between 100ms and 2000ms
-        var delay = Random.Shared.Next(100, 1000);
+        var delay = Random.Shared.Next(fromMs, toMs);
         await Task.Delay(delay);
         await next();
     });

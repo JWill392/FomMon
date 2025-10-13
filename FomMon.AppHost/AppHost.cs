@@ -1,5 +1,6 @@
-// Launch config note: open browser at http://localhost:15123/
+// Note: open browser from dashboard link in terminal output (includes login token)
 using FomMon.AppHost.Extensions;
+using FomMon.Data.Configuration.Layer;
 using Microsoft.Extensions.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);
@@ -14,6 +15,7 @@ var postgres = builder.AddPostgres("postgres", pgUser, pgPwd)
     .WithPgWeb(pgWeb => pgWeb.WithHostPort(5051))
     .WithDataVolume(isReadOnly: false) // persist to subsequent debugging sessions
     .WithLifetime(ContainerLifetime.Persistent); 
+
 if (builder.Environment.IsDevelopment())
     postgres.WithHostPort(56298); // allow local access
 
@@ -28,7 +30,6 @@ var migrations = builder.AddProject<Projects.FomMon_MigrationService>("migration
     .WaitFor(applicationDb)
     .WithParentRelationship(applicationDb);
 
-// const string mapStyleDir = "./MapStyles"; // TODO config
 var tileserver = builder.AddMapLibreMartin("tileserver", 
         applicationDb, 
         applicationDb.Resource.GetConnectionUrl(), 
@@ -38,44 +39,20 @@ var tileserver = builder.AddMapLibreMartin("tileserver",
     .WaitForCompletion(migrations)
     .WithCacheSizeMb(1024)
     .WithPgDefaultSrid(4326)
-    .WithAutoPublishSchemas(["layers"]) // all layers stored in this schema, auto published
-                                        // TODO get from Data.LayerRegistry.Schema.. or rather pass down to it?
-    // .WithBindMount(mapStyleDir, "/etc/martin/styles")
-    // .AddStylesPath("/etc/martin/styles")
-    .WithLifetime(ContainerLifetime.Persistent); // but requires restart on schema changes
+    .WithAutoPublishSchemas(LayerRegistry.Schema)
+    .WithLifetime(ContainerLifetime.Persistent); // Note: Requires restart on schema change
 
 if (builder.Environment.IsDevelopment())
 {
     tileserver.WithWebUi("enable-for-all");
 }
-    
-    
-// TODO martin implements prometheus metrics at /_/metrics	
 
 
-// if (builder.Environment.IsDevelopment())
-// {
-//     // local map editing
-//     var mapStyleEditor = builder.AddContainer("maputnik", "ghcr.io/maplibre/maputnik:main")
-//         .WithHttpEndpoint(targetPort: 8000, port: 8888)
-//         .WithLifetime(ContainerLifetime.Persistent)
-//         .WithReference(tileserver)
-//         .WaitFor(tileserver)
-//         .WithBindMount(mapStyleDir, "/app/styles"); // TODO decide on location for styles 
-//     // TODO access tileserver endpoint
-// }
-
-
-// TODO YARP integration once Aspire.Hosting.Yarp is out of pre-release
-//var fomService = builder.AddExternalService("fomApi", "https://fom.nrs.gov.bc.ca/")
-//    .WithHttpHealthCheck("/api");
-
-// NOTE: if changing realm settings in admin console, export to RealmImport dir so it's in source control
+// NOTE: if changing settings in keycloak admin console, export to RealmImport file so it's in source control
 var keycloak = builder.AddKeycloak("keycloak", 8080)
-
     .WithPostgres(keycloakDb)
     .WithDataVolume()
-    .WithRealmImport("./Realms")
+    .WithRealmImport("./realm-export.json")
     .WithLifetime(ContainerLifetime.Persistent);
      
 
@@ -85,13 +62,8 @@ var apiService = builder.AddProject<Projects.FomMon_ApiService>("apiservice")
     .WithReference(migrations)
     .WithReference(keycloak)
     .WaitForCompletion(migrations)
-    //.WithReference(fomService)
     .WithHttpHealthCheck("/health")
     .PublishAsDockerFile();
-
-//var cache = builder.AddRedis("cache")
-//    .WithRedisInsight()
-//    .WithLifetime(ContainerLifetime.Persistent);
 
 
 // email - dev mock server
@@ -115,8 +87,6 @@ builder.AddNpmApp("angular", "../FomMon.Angular")
     .WithHttpEndpoint(port: 4201, env: "PORT")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/")
-    // .WithReference(cache)
-    // .WaitFor(cache)
     .PublishAsDockerFile();
 
 

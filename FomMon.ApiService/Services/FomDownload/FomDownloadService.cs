@@ -37,11 +37,11 @@ public static class FomDownloaderExtensions
             .ValidateOnStart();
 
 
-        services.AddScoped<IFomDownloader, FomDownloader>();
+        services.AddScoped<IFomDownloader, FomDownloadService>();
 
         services.ConfigureOpenTelemetryTracerProvider(t =>
         {
-            t.AddSource(FomDownloader.ActivitySourceName);
+            t.AddSource(FomDownloadService.ActivitySourceName);
         });
         services.ConfigureOpenTelemetryMeterProvider(m =>
         {
@@ -62,12 +62,12 @@ public static class FomDownloaderExtensions
 /// <param name="queue"></param>
 /// <param name="logger"></param>
 /// <param name="opt"></param>
-public sealed class FomDownloader(
+public sealed class FomDownloadService(
     FomApiClient apiClient, 
     AppDbContext dbContext,
     IClockService clock,
     IBackgroundTaskQueue queue,
-    ILogger<FomDownloader> logger,
+    ILogger<FomDownloadService> logger,
     IOptions<FomDownloaderSettings> opt) : IFomDownloader
 {
     private readonly FomDownloaderSettings _settings = opt.Value;
