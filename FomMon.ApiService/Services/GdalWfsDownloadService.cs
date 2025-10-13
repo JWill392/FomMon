@@ -105,7 +105,7 @@ public class GdalWfsDownloadService(
             layerCfg.WfsLayer, // layer name
             "-nln", $"{LayerRegistry.Schema}.{layerCfg.TableName}",
             "-overwrite",
-            "-t_srs", "EPSG:4326",
+            "-t_srs", LayerRegistry.DefaultSridString,
             "-lco", $"GEOMETRY_NAME={LayerRegistry.GeometryColumn}",
             "-lco", $"SCHEMA={LayerRegistry.Schema}",
             "-lco", $"DESCRIPTION={layerCfg.Description}",

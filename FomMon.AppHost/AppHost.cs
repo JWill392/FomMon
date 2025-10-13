@@ -38,7 +38,7 @@ var tileserver = builder.AddMapLibreMartin("tileserver",
     .WithReference(applicationDb)
     .WaitForCompletion(migrations)
     .WithCacheSizeMb(1024)
-    .WithPgDefaultSrid(4326)
+    .WithPgDefaultSrid(LayerRegistry.DefaultSrid)
     .WithAutoPublishSchemas(LayerRegistry.Schema)
     .WithLifetime(ContainerLifetime.Persistent); // Note: Requires restart on schema change
 

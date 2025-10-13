@@ -7,6 +7,8 @@ public static class LayerRegistry
 {
     
     public static readonly string Schema = "layers";
+    public static readonly int DefaultSrid = 4326;
+    public static readonly string DefaultSridString = "EPSG:4326";
     public static readonly string GeometryColumn = "geometry";
     
     internal static readonly bool Initialized = false;
