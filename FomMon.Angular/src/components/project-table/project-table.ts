@@ -1,8 +1,8 @@
-import { Component, Input, signal, computed, ChangeDetectionStrategy, Inject } from '@angular/core';
-import { DatePipe } from '@angular/common';
-import { Projects } from '../../types/project';
+import { Component, Input, signal, computed, ChangeDetectionStrategy, Inject, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
+import {ProjectService} from "../project/project.service";
 
+/// UNUSED currently
 @Component({
   selector: 'project-table',
   templateUrl: './project-table.html',
@@ -10,7 +10,8 @@ import { environment } from '../../environments/environment';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectTable {
-  @Input() projects = signal<Projects>([]);
+  private projectService = inject(ProjectService);
+  projects = this.projectService.data;
 
   environment = environment;
   page = signal(1);

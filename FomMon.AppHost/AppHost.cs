@@ -28,7 +28,7 @@ var migrations = builder.AddProject<Projects.FomMon_MigrationService>("migration
     .WaitFor(applicationDb)
     .WithParentRelationship(applicationDb);
 
-
+// const string mapStyleDir = "./MapStyles"; // TODO config
 var tileserver = builder.AddMapLibreMartin("tileserver", 
         applicationDb, 
         applicationDb.Resource.GetConnectionUrl(), 
@@ -40,6 +40,8 @@ var tileserver = builder.AddMapLibreMartin("tileserver",
     .WithPgDefaultSrid(4326)
     .WithAutoPublishSchemas(["layers"]) // all layers stored in this schema, auto published
                                         // TODO get from Data.LayerRegistry.Schema.. or rather pass down to it?
+    // .WithBindMount(mapStyleDir, "/etc/martin/styles")
+    // .AddStylesPath("/etc/martin/styles")
     .WithLifetime(ContainerLifetime.Persistent); // but requires restart on schema changes
 
 if (builder.Environment.IsDevelopment())
@@ -59,11 +61,9 @@ if (builder.Environment.IsDevelopment())
 //         .WithLifetime(ContainerLifetime.Persistent)
 //         .WithReference(tileserver)
 //         .WaitFor(tileserver)
-//         //.WithBindMount("../FomMon.MapStyleEditor/maputnik.json", "/app/style.json"); // TODO decide on location for styles 
+//         .WithBindMount(mapStyleDir, "/app/styles"); // TODO decide on location for styles 
 //     // TODO access tileserver endpoint
 // }
-    
-
 
 
 // TODO YARP integration once Aspire.Hosting.Yarp is out of pre-release

@@ -20,13 +20,11 @@ import {
   ScaleControl,
   StyleLayer
 } from 'maplibre-gl';
-import {ProjectFactory, Projects} from '../../types/project';
 import {HttpClient} from '@angular/common/http';
 import {MaplibreTerradrawControl} from '@watergis/maplibre-gl-terradraw';
 import {addProjectClusterLayer, AddUpdateProjectSource} from './project-layer.service';
 import {addProjectFeatureLayers} from './project-feature-layer.service';
 import {addAreaWatchLayer, AddUpdateAreaWatchSource} from './area-watch-layer.service';
-import {map} from "rxjs/operators";
 import {AreaWatchService} from '../area-watch/area-watch.service';
 import {AreaWatchList} from '../area-watch/area-watch-list/area-watch-list';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -34,6 +32,7 @@ import {UserService} from '../user/user.service';
 import {LayerKind} from '../layer/layer.model';
 import {LayerService} from '../layer/layer.service';
 import {AreaAlertService} from "../area-alert/area-alert.service";
+import {ProjectService} from "../project/project.service";
 
 interface LayerGroup {
   id: string;
@@ -58,7 +57,6 @@ type StyleLayerFactory = (map: Map) => StyleLayer[];
 })
 export class MapComponent implements AfterViewInit {
   @ViewChild('map', {static:true}) mapElement!: ElementRef<HTMLDivElement>;
-  projects = signal<Projects>([]);
 
   @Input() defaultCenter: [number, number] = [-120.5, 50.6];
   @Input() defaultZoom: number = 7;
@@ -70,6 +68,7 @@ export class MapComponent implements AfterViewInit {
   private areaWatchService = inject(AreaWatchService);
   private areaAlertService = inject(AreaAlertService);
   private layerService = inject(LayerService);
+  private projectService = inject(ProjectService);
   private destroyRef = inject(DestroyRef);
   private userService = inject(UserService);
 
@@ -172,10 +171,12 @@ export class MapComponent implements AfterViewInit {
     // project data updates after load
     effect(() => {
       const mapLoaded = this.mapState() === 'loaded';
-      const proj = this.projects()
-      if (!mapLoaded) return; // TODO make service for projects; wait for state
+      const projectsReady = this.projectService.state.isReady();
+      const projects = this.projectService.data()
 
-      AddUpdateProjectSource(proj, this.map, 'projects');
+      if (!mapLoaded || !projectsReady) return;
+
+      AddUpdateProjectSource(projects, this.map, 'projects');
     });
 
     // set alert featurestate
@@ -202,12 +203,6 @@ export class MapComponent implements AfterViewInit {
       // TODO unset featurestate alert when removed from alertservice
     })
 
-    http.get<any[]>('api/projects').pipe( // TODO move projects to service
-        map(body => body.map(ProjectFactory.fromJson))
-    ).subscribe({
-      next: result => this.projects.set(result),
-      error: console.error
-    });
 
   }
 
@@ -329,7 +324,7 @@ export class MapComponent implements AfterViewInit {
 
     addProjectClusterLayer({
       map: this.map,
-      projects: this.projects(),
+      projects: this.projectService.data(),
       sourceId: 'projects',
       clusterLayerId: 'project-clusters',
     });

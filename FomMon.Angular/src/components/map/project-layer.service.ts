@@ -1,6 +1,6 @@
 //import { Point, Feature, FeatureCollection, Geometry } from 'geojson';
 import { GeoJSONSource, Map } from 'maplibre-gl';
-import { Project, Projects, ProjectState } from '../../types/project';
+import {Projects, ProjectState} from "../project/project.model";
 
 // Colours
 const PROJECT_COLORS = {

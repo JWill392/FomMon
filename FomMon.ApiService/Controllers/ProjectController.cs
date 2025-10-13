@@ -11,7 +11,7 @@ namespace FomMon.ApiService.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class ProjectsController(AppDbContext db, IMapper mapper) : ControllerBase
+public class ProjectController(AppDbContext db, IMapper mapper) : ControllerBase
 {
     
     [HttpGet][AllowAnonymous]

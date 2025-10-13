@@ -9,6 +9,7 @@ import {LayerService} from '../components/layer/layer.service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {UserService} from '../components/user/user.service';
 import {AreaAlertService} from "../components/area-alert/area-alert.service";
+import {ProjectService} from "../components/project/project.service";
 
 @Injectable()
 @Component({
@@ -28,6 +29,8 @@ import {AreaAlertService} from "../components/area-alert/area-alert.service";
 })
 export class App {
   private layerService = inject(LayerService)
+  private projectService = inject(ProjectService)
+
   private userService = inject(UserService)
   private areaWatchService = inject(LayerService)
   private areaAlertService = inject(AreaAlertService)
@@ -40,6 +43,10 @@ export class App {
   constructor() {
     // get config
     this.layerService.initialize$()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
+
+    this.projectService.initialize$()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
 

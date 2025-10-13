@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace FomMon.ApiService.Shared;
+namespace FomMon.Data.Shared;
 
 public abstract class TypedCode<TSelf>
     where TSelf : TypedCode<TSelf>

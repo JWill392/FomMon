@@ -1,5 +1,5 @@
 using System.Text.Json.Serialization;
-using FomMon.ApiService.Shared;
+using FomMon.Data.Shared;
 
 namespace FomMon.Data.Configuration.Layer;
 
