@@ -6,7 +6,6 @@ using FomMon.Data.Shared;
 using FomMon.ServiceDefaults;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
-using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
 namespace FomMon.ApiService.Services;
@@ -18,11 +17,11 @@ public static class GdalWfsDownloaderExtensions
     {
         services.AddOptions<WfsDownloadServiceSettings>()
             .BindConfiguration("WfsDownloader")
-            .PostConfigure(configure ?? (o => { }))
+            .PostConfigure(configure ?? (_ => {}))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddScoped<IWfsDownloader, GdalWfsDownloadService>();
+        services.AddScoped<IWfsDownloadService, GdalWfsDownloadService>();
 
         services.ConfigureOpenTelemetryTracerProvider(t => { t.AddSource(GdalWfsDownloadService.ActivitySourceName); });
 
@@ -30,7 +29,7 @@ public static class GdalWfsDownloaderExtensions
     }
 }
 
-public interface IWfsDownloader
+public interface IWfsDownloadService
 {
     public Task DownloadToDbAsync(
         LayerKind kind,  
@@ -55,7 +54,7 @@ public class GdalWfsDownloadService(
     IProcessRunner processRunner,
     IConfiguration configuration,
     ILogger<GdalWfsDownloadService> logger,
-    IOptions<WfsDownloadServiceSettings> options) : IWfsDownloader
+    IOptions<WfsDownloadServiceSettings> options) : IWfsDownloadService
 {
     public const string ActivitySourceName = "FomMon.WfsDownloader";
     
@@ -119,36 +118,39 @@ public class GdalWfsDownloadService(
         
 
         // Execute ogr2ogr with timeout
-        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(c);
-        timeoutCts.CancelAfter(TimeSpan.FromSeconds(_settings.TimeoutSeconds));
+        using (var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(c))
+        {
+            timeoutCts.CancelAfter(TimeSpan.FromSeconds(_settings.TimeoutSeconds));
 
-        ProcessResult result;
-        try
-        {
-            result = await processRunner.RunAsync(_settings.Ogr2OgrPath, args, timeoutCts.Token);
+            ProcessResult result;
+            try
+            {
+                result = await processRunner.RunAsync(_settings.Ogr2OgrPath, args, timeoutCts.Token);
 
-        }
-        catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested && !c.IsCancellationRequested)
-        {
-            var ex = new TimeoutException(
-                $"ogr2ogr operation timed out after {_settings.TimeoutSeconds} seconds");
-            activity?.SetStatus(ActivityStatusCode.Error, "Timeout");
-            activity?.AddException(ex);
-            throw ex;
-        }
-        catch (Exception ex)
-        {
-            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-            activity?.AddException(ex);
-            throw;
+            }
+            catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested && !c.IsCancellationRequested)
+            {
+                var ex = new TimeoutException(
+                    $"ogr2ogr operation timed out after {_settings.TimeoutSeconds} seconds");
+                activity?.SetStatus(ActivityStatusCode.Error, "Timeout");
+                activity?.AddException(ex);
+                throw ex;
+            }
+            catch (Exception ex)
+            {
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                activity?.AddException(ex);
+                throw;
+            }
+        
+            if (result.ExitCode != 0)
+            {
+                activity?.SetStatus(ActivityStatusCode.Error, $"Exit code: {result.ExitCode}");
+                throw new Exception(
+                    $"ogr2ogr failed with exit code {result.ExitCode}. Error: {result.Error}");
+            }
         }
         
-        if (result.ExitCode != 0)
-        {
-            activity?.SetStatus(ActivityStatusCode.Error, $"Exit code: {result.ExitCode}");
-            throw new Exception(
-                $"ogr2ogr failed with exit code {result.ExitCode}. Error: {result.Error}");
-        }
         
         // ogr2ogr generates its own PK, so index real source key
         // (tried -preserve_fid, -lco FID=column, even sql select objectid as fid/ogc_fid etc.

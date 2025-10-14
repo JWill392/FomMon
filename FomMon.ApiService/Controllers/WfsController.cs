@@ -9,7 +9,7 @@ namespace FomMon.ApiService.Controllers;
 public class WfsController(
     ILogger<WfsController> logger, 
     IConfiguration config,
-    IWfsDownloader wfs) : ControllerBase
+    IWfsDownloadService wfs) : ControllerBase
 {
 
     /// <summary>

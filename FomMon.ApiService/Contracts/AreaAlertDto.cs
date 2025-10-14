@@ -1,5 +1,3 @@
-using FomMon.Data.Configuration.Layer;
-using FomMon.Data.Models;
 using NodaTime;
 
 namespace FomMon.ApiService.Contracts;

@@ -5,8 +5,6 @@ using FomMon.ApiService.Services;
 using FomMon.ApiService.Shared;
 using FomMon.Data.Contexts;
 using FomMon.ServiceDefaults;
-using Mapster;
-using NetTopologySuite.Geometries;
 using Extensions = FomMon.ServiceDefaults.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);

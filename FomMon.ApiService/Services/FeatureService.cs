@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json;
+﻿using System.Text.Json;
 using FomMon.Data.Contexts;
 using FomMon.Data.Models;
 using FomMon.ServiceDefaults;
