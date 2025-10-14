@@ -54,14 +54,25 @@ var keycloak = builder.AddKeycloak("keycloak", 8080)
     .WithDataVolume()
     .WithRealmImport("./realm-export.json")
     .WithLifetime(ContainerLifetime.Persistent);
-     
 
+var cache = builder.AddRedis("cache")
+    .WithRedisInsight(c => c.WithHostPort(46235)) // arbitrary stable port
+    .WithDataVolume(isReadOnly: false)
+    .WithPersistence(
+        interval: TimeSpan.FromMinutes(5),
+        keysChangedThreshold: 100
+        )
+    .WithLifetime(ContainerLifetime.Persistent)
+    ; 
 
+// hangfire dashboard: http://localhost:5389/hangfire
 var apiService = builder.AddProject<Projects.FomMon_ApiService>("apiservice")
     .WithReference(applicationDb)
     .WithReference(migrations)
-    .WithReference(keycloak)
     .WaitForCompletion(migrations)
+    .WithReference(keycloak)
+    .WithReference(cache)
+    .WaitFor(cache)
     .WithHttpHealthCheck("/health")
     .PublishAsDockerFile();
 

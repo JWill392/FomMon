@@ -1,10 +1,14 @@
 using FomMon.ApiService;
 using FomMon.ApiService.FomApi;
 using FomMon.ApiService.Infrastructure;
+using FomMon.ApiService.Jobs;
+using FomMon.ApiService.Jobs.FomDownload;
 using FomMon.ApiService.Services;
 using FomMon.ApiService.Shared;
 using FomMon.Data.Contexts;
 using FomMon.ServiceDefaults;
+using Hangfire;
+using Hangfire.Redis.StackExchange;
 using Extensions = FomMon.ServiceDefaults.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -40,20 +44,31 @@ builder.Services.AddAuthentication()
 // Database
 builder.Services.AddAppDbContext(builder.Configuration, builder.Environment.IsDevelopment());
 
+// Redis
+builder.AddRedisClient(connectionName: "cache");
+
 // Outgoing API
 builder.Services.AddHttpClient<FomApiClient>(c => c.BaseAddress = new Uri("https://fom.nrs.gov.bc.ca/")); // TODO put in config
 
-builder.Services.AddFomDownloader();
-builder.Services.AddFomPollingService();
 
-builder.Services.AddWfsDownloader();
+// Hangfire 
+builder.Services.AddHangfire(c => c
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UseRedisStorage(builder.Configuration.GetConnectionString("cache"), 
+            new RedisStorageOptions()
+            {
+                Prefix = "{fommon.apiservice.hangfire}:",
+            })
+        .WithJobExpirationTimeout(TimeSpan.FromDays(7))
+    );
+builder.Services.AddHangfireServer();
 
-// Background work
+// Background jobs
+builder.Services.AddFomDownloadJob();
+builder.Services.AddWfsDownloadJob();
 builder.Services.AddProcessRunner();
-builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
-builder.Services.AddHostedService<BackgroundTaskProcessorService>();
-builder.Services.AddOpenTelemetry()
-    .WithTracing(tracing => tracing.AddSource(BackgroundTaskProcessorService.ActivitySourceName));
 
 // Business logic services
 builder.Services.AddScoped<IAreaWatchService, AreaWatchService>();
@@ -72,6 +87,12 @@ builder.Services.AddControllers(o =>
 
 var app = builder.Build();
 
+// Hangfire dashboard
+app.UseHangfireDashboard(); 
+
+// TODO centralize job config
+FomDownloadJobExtensions.ConfigureJobs();
+WfsDownloadJobExtensions.ConfigureJobs();
 
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler();
@@ -81,7 +102,7 @@ if (app.Environment.IsDevelopment() && builder.Configuration.GetSection("Testing
 {
     Int32.TryParse(delayCfg["FromMs"], out var fromMs);
     Int32.TryParse(delayCfg["ToMs"], out var toMs);
-    app.Use(async (context, next) =>
+    app.Use(async (_, next) =>
     {
         var delay = Random.Shared.Next(fromMs, toMs);
         await Task.Delay(delay);
@@ -97,6 +118,7 @@ app.UseAuthorization();
 
 app.MapDefaultEndpoints();
 app.MapControllers();
+app.MapHangfireDashboard(); // TODO authz policy with keycloak roles, link to management dashboard from SPA
 
 
 app.Run();

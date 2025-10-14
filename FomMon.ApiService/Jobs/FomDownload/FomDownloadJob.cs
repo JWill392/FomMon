@@ -4,75 +4,56 @@ using FomMon.ApiService.FomApi;
 using FomMon.Data.Contexts;
 using FomMon.Data.Models;
 using FomMon.ServiceDefaults;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using Hangfire;
 using Mapster;
-using OpenTelemetry.Metrics;
+using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Trace;
 
-namespace FomMon.ApiService;
+namespace FomMon.ApiService.Jobs.FomDownload;
 
-public interface IFomDownloader
-{
-    public Task GetProjects(CancellationToken c);
-    public Task GetPublicNotices(CancellationToken c);
-}
 
-public class FomDownloaderSettings
-{
-    public TimeSpan RefreshProjectInterval { get; set; }
-}
 
-public static class FomDownloaderExtensions
+public static class FomDownloadJobExtensions
 {
-    public static IServiceCollection AddFomDownloader(this IServiceCollection services, Action<FomDownloaderSettings>? configure = null)
+    public static IServiceCollection AddFomDownloadJob(this IServiceCollection services)
     {
-        
-        services.AddOptions<FomDownloaderSettings>()
-            .BindConfiguration("FomDownloader")
-            .PostConfigure(configure ?? (o => {}))
-            .ValidateDataAnnotations()
-            .Validate(s => s.RefreshProjectInterval > TimeSpan.Zero, "RefreshProjectInterval must be > 0")
-            .ValidateOnStart();
-
-
-        services.AddScoped<IFomDownloader, FomDownloadService>();
-
-        services.ConfigureOpenTelemetryTracerProvider(t =>
-        {
-            t.AddSource(FomDownloadService.ActivitySourceName);
-        });
-        services.ConfigureOpenTelemetryMeterProvider(m =>
-        {
-
-        });
+        services.ConfigureOpenTelemetryTracerProvider(t => t.AddSource(FomDownloadJob.ActivitySourceName));
         
         return services;
+        
+        // TODO configure job frequency again
+        // services.AddOptions<FomDownloadJobSettings>()
+        //     .BindConfiguration("FomDownloadJob")
+        //     .ValidateDataAnnotations()
+        //     .Validate(s => s.RefreshProjectInterval > TimeSpan.Zero, "RefreshProjectInterval must be > 0")
+        //     .ValidateOnStart();
+        //
+    }
+
+    public static void ConfigureJobs()
+    {
+        RecurringJob.AddOrUpdate<FomDownloadJob>(FomDownloadJob.GetProjectsJobName, x => x.GetProjects(CancellationToken.None), Cron.Daily);
+        RecurringJob.TriggerJob(FomDownloadJob.GetProjectsJobName);  // immediately run once
+        
+        RecurringJob.AddOrUpdate<FomDownloadJob>(FomDownloadJob.GetPublicNoticesJobName, x => x.GetPublicNotices(CancellationToken.None), Cron.Daily);
+        RecurringJob.TriggerJob(FomDownloadJob.GetPublicNoticesJobName); // immediately run once
     }
 }
 
 /// <summary>
 /// Downloads projects and their features from the external FOM API.  Composes Project + PublicNotice APIs into Project.
 /// </summary>
-/// <param name="env"></param>
-/// <param name="apiClient"></param>
-/// <param name="dbContext"></param>
-/// <param name="clock"></param>
-/// <param name="queue"></param>
-/// <param name="logger"></param>
-/// <param name="opt"></param>
-public sealed class FomDownloadService(
+public sealed class FomDownloadJob(
     FomApiClient apiClient, 
     AppDbContext dbContext,
     IClockService clock,
-    IBackgroundTaskQueue queue,
-    ILogger<FomDownloadService> logger,
-    IOptions<FomDownloaderSettings> opt) : IFomDownloader
-{
-    private readonly FomDownloaderSettings _settings = opt.Value;
-    
+    ILogger<FomDownloadJob> logger) 
+{   
     public const string ActivitySourceName = "FomMon.FomDownloader";
     private static readonly ActivitySource ActivitySource = new(ActivitySourceName);
+
+    public const string GetProjectsJobName = nameof(FomDownloadJob.GetProjects);
+    public const string GetPublicNoticesJobName = nameof(FomDownloadJob.GetPublicNotices);
 
 
     public async Task GetProjects(CancellationToken c)
@@ -115,8 +96,6 @@ public sealed class FomDownloadService(
         logger.LogDebug("Maybe updated {count} projects", pMayChangeList.Count);
         
         await dbContext.SaveChangesAsync(c);
-        // Call public notice API to get additional project info
-        await queue.QueueWorkAsync(new WorkItem("FomDownloader.GetPublicNotices", (s, ct) => s.GetRequiredService<IFomDownloader>().GetPublicNotices(ct)));
     }
 
     private async Task<List<Project>> DownloadProjects(Activity? activity, CancellationToken c)

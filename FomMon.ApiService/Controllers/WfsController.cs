@@ -1,3 +1,4 @@
+using FomMon.ApiService.Jobs;
 using FomMon.ApiService.Services;
 using FomMon.Data.Configuration.Layer;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,7 @@ namespace FomMon.ApiService.Controllers;
 public class WfsController(
     ILogger<WfsController> logger, 
     IConfiguration config,
-    IWfsDownloadService wfs) : ControllerBase
+    IWfsDownloadJob wfs) : ControllerBase
 {
 
     /// <summary>
@@ -21,7 +22,10 @@ public class WfsController(
     {
         try
         {
-            await wfs.DownloadToDbAsync(kind, limit, c);
+            await wfs.DownloadToDbAsync(kind, 
+                limit: limit, 
+                updateAge: null, 
+                c: c);
 
             logger.LogInformation("Downloaded {kind}", kind);
             return Ok();

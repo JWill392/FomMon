@@ -4,40 +4,64 @@ using FomMon.Data.Configuration.Layer;
 using FomMon.Data.Contexts;
 using FomMon.Data.Shared;
 using FomMon.ServiceDefaults;
-using Microsoft.Extensions.Options;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using NodaTime;
 using OpenTelemetry.Trace;
 
-namespace FomMon.ApiService.Services;
+namespace FomMon.ApiService.Jobs;
 
-public static class GdalWfsDownloaderExtensions
+public static class WfsDownloadJobExtensions
 {
-    public static IServiceCollection AddWfsDownloader(this IServiceCollection services,
-        Action<WfsDownloadServiceSettings>? configure = null)
+    public static IServiceCollection AddWfsDownloadJob(this IServiceCollection services,
+        Action<WfsDownloadJobSettings>? configure = null)
     {
-        services.AddOptions<WfsDownloadServiceSettings>()
+        services.AddOptions<WfsDownloadJobSettings>()
             .BindConfiguration("WfsDownloader")
             .PostConfigure(configure ?? (_ => {}))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddScoped<IWfsDownloadService, GdalWfsDownloadService>();
+        services.AddScoped<IWfsDownloadJob, GdalWfsDownloadJob>(); // for direct call in testing/admin
 
-        services.ConfigureOpenTelemetryTracerProvider(t => { t.AddSource(GdalWfsDownloadService.ActivitySourceName); });
+        services.ConfigureOpenTelemetryTracerProvider(t => { t.AddSource(GdalWfsDownloadJob.ActivitySourceName); });
 
         return services;
     }
+    
+     
+    public static void ConfigureJobs()
+    {
+        var delay = Duration.Zero;
+        foreach (var layerKind in LayerRegistry.All.Where(l => l.WfsUrl is not null).Select(l => l.Kind))
+        {
+            RecurringJob.AddOrUpdate<GdalWfsDownloadJob>(
+                $"{nameof(GdalWfsDownloadJob.DownloadToDbAsync)}.{layerKind}", 
+                x => x.DownloadToDbAsync(layerKind, null, Duration.FromHours(11), CancellationToken.None), 
+                Cron.Daily);
+            
+            // run immediately once
+            BackgroundJob.Schedule<GdalWfsDownloadJob>(
+                x => x.DownloadToDbAsync(layerKind, null, Duration.FromHours(11), CancellationToken.None),
+                delay.ToTimeSpan());
+
+            delay += Duration.FromMinutes(2); // crude rate limiting 
+        }
+    }
+
 }
 
-public interface IWfsDownloadService
+public interface IWfsDownloadJob
 {
     public Task DownloadToDbAsync(
         LayerKind kind,  
         int? limit, 
+        Duration? updateAge,
         CancellationToken c);
 }
 
-public sealed class WfsDownloadServiceSettings
+public sealed class WfsDownloadJobSettings
 {
     public long TimeoutSeconds { get; set; }
     /// <summary>
@@ -48,43 +72,50 @@ public sealed class WfsDownloadServiceSettings
     public bool OgrWfsPagingAllowed { get; set; }
 }
 
-public class GdalWfsDownloadService(
+public class GdalWfsDownloadJob(
     AppDbContext db, 
     IClockService clock, 
     IProcessRunner processRunner,
     IConfiguration configuration,
-    ILogger<GdalWfsDownloadService> logger,
-    IOptions<WfsDownloadServiceSettings> options) : IWfsDownloadService
+    ILogger<GdalWfsDownloadJob> logger,
+    IOptions<WfsDownloadJobSettings> options) : IWfsDownloadJob
 {
     public const string ActivitySourceName = "FomMon.WfsDownloader";
     
     private static readonly ActivitySource ActivitySource = new(ActivitySourceName);
-    private readonly WfsDownloadServiceSettings _settings = options.Value;
+    private readonly WfsDownloadJobSettings _settings = options.Value;
     
     private readonly string _pgConnectionString = 
         configuration.GetConnectionString("application") ??
         throw new Exception("Connection string not found");
 
+   
+    
+    
+    
     public async Task DownloadToDbAsync(
         LayerKind kind,  
         int? limit, 
+        Duration? updateAge,
         CancellationToken c)
     {
         using var activity = ActivitySource.StartActivity();
-        
         activity?.SetTag("layer.kind", kind.ToString());
 
-        
         var layerCfg = LayerRegistry.Get(kind);
         if (layerCfg.WfsUrl is null) throw new ArgumentException($"Layer type {kind} has no WfsUrl configured");
         if (layerCfg.WfsLayer is null) throw new ArgumentException($"Layer type {kind} has no WfsLayer configured");
-        var layer = await db.LayerTypes.FindAsync([kind], c) 
-            ?? throw new ArgumentException($"Layer type {kind} not found");
-        
-        
         activity?.SetTag("layer.name", layerCfg.TableName);
         activity?.SetTag("wfs.url", layerCfg.WfsUrl);
+        
+        var layer = await db.LayerTypes.FindAsync([kind], c) 
+            ?? throw new ArgumentException($"Layer type {kind} not found");
 
+        if (layer.FeatureCount > 0 && updateAge is not null && clock.Now - layer.LastDownloaded < updateAge)
+        {
+            logger.LogInformation("Skipped downloading because layer {kind} was updated more recently than {updateAge}", kind, updateAge);
+            return;
+        }
 
         // Build PostgreSQL connection string for ogr2ogr
         var builder = new Npgsql.NpgsqlConnectionStringBuilder(_pgConnectionString);
@@ -168,7 +199,8 @@ public class GdalWfsDownloadService(
             "Successfully downloaded WFS layer {LayerName} with {FeatureCount} features",
             layerCfg.TableName, layer.FeatureCount);
     }
-    
+
+
     private async Task<long> GetFeatureCountAsync(string tableName, CancellationToken c)
     {
         var sql = $"SELECT COUNT(*) FROM {LayerRegistry.Schema}.{tableName}";
@@ -193,4 +225,7 @@ public class GdalWfsDownloadService(
             "Created index {IndexName} on {TableName}.{ColumnName}",
             indexName, tableName, columnName);
     }
+    
+    
+
 }
