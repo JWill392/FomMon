@@ -21,7 +21,7 @@
     //"module": "Node16",
     "useDefineForClassFields": true,
     "lib": [
-      "ES2024",
+      "ESNext",
       "dom"
     ],
     "baseUrl": ".", // workaround terradraw deep import issue

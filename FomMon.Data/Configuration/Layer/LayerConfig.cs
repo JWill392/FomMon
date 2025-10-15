@@ -11,7 +11,9 @@ public record LayerConfig(
     string? WfsUrl,
     string? WfsLayer,
     string TileSource,
-    string Color)
+    string Color,
+    string GeometryType,
+    string Attribution)
 {
     // Override properties to add validation
     public string TableName { get; init; } = SqlUtil.ValidateSqlIdentifier(TableName);

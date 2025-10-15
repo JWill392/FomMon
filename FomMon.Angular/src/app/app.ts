@@ -5,11 +5,12 @@ import {MenuComponent} from "../components/menu/menu";
 import {Snackbar} from '../components/shared/snackbar/snackbar';
 import {ErrorService} from '../components/shared/error.service';
 import {NotificationService} from '../components/shared/snackbar/notification.service';
-import {LayerService} from '../components/layer/layer.service';
+import {LayerTypeService} from '../components/layer-type/layer-type.service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {UserService} from '../components/user/user.service';
 import {AreaAlertService} from "../components/area-alert/area-alert.service";
 import {ProjectService} from "../components/project/project.service";
+import {AreaWatchService} from "../components/area-watch/area-watch.service";
 
 @Injectable()
 @Component({
@@ -28,11 +29,11 @@ import {ProjectService} from "../components/project/project.service";
   `],
 })
 export class App {
-  private layerService = inject(LayerService)
+  private layerService = inject(LayerTypeService)
   private projectService = inject(ProjectService)
 
   private userService = inject(UserService)
-  private areaWatchService = inject(LayerService)
+  private areaWatchService = inject(AreaWatchService)
   private areaAlertService = inject(AreaAlertService)
 
   private errorService = inject(ErrorService)

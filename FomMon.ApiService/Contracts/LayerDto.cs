@@ -7,7 +7,10 @@ public record LayerDto(
     string Name,
     string Description,
     string TileSource,
-    string Color
+    string Color,
+    string GeometryType,
+    string Attribution,
+    string SourceIdColumn
     )
 {
     

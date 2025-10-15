@@ -29,10 +29,10 @@ import {AreaWatchService} from '../area-watch/area-watch.service';
 import {AreaWatchList} from '../area-watch/area-watch-list/area-watch-list';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {UserService} from '../user/user.service';
-import {LayerKind} from '../layer/layer.model';
-import {LayerService} from '../layer/layer.service';
+import {LayerTypeService} from '../layer-type/layer-type.service';
 import {AreaAlertService} from "../area-alert/area-alert.service";
 import {ProjectService} from "../project/project.service";
+import {LayerKind} from "../layer-type/layer-type.model";
 
 interface LayerGroup {
   id: string;
@@ -64,13 +64,14 @@ export class MapComponent implements AfterViewInit {
   map!: Map;
   private mapState = signal<'idle' | 'ready' | 'loaded'>('idle');
 
+  private layerService = inject(LayerTypeService);
+  private projectService = inject(ProjectService);
 
+  private userService = inject(UserService);
   private areaWatchService = inject(AreaWatchService);
   private areaAlertService = inject(AreaAlertService);
-  private layerService = inject(LayerService);
-  private projectService = inject(ProjectService);
+
   private destroyRef = inject(DestroyRef);
-  private userService = inject(UserService);
 
   isAuthenticated = this.userService.state.isReady;
 
@@ -152,9 +153,9 @@ export class MapComponent implements AfterViewInit {
       this.addBaseLayers();
       this.addDomainLayers();
       this.registerInteractivity();
-      this.mapState.set("loaded");
-
       this.registerDrawing();
+
+      this.mapState.set("loaded");
     });
 
     // areawatch data updates after load

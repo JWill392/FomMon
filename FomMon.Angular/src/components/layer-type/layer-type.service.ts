@@ -1,4 +1,4 @@
-import {Layer} from './layer.model';
+import {LayerType} from './layer-type.model';
 import {computed, inject, Injectable, signal} from '@angular/core';
 import {tap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
@@ -9,13 +9,13 @@ import {Observable} from "rxjs";
 @Injectable({
   providedIn: 'root'
 })
-export class LayerService implements ServiceWithState {
+export class LayerTypeService implements ServiceWithState {
   private http = inject(HttpClient);
 
   private _state = new ServiceLoadState();
   readonly state = this._state.asReadonly();
 
-  private _data = signal<Layer[] | undefined>(undefined);
+  private _data = signal<LayerType[] | undefined>(undefined);
   readonly data = this._data.asReadonly();
 
   byKind = computed(() =>
@@ -25,7 +25,7 @@ export class LayerService implements ServiceWithState {
 
   initialize$(): Observable<never> {
     let loadUrl = '/api/layer';
-    return this.http.get<Layer[]>(loadUrl)
+    return this.http.get<LayerType[]>(loadUrl)
       .pipe(
         tap((body) => {
             if (!Array.isArray(body)) {

@@ -1,0 +1,74 @@
+<mgl-vector-source
+        [id]="layer().kind"
+        [tiles]="[url()]"
+        [attribution]="layer().attribution"
+        [promoteId]="layer().sourceIdColumn"
+>
+  <!-- Polygon Fill layer -->
+  @if (layer().geometryType === 'POLYGON') {
+    <mgl-layer
+            [id]="layer().tileSource"
+            type="fill"
+            [source]="layer().kind"
+            [sourceLayer]="layer().tileSource"
+            [paint]="{
+            'fill-color': [
+              'case',
+              ['boolean', ['feature-state', 'selected'], false], '#FFB347',
+              layer().color
+            ],
+            'fill-opacity': [
+              'case',
+              ['boolean', ['feature-state', 'hover'], false], 0.7,
+              0.5
+            ]
+          }"
+    ></mgl-layer>
+
+    <!-- Polygon outline layer -->
+    <mgl-layer
+            [id]="layer().tileSource + '-outline'"
+            type="line"
+            [source]="layer().kind"
+            [sourceLayer]="layer().tileSource"
+            [paint]="{
+          'line-color': [
+              'case',
+              ['boolean', ['feature-state', 'selected'], false], '#F58F00',
+              ['boolean', ['feature-state', 'alert'], false], '#f54a00',
+              layer().color
+            ],
+          'line-width': [
+            'case',
+            ['boolean', ['feature-state', 'selected'], false], 3,
+            ['boolean', ['feature-state', 'hover'], false], 2,
+            1
+          ],
+          'line-opacity': 0.8
+        }"
+    ></mgl-layer>
+  } @else if (layer().geometryType === 'LINESTRING') {
+
+    <!-- Line layer -->
+    <mgl-layer
+            [id]="layer().tileSource + '-line'"
+            type="line"
+            [source]="layer().kind"
+            [sourceLayer]="layer().tileSource"
+            [minzoom]="8"
+            [paint]="{
+          'line-color': layer().color,
+          'line-width': [
+            'case',
+            ['boolean', ['feature-state', 'selected'], false], 3,
+            ['boolean', ['feature-state', 'hover'], false], 2,
+            2
+          ],
+          'line-dasharray': [2, 0.5],
+          'line-opacity': 0.8,
+
+        }"
+    ></mgl-layer>
+  }
+
+</mgl-vector-source>

@@ -11,7 +11,7 @@ import {
 import {AreaWatch} from '../area-watch.model';
 import {AreaWatchService} from '../area-watch.service';
 import {NotificationService} from '../../shared/snackbar/notification.service';
-import {LayerService} from '../../layer/layer.service';
+import {LayerTypeService} from '../../layer-type/layer-type.service';
 import {LocalState} from "../../shared/local-state";
 
 @Component({
@@ -22,7 +22,7 @@ import {LocalState} from "../../shared/local-state";
 })
 export class AreaWatchCard implements AfterViewInit, OnInit {
   awService = inject(AreaWatchService);
-  layerService = inject(LayerService);
+  layerService = inject(LayerTypeService);
   notService = inject(NotificationService);
 
   data = input.required<AreaWatch>();

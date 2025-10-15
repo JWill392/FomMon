@@ -7,14 +7,14 @@ import {ServiceLoadState} from "../shared/service-load-state";
 import {tap} from "rxjs/operators";
 import {LocalState} from "../shared/local-state";
 import {UserService} from "../user/user.service";
-import {LayerService} from "../layer/layer.service";
+import {LayerTypeService} from "../layer-type/layer-type.service";
 
 
 @Injectable({providedIn: 'root'})
 export class AreaAlertService implements ServiceWithState {
   private http = inject(HttpClient);
   private userService = inject(UserService);
-  private layerService = inject(LayerService);
+  private layerService = inject(LayerTypeService);
 
   private _state = new ServiceLoadState();
   readonly state = this._state.asReadonly();

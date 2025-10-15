@@ -4,8 +4,9 @@ import {AreaWatchService} from '../area-watch.service';
 import {AreaWatchAdd} from '../area-watch.model';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {NotificationService} from '../../shared/snackbar/notification.service';
-import {Layer, LayerKind} from '../../layer/layer.model';
-import {LayerService} from '../../layer/layer.service';
+
+import {LayerTypeService} from '../../layer-type/layer-type.service';
+import {LayerKind} from "../../layer-type/layer-type.model";
 
 @Component({
   selector: 'app-area-watch-add',
@@ -16,7 +17,7 @@ import {LayerService} from '../../layer/layer.service';
   styleUrl: './area-watch-add.component.css'
 })
 export class AreaWatchAddComponent {
-  layerService = inject(LayerService);
+  layerService = inject(LayerTypeService);
 
   form = new FormGroup({
     name: new FormControl<string>('', {

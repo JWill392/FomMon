@@ -1,6 +1,7 @@
-import {LayerKind} from "../layer/layer.model";
+
 import {Geometry} from "geojson";
 import {LocalStateItem} from "../shared/local-state";
+import {LayerKind} from "../layer-type/layer-type.model";
 
 export interface AreaAlert extends LocalStateItem{
   id: number,

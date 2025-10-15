@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using FomMon.Data.Shared;
+using NetTopologySuite.IO;
 
 namespace FomMon.Data.Configuration.Layer;
 
@@ -26,7 +27,9 @@ public static class LayerRegistry
                 WfsUrl: "https://openmaps.gov.bc.ca/geo/pub/wfs?service=WFS",
                 WfsLayer: "pub:WHSE_FOREST_TENURE.FOM_CUTBLOCK_SP",
                 TileSource: "fom_cutblock",
-                Color: "#A5124D"
+                Color: "#A5124D",
+                GeometryType: "POLYGON",
+                Attribution: "Forest Operations Map NRS BC"
             ),
             new(
                 Kind: new LayerKind("FomRoad"),
@@ -37,7 +40,9 @@ public static class LayerRegistry
                 WfsUrl: "https://openmaps.gov.bc.ca/geo/pub/wfs?service=WFS",
                 WfsLayer: "pub:WHSE_FOREST_TENURE.FOM_ROAD_SECTION_SP",
                 TileSource: "fom_road",
-                Color: "#7691BC"
+                Color: "#7691BC",
+                GeometryType: "LINESTRING",
+                Attribution: "Forest Operations Map NRS BC"
             ),
             new(
                 Kind: new LayerKind("FomRetention"),
@@ -48,7 +53,9 @@ public static class LayerRegistry
                 WfsUrl: "https://openmaps.gov.bc.ca/geo/pub/wfs?service=WFS",
                 WfsLayer: "pub:WHSE_FOREST_TENURE.FOM_WLDLFE_TREE_RETNTN_AREA_SP",
                 TileSource: "fom_retention",
-                Color: "#80D39B"
+                Color: "#80D39B",
+                GeometryType: "POLYGON",
+                Attribution: "Forest Operations Map NRS BC"
             ),
         ];
         ByKind = All.ToDictionary(k=>k.Kind);
