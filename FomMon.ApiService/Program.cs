@@ -13,8 +13,6 @@ using Extensions = FomMon.ServiceDefaults.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//var isDesignTime = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
-
 builder.AddServiceDefaults();
 builder.Services.AddProblemDetails();
 //builder.Services.AddOpenApi(); does not play nicely with NetTopology
@@ -98,7 +96,8 @@ WfsDownloadJobExtensions.ConfigureJobs();
 app.UseExceptionHandler();
 
 // TESTING: Simulate network latency
-if (app.Environment.IsDevelopment() && builder.Configuration.GetSection("Testing:IncomingDelay") is {} delayCfg)
+if (app.Environment.IsDevelopment() && 
+    builder.Configuration.GetSection("Testing:IncomingDelay") is {} delayCfg)
 {
     Int32.TryParse(delayCfg["FromMs"], out var fromMs);
     Int32.TryParse(delayCfg["ToMs"], out var toMs);

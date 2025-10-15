@@ -33,20 +33,29 @@ public static class WfsDownloadJobExtensions
      
     public static void ConfigureJobs()
     {
-        var delay = Duration.Zero;
+        string? parentJobId = null;
+        int i = 0;
         foreach (var layerKind in LayerRegistry.All.Where(l => l.WfsUrl is not null).Select(l => l.Kind))
         {
             RecurringJob.AddOrUpdate<GdalWfsDownloadJob>(
                 $"{nameof(GdalWfsDownloadJob.DownloadToDbAsync)}.{layerKind}", 
                 x => x.DownloadToDbAsync(layerKind, null, Duration.FromHours(11), CancellationToken.None), 
-                Cron.Daily);
+                Cron.Daily(7, (i*10) % 60));
+            
             
             // run immediately once
-            BackgroundJob.Schedule<GdalWfsDownloadJob>(
-                x => x.DownloadToDbAsync(layerKind, null, Duration.FromHours(11), CancellationToken.None),
-                delay.ToTimeSpan());
+            if (parentJobId is null)
+            {
+                parentJobId = BackgroundJob.Enqueue<GdalWfsDownloadJob>(x =>
+                    x.DownloadToDbAsync(layerKind, null, Duration.FromHours(11), CancellationToken.None));
+            }
+            else
+            {
+                parentJobId = BackgroundJob.ContinueJobWith<GdalWfsDownloadJob>(parentJobId,
+                    x => x.DownloadToDbAsync(layerKind, null, Duration.FromHours(11), CancellationToken.None));
+            }
 
-            delay += Duration.FromMinutes(2); // crude rate limiting 
+            i++;
         }
     }
 
