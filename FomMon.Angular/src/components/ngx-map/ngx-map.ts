@@ -178,9 +178,7 @@ export class NgxMap {
     }
 
     const LAYER_INTERACTIVITY: LayerInteractivity[] = [
-      { id: 'project-points', selectable: true, hoverable: true, clickable: true },
       { id: 'fom_cutblock', selectable: true, hoverable: true, clickable: true },
-      { id: 'project-clusters', hoverable: true, clickable: true, clusterZoom: true },
       { id: 'area-watch', selectable: true, hoverable: true, clickable: true },
     ];
 
@@ -220,24 +218,6 @@ export class NgxMap {
       }
     });
 
-    // Cluster zoom on click
-    this.map.on('click', getLayerIdsBy('clusterZoom'), async (e) => {
-      if (!this.map || e.defaultPrevented) return;
-
-      const features = this.map.queryRenderedFeatures(e.point, {
-        layers: getLayerIdsBy('clusterZoom'),
-      });
-      const f = features[0];
-      const clusterId = f.properties['cluster_id'];
-      const source = this.map.getSource(f.source as string) as GeoJSONSource;
-      const zoom = await source.getClusterExpansionZoom(clusterId);
-      const geometry = f.geometry as { type: string; coordinates: [number, number] };
-
-      this.map.easeTo({
-        center: geometry.coordinates,
-        zoom,
-      });
-    });
 
     // Cursor changes
     this.map.on('mouseenter', getLayerIdsBy('clickable'), () => {

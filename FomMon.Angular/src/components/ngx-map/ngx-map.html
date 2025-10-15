@@ -1,3 +1,7 @@
+@if (isAuthenticated()) {
+  <app-area-watch-list></app-area-watch-list>
+}
+
 <mgl-map class="map"
          [style]="'https://demotiles.maplibre.org/style.json'"
          [center]="defaultCenter()"
@@ -71,6 +75,3 @@
   <app-base-layer-switcher/>
 </mgl-map>
 
-@if (isAuthenticated()) {
-  <app-area-watch-list></app-area-watch-list>
-}
