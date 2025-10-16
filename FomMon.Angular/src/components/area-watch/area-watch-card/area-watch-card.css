@@ -3,7 +3,6 @@
   background: #f2f4f0;
   padding: 5px 10px;
 
-
   cursor: pointer;
   transition: background 0.1s ease;
 }
@@ -26,6 +25,7 @@
 
 
 .layer-thumb {
+  flex: 0 0 auto;
   width: 64px;
   height: 64px;
   border-radius: 6px;
@@ -37,13 +37,22 @@
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  /*justify-content: left;*/
   align-items: flex-start;
   gap: 10px;
+
+  overflow: hidden;
 }
 
+.label-container .name {
+  width: 100%;
+  overflow: hidden;
+  text-wrap: nowrap;
+  text-overflow: ellipsis;
+}
+
+
 .action-container {
-  /*flex: 0 1 auto;*/
+  flex: 0 0 auto;
   display: flex;
   justify-content: flex-end;
   align-items: center;
