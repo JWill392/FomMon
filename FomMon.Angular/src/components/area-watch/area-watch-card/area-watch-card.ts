@@ -5,14 +5,13 @@ import {
   input,
   ViewChild,
   AfterViewInit,
-  DestroyRef,
   OnInit
 } from '@angular/core';
 import {AreaWatch} from '../area-watch.model';
 import {AreaWatchService} from '../area-watch.service';
 import {NotificationService} from '../../shared/snackbar/notification.service';
 import {LayerTypeService} from '../../layer-type/layer-type.service';
-import {LocalState} from "../../shared/local-state";
+import {LocalState} from "../../shared/service/local-state";
 
 @Component({
   selector: 'app-area-watch-card',
@@ -60,7 +59,7 @@ export class AreaWatchCard implements AfterViewInit, OnInit {
   delete() {
     this.awService.delete$(this.data())
       .subscribe({
-        next: (d) => {
+        next: (_) => {
           this.notService.pushMessage(`Watch '${this.data().name}' deleted`);
           },
         error: (e) => {

@@ -1,4 +1,4 @@
-import {Component, computed, input} from '@angular/core';
+import {Component, input} from '@angular/core';
 import {LayerComponent, VectorSourceComponent} from "@maplibre/ngx-maplibre-gl";
 import {LayerType} from "../../../layer-type/layer-type.model";
 

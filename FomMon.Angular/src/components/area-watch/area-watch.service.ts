@@ -4,10 +4,10 @@ import {AreaWatch, AreaWatchAdd, AreaWatchDto} from './area-watch.model';
 import {catchError, map, tap} from 'rxjs/operators';
 import {EMPTY, Observable, throwError} from 'rxjs';
 import {v4 as uuidv4} from 'uuid';
-import {ServiceLoadState} from "../shared/service-load-state";
+import {ServiceLoadState} from "../shared/service/service-load-state";
 import {UserService} from "../user/user.service";
-import {LoadState, ServiceState, ServiceWithState} from "../shared/service-state";
-import {LocalState} from "../shared/local-state";
+import {LoadState, ServiceWithState} from "../shared/service/service-state";
+import {LocalState} from "../shared/service/local-state";
 
 
 @Injectable({providedIn: 'root'})

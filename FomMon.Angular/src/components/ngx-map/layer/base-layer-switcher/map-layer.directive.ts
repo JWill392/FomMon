@@ -1,4 +1,4 @@
-import {Directive, Input, OnInit, OnDestroy, inject, signal, input, InputSignal} from '@angular/core';
+import {Directive, OnInit, OnDestroy, inject, signal, input, InputSignal} from '@angular/core';
 import { LayerComponent } from '@maplibre/ngx-maplibre-gl';
 import {LayerSpecification} from "maplibre-gl";
 import {MapLayerService} from "../map-layer.service";

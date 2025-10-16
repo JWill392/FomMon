@@ -1,5 +1,4 @@
 import {Signal} from '@angular/core';
-import {Observable} from "rxjs";
 
 
 export interface ServiceWithState {

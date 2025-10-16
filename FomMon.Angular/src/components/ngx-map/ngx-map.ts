@@ -1,6 +1,6 @@
 import {
   ChangeDetectionStrategy,
-  Component, computed,
+  Component,
   DestroyRef,
   effect,
   inject,
@@ -10,8 +10,6 @@ import {
 import {
   MapComponent as MglMapComponent,
   LayerComponent,
-  VectorSourceComponent,
-  GeoJSONSourceComponent,
   ControlComponent,
   ScaleControlDirective,
   NavigationControlDirective,

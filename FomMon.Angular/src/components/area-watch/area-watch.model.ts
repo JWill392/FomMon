@@ -1,5 +1,5 @@
 ﻿import {Geometry} from 'geojson';
-import {LocalState, LocalStateItem} from "../shared/local-state";
+import {LocalState, LocalStateItem} from "../shared/service/local-state";
 import {LayerKind} from "../layer-type/layer-type.model";
 
 export interface AreaWatch extends LocalStateItem {

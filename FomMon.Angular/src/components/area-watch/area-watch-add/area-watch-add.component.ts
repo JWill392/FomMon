@@ -1,10 +1,8 @@
-import {Component, DestroyRef, inject, OnInit} from '@angular/core';
-import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
+import {Component, DestroyRef, inject} from '@angular/core';
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {AreaWatchService} from '../area-watch.service';
-import {AreaWatchAdd} from '../area-watch.model';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {NotificationService} from '../../shared/snackbar/notification.service';
-
 import {LayerTypeService} from '../../layer-type/layer-type.service';
 import {LayerKind} from "../../layer-type/layer-type.model";
 
@@ -48,7 +46,7 @@ export class AreaWatchAddComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
           next: (result) => {
-            this.notService.pushMessage(`Watch '${addAw.name}' added`);
+            this.notService.pushMessage(`Watch '${result.name}' added`);
             // TODO navigate back to list
           },
           error: error => {

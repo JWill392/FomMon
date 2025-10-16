@@ -1,6 +1,6 @@
 import {inject, Injectable, signal} from "@angular/core";
-import {ServiceState, ServiceWithState} from "../shared/service-state";
-import {ServiceLoadState} from "../shared/service-load-state";
+import {ServiceWithState} from "../shared/service/service-state";
+import {ServiceLoadState} from "../shared/service/service-load-state";
 import {HttpClient} from "@angular/common/http";
 import {Project} from "./project.model";
 import {Observable} from "rxjs";

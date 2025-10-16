@@ -1,8 +1,6 @@
-import {Component, DestroyRef, effect, Inject, inject, Injectable, signal} from '@angular/core';
-import { RouterModule } from '@angular/router';
+import {DestroyRef, effect, inject, Injectable, signal} from '@angular/core';
 import Keycloak from 'keycloak-js';
 import {
-  HasRolesDirective,
   KEYCLOAK_EVENT_SIGNAL,
   KeycloakEventType,
   typeEventArgs,
@@ -13,8 +11,8 @@ import {HttpClient} from "@angular/common/http";
 import {catchError, map, tap} from "rxjs/operators";
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {throwError} from 'rxjs';
-import {LoadState, ServiceWithState} from "../shared/service-state";
-import {ServiceLoadState} from "../shared/service-load-state";
+import {ServiceWithState} from "../shared/service/service-state";
+import {ServiceLoadState} from "../shared/service/service-load-state";
 
 @Injectable({
   providedIn: 'root'
@@ -58,7 +56,7 @@ export class UserService implements ServiceWithState {
       .pipe(
         catchError((error) => throwError(() => {
           this.logout();
-          return new Error("Failed to log in");
+          return new Error("Failed to log in", error);
         })),
         map(u => UserFactory.fromJson(u)),
         tap({

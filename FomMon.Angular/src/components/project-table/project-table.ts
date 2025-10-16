@@ -1,4 +1,4 @@
-import { Component, Input, signal, computed, ChangeDetectionStrategy, Inject, inject } from '@angular/core';
+import { Component, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
 import {ProjectService} from "../project/project.service";
 

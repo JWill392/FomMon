@@ -2,8 +2,8 @@ import {LayerType} from './layer-type.model';
 import {computed, inject, Injectable, signal} from '@angular/core';
 import {tap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
-import {ServiceLoadState} from "../shared/service-load-state";
-import {ServiceWithState} from "../shared/service-state";
+import {ServiceLoadState} from "../shared/service/service-load-state";
+import {ServiceWithState} from "../shared/service/service-state";
 import {Observable} from "rxjs";
 
 @Injectable({

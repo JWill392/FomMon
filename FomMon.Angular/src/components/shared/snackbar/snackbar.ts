@@ -1,8 +1,6 @@
-import {Component, effect, signal, DestroyRef, inject, computed} from '@angular/core';
-import {Subscription, timer} from 'rxjs';
-import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
+import {Component, inject} from '@angular/core';
+import {toSignal} from '@angular/core/rxjs-interop';
 import {NotificationService} from './notification.service';
-import {Snack} from './snack.model';
 
 @Component({
   selector: 'app-snackbar',

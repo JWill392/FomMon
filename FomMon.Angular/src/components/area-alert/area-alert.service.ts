@@ -1,11 +1,11 @@
-import {computed, DestroyRef, effect, inject, Injectable, signal} from "@angular/core";
+import {computed, effect, inject, Injectable, signal} from "@angular/core";
 import {AreaAlert} from "./area-alert.model";
 import {Observable} from "rxjs";
-import {ServiceState, ServiceWithState} from "../shared/service-state";
+import {ServiceWithState} from "../shared/service/service-state";
 import {HttpClient} from "@angular/common/http";
-import {ServiceLoadState} from "../shared/service-load-state";
+import {ServiceLoadState} from "../shared/service/service-load-state";
 import {tap} from "rxjs/operators";
-import {LocalState} from "../shared/local-state";
+import {LocalState} from "../shared/service/local-state";
 import {UserService} from "../user/user.service";
 import {LayerTypeService} from "../layer-type/layer-type.service";
 
@@ -14,7 +14,6 @@ import {LayerTypeService} from "../layer-type/layer-type.service";
 export class AreaAlertService implements ServiceWithState {
   private http = inject(HttpClient);
   private userService = inject(UserService);
-  private layerService = inject(LayerTypeService);
 
   private _state = new ServiceLoadState();
   readonly state = this._state.asReadonly();

@@ -1,4 +1,4 @@
-import {Injectable, InputSignal, signal} from '@angular/core';
+import {Injectable, signal} from '@angular/core';
 import {LayerSpecification} from "maplibre-gl";
 
 export interface LayerInfo {

@@ -1,4 +1,4 @@
-import {Component, DestroyRef, effect, inject, Injectable, signal} from '@angular/core';
+import {Component, DestroyRef, effect, inject, Injectable} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import {MenuComponent} from "../components/menu/menu";
@@ -35,9 +35,6 @@ export class App {
   private userService = inject(UserService)
   private areaWatchService = inject(AreaWatchService)
   private areaAlertService = inject(AreaAlertService)
-
-  private errorService = inject(ErrorService)
-  private notService = inject(NotificationService)
 
   private destroyRef = inject(DestroyRef);
 

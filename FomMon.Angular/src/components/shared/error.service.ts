@@ -1,4 +1,4 @@
-import {Injectable, ErrorHandler, signal} from '@angular/core';
+import {Injectable, ErrorHandler} from '@angular/core';
 
 @Injectable({
   providedIn: 'root'

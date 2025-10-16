@@ -1,4 +1,4 @@
-import {Component, computed, inject} from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {ControlComponent} from "@maplibre/ngx-maplibre-gl";
 import {MapLayerService} from "../map-layer.service";
 

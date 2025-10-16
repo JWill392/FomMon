@@ -1,4 +1,4 @@
-import { Point, Feature, FeatureCollection, Geometry } from 'geojson';
+import { Point } from 'geojson';
 
 export interface Project {
   id: number;
