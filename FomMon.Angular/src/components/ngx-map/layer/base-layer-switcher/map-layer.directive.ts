@@ -1,7 +1,7 @@
 import {Directive, OnInit, OnDestroy, inject, signal, input, InputSignal} from '@angular/core';
 import { LayerComponent } from '@maplibre/ngx-maplibre-gl';
 import {LayerSpecification} from "maplibre-gl";
-import {MapLayerService} from "../map-layer.service";
+import {LayerCategory, MapLayerService} from "../map-layer.service";
 
 @Directive({
   selector: 'mgl-layer[appMapLayer]',
@@ -11,6 +11,9 @@ export class MapLayerDirective implements OnInit, OnDestroy {
   thumbnailImg = input.required<string>();
   name = input.required<string>();
   initiallyVisible = input<boolean>(false);
+
+  category = input.required<LayerCategory>();
+  group = input.required<string>();
 
   additionalLayout = input<LayerSpecification['layout']>();
 
@@ -35,7 +38,9 @@ export class MapLayerDirective implements OnInit, OnDestroy {
       name: this.name(),
       thumbnailImg: this.thumbnailImg(),
       visible: this.initiallyVisible(),
-      layout: this.additionalLayout()
+      layout: this.additionalLayout(),
+      category: this.category(),
+      group: this.group(),
     });
 
   }

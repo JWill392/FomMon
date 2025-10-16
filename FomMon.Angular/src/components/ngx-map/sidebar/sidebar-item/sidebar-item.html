@@ -1,0 +1,7 @@
+<a [routerLink]="routerLink()"
+   class="action-item"
+   routerLinkActive="action-item-router-active"
+   [class.collapsed]="collapsed()">
+  <img class="action-item-icon" [src]="icon()"  [alt]="title()"/>
+  <label class="action-item-title" [class.collapsed]="collapsed()">{{title()}}</label>
+</a>

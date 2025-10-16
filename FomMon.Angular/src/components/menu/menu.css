@@ -28,7 +28,7 @@
   margin-top: 4px;
   border-bottom: transparent 4px solid;
 }
-.action-item-active {
+.action-item-router-active {
   border-bottom-color: #d6e9c6;
 }
 

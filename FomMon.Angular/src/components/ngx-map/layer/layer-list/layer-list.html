@@ -1,0 +1,8 @@
+@for (layer of featureLayers(); track layer.id) {
+  <div class="layer-thumb"
+       [class.active]="layer.visible"
+       (click)="toggleGroupVisibility(layer.group)">
+    <img [src]="layer.thumbnailImg" [alt]="layer.name" />
+    <span>{{ layer.name }}</span>
+  </div>
+}

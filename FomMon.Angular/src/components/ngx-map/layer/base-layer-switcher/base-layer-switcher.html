@@ -1,12 +1,10 @@
-<mgl-control position="bottom-left">
-  <div class="base-layer-switcher">
-    @for (layer of layers(); track layer.id) {
-      <div class="layer-thumb"
-           [class.active]="layer.visible"
-           (click)="selectLayer(layer.id)">
-        <img [src]="layer.thumbnailImg" [alt]="layer.name" />
-        <span>{{ layer.name }}</span>
-      </div>
-    }
-  </div>
-</mgl-control>
+<div class="base-layer-switcher">
+  @for (layer of baseLayers(); track layer.id) {
+    <div class="layer-thumb"
+         [class.active]="layer.visible"
+         (click)="selectBaseLayer(layer.id)">
+      <img [src]="layer.thumbnailImg" [alt]="layer.name" />
+      <span>{{ layer.name }}</span>
+    </div>
+  }
+</div>

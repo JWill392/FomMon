@@ -331,6 +331,7 @@ namespace FomMon.Data.Migrations
                         .HasColumnName("display_name");
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("citext")
                         .HasColumnName("email");
@@ -358,8 +359,7 @@ namespace FomMon.Data.Migrations
 
                     b.HasIndex("Email")
                         .IsUnique()
-                        .HasDatabaseName("ix_users_email")
-                        .HasFilter("\"email\" IS NOT NULL");
+                        .HasDatabaseName("ix_users_email");
 
                     b.HasIndex("Issuer", "Subject")
                         .IsUnique()

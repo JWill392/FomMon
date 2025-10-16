@@ -1,0 +1,83 @@
+:host {
+  /*width: 250px;*/
+  font-family: "Open Sans", sans-serif;
+}
+
+.sidebar {
+  display: flex;
+
+  /*overflow: hidden;*/
+  /*min-width: 250px;*/
+  /*transition: width 0.3s ease-in-out;*/
+  height: 100%;
+
+}
+/* NOTE: see styles.css hack to make maplibre control container full height */
+
+
+nav {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f9fa;
+  justify-content: space-between;
+  border-right: 1px solid #dee2e6;
+
+  transition: width 0.2s ease-in-out;
+  overflow: hidden;
+}
+
+nav.collapsed {
+  width: 40px;
+}
+nav:not(.collapsed) {
+  width: 140px;
+}
+
+.top-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+
+
+
+.nav-collapse-button {
+  display: flex;
+  justify-content: end;
+  padding: 5px;
+
+  transform: rotate(0deg);
+}
+.nav-collapse-button.collapsed img {
+  transition: transform 0.2s ease-in-out;
+  transform: rotate(180deg);
+}
+.nav-collapse-button:not(.collapsed) img {
+  transition: transform 0.2s ease-in-out;
+  transform: rotate(0deg);
+}
+
+
+.content {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: #dff0d8;
+
+  transition: width 0.3s ease-in-out;
+  overflow: scroll;
+  scrollbar-gutter: stable;
+}
+.content:not(.closed) {
+  width: 250px;
+}
+.content.closed {
+  width: 0;
+}

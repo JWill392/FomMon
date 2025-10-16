@@ -1,3 +1,15 @@
+:host {
+  display: block;
+  padding: 0 20px;
+}
+
+header {
+  margin: 10px 0;
+}
+header h1 {
+  margin: 10px 0;
+}
+
 .credentials {
   list-style: none;
   padding: 0;
@@ -13,6 +25,7 @@
   border: 1px solid #ddd;
   display: flex;
   align-items: center;
+  width: fit-content;
 }
 
 .credentials li strong {

@@ -1,0 +1,24 @@
+<div class="sidebar" [class.collapsed]="navCollapsed()">
+  <nav [class.collapsed]="navCollapsed()">
+    <div class="top-container">
+    <div class="header-logo"><img src="assets/header-logo.png" alt="Logo" /></div>
+    <div class="actions">
+
+      <app-sidebar-item title="Layers" icon="icon-layers" routerLink="layers" [collapsed]="navCollapsed()" />
+      <app-sidebar-item title="Watches" icon="icon-area-watch" routerLink="area-watch-list" *kaHasRoles="['spa-user']"
+                        [collapsed]="navCollapsed()" />
+
+    </div>
+    </div>
+    <div class="bottom-container">
+      <div class="nav-collapse-button" (click)="toggleNav()" [class.collapsed]="navCollapsed()">
+        <img src="assets/icon-collapse" alt="Collapse" />
+      </div>
+    </div>
+  </nav>
+  <div class="content" [class.closed]="contentClosed()">
+    <router-outlet />
+  </div>
+</div>
+
+

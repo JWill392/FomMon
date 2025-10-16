@@ -1,11 +1,14 @@
-import {Injectable, signal} from '@angular/core';
+import {computed, Injectable, signal} from '@angular/core';
 import {LayerSpecification} from "maplibre-gl";
 
+export type LayerCategory = "base"|"feature";
 export interface LayerInfo {
   id: string;
   name: string;
   thumbnailImg: string;
   visible: boolean;
+  category: LayerCategory;
+  group: string;
   layout: LayerSpecification['layout'];
 }
 
@@ -14,8 +17,10 @@ export interface LayerInfo {
 })
 export class MapLayerService {
   private _layers = signal<LayerInfo[]>([]);
-  public readonly layers = this._layers.asReadonly();
+  public readonly baseLayers = computed(() => this._layers().filter(l => l.category === 'base'));
+  public readonly featureLayers = computed(() => this._layers().filter(l => l.category === 'feature'));
 
+  // TODO change to list of groups w/ layer children
   registerLayer(layer: LayerInfo): void {
     this._layers.update(layers => [
       ...layers,
@@ -28,13 +33,23 @@ export class MapLayerService {
     this._layers.update(layers => layers.filter(l => l.id !== id));
   }
 
-  selectLayer(id: string): void {
+  selectBaseLayer(group: string): void {
     this._layers.update(layers =>
-       layers.map(l => ({
+       layers.map(l => l.category !== 'base' ? l : ({
           ...l,
-          visible: l.id === id,
-          layout: this.layoutWithVisibility(l.layout, l.id === id)
+          visible: l.group === group,
+          layout: this.layoutWithVisibility(l.layout, l.group === group)
        }))
+    );
+  }
+
+  toggleVisibility(group: string): void {
+    this._layers.update(layers =>
+      layers.map(l => l.group !== group ? l : ({
+        ...l,
+        visible: !l.visible,
+        layout: this.layoutWithVisibility(l.layout, !l.visible)
+      }))
     );
   }
 

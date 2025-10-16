@@ -7,3 +7,18 @@
 html, body {
   font-family: 'Open Sans', sans-serif;
 }
+
+
+/* hack to make sidebar control full height*/
+.maplibregl-ctrl-top-left .maplibregl-ctrl  {
+  margin: 0 !important;
+  height: 100%;
+}
+
+.maplibregl-ctrl-top-left {
+  height: 100%;
+}
+
+.maplibregl-control-container {
+  height: 100%;
+}

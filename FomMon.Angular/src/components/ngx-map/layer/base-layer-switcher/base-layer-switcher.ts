@@ -13,9 +13,9 @@ import {MapLayerService} from "../map-layer.service";
 export class BaseLayerSwitcher {
   private mapLayerService = inject(MapLayerService);
 
-  protected layers = this.mapLayerService.layers;
+  protected baseLayers = this.mapLayerService.baseLayers;
 
-  protected selectLayer(id: string): void {
-    this.mapLayerService.selectLayer(id);
+  protected selectBaseLayer(id: string): void {
+    this.mapLayerService.selectBaseLayer(id);
   }
 }

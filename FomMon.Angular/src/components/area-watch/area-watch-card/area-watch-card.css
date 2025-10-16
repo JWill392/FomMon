@@ -1,7 +1,11 @@
 :host {
-  display: block;
   background: #f2f4f0;
-  padding: 5px 10px;
+  padding: 5px;
+
+  display: flex;
+  align-items: stretch;
+  justify-content: normal;
+  gap: 10px;
 
   cursor: pointer;
   transition: background 0.1s ease;
@@ -16,12 +20,6 @@
 
 
 
-.topbar {
-  display: flex;
-  align-items: stretch;
-  justify-content: normal;
-  gap: 10px;
-}
 
 
 .layer-thumb {
@@ -66,34 +64,40 @@
   padding: 0;
   color: transparent;
 }
-.topbar:hover .action-item {
-  padding: 5px 8px;
-  background: #b6bdb2;
-  color: #214221;
-  font-size: 16px;
-  font-weight: bolder;
+:host:hover .action-item {
+  padding: 3px 6px;
+  background: #cccfca;
+  color: #9c0f14;
+  font-size: 14px;
+  font-weight: bold;
   border-radius: 50%;
   cursor: pointer;
-  transition: color 0.1s ease;
+  transition: color 0.1s ease, background-color 0.1s ease;
 }
 
 h3 {
-  font-size: 0.8em;
+  font-size: 12px;
   font-weight: bold;
   color: #214221;
   margin-top: 4px;
 }
 
+.layers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
 
 .badge {
   list-style: none;
-  font-size: 0.6em;
+  font-size: 9px;
   background: #eaffd3;
   color: #306030;
-  padding: 2px 4px;
+  padding: 4px 6px;
   border-radius: 4px;
   font-weight: bold;
   text-transform: uppercase;
+  line-height: 1;
   /*TODO overflow*/
 }
 

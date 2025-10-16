@@ -1,0 +1,49 @@
+.action-item {
+  cursor: pointer;
+  display: flex;
+
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  text-wrap: nowrap;
+}
+.action-item-icon {
+  width: 20px;
+  height: 20px;
+  overflow: hidden;
+  min-width: 20px;
+}
+.action-item-title {
+  font-size: 14px;
+  color: #333;
+  font-family: "Open Sans", sans-serif;
+  display: block;
+  cursor: pointer;
+
+  transition: color 0.2s ease-in-out;
+}
+
+.action-item-title:not(.collapsed) {
+  color: #333;
+}
+.action-item-title.collapsed {
+  color: transparent;
+}
+
+.action-item {
+  color: #333;
+  text-decoration: none;
+  padding: 5px;
+}
+.action-item:hover {
+  color: #5a6c52;
+}
+.action-item:active {
+  color: #111;
+}
+
+.action-item-router-active {
+  color: #5a6c52;
+  background: #dff0d8;
+  font-weight: bold;
+}

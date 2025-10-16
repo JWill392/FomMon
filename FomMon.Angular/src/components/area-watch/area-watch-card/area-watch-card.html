@@ -1,16 +1,16 @@
-<div class="topbar">
+
   <img class="layer-thumb" #thumb [src]="'assets/areawatch-thumb-dummy.png'" alt="{{ data().name }}" />
 
   <div class="label-container">
     <h3 class="name">{{ data().name }}</h3>
-    <ul class="layers">
+    <div class="layers">
 
       @if (layerService.state.isReady()) {
         @for (l of data()?.layers; track l) {
           <li class="badge"><p>{{ layerService.byKind()[l].name }}</p></li>
         }
       }
-    </ul>
+    </div>
   </div>
 
   <div class="action-container">
@@ -20,4 +20,3 @@
 
 <!--    TODO icon, throbber while deleting-->
   </div>
-</div>

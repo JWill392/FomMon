@@ -1,9 +1,3 @@
-@if (isAuthenticated()) {
-  <div class="sidebar">
-    <app-area-watch-list></app-area-watch-list>
-  </div>
-}
-
 <mgl-map class="map"
          [style]="'https://demotiles.maplibre.org/style.json'"
          [center]="defaultCenter()"
@@ -13,6 +7,7 @@
          (mapLoad)="onMapLoad($event)"
          [dragRotate]="false"
          [touchZoomRotate]="false"
+         [attributionControl]="{compact: true}"
 >
   <!-- OSM Base Layer -->
   <mgl-raster-source
@@ -34,6 +29,8 @@
         [thumbnailImg]="'assets/layer-preview-osm-base.png'"
         [name]="'Map'"
         [initiallyVisible]="true"
+        category="base"
+        group="osm-base"
     />
   </mgl-raster-source>
 
@@ -55,6 +52,8 @@
         appMapLayer
         [thumbnailImg]="'assets/layer-preview-esri-imagery.png'"
         [name]="'Satellite'"
+        category="base"
+        group="esri-imagery"
     />
   </mgl-raster-source>
 
@@ -66,14 +65,26 @@
 
   <app-area-watch-layer/>
 
+
+  <mgl-control position="top-right">
+    <app-base-layer-switcher/>
+  </mgl-control>
+
   <!-- Controls -->
   <mgl-control mglNavigation [showCompass]="false" position="top-right"></mgl-control>
   <mgl-control mglScale [maxWidth]="100" unit="metric" position="bottom-right"></mgl-control>
-  <mgl-control mglGeolocate
-               [positionOptions]="{ enableHighAccuracy: false }"
-               [trackUserLocation]="true"
-  ></mgl-control>
+<!--  <mgl-control mglGeolocate-->
+<!--               [positionOptions]="{ enableHighAccuracy: false }"-->
+<!--               [trackUserLocation]="true"-->
+<!--  ></mgl-control>-->
 
-  <app-base-layer-switcher/>
+
+
+  <mgl-control position="top-left" >
+    <app-sidebar>
+      <router-outlet></router-outlet>
+    </app-sidebar>
+  </mgl-control>
+
 </mgl-map>
 

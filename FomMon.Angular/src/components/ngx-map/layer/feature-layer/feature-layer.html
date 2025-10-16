@@ -6,8 +6,9 @@
 >
   <!-- Polygon Fill layer -->
   @if (layer().geometryType === 'POLYGON') {
+    @let idFill = layer().tileSource;
     <mgl-layer
-            [id]="layer().tileSource"
+            [id]="idFill"
             type="fill"
             [source]="layer().kind"
             [sourceLayer]="layer().tileSource"
@@ -23,11 +24,19 @@
               0.5
             ]
           }"
+            [layout]="mapLayerService.getLayout(idFill)"
+            appMapLayer
+            category="feature"
+            [group]="layer().kind"
+            [name]="layer().name"
+            [thumbnailImg]="'assets/layer-preview-osm-base.png'"
+            [initiallyVisible]="true"
     ></mgl-layer>
 
     <!-- Polygon outline layer -->
+    @let idOutline = layer().tileSource + '-outline';
     <mgl-layer
-            [id]="layer().tileSource + '-outline'"
+            [id]="idOutline"
             type="line"
             [source]="layer().kind"
             [sourceLayer]="layer().tileSource"
@@ -46,12 +55,20 @@
           ],
           'line-opacity': 0.8
         }"
+            [layout]="mapLayerService.getLayout(idOutline)"
+            appMapLayer
+            category="feature"
+            [group]="layer().kind"
+            [name]="layer().name"
+            [thumbnailImg]="'assets/layer-preview-osm-base.png'"
+            [initiallyVisible]="true"
     ></mgl-layer>
   } @else if (layer().geometryType === 'LINESTRING') {
 
     <!-- Line layer -->
+    @let idLine = layer().tileSource + '-line';
     <mgl-layer
-            [id]="layer().tileSource + '-line'"
+            [id]="idLine"
             type="line"
             [source]="layer().kind"
             [sourceLayer]="layer().tileSource"
@@ -68,6 +85,13 @@
           'line-opacity': 0.8,
 
         }"
+            [layout]="mapLayerService.getLayout(idLine)"
+            appMapLayer
+            category="feature"
+            [group]="layer().kind"
+            [name]="layer().name"
+            [thumbnailImg]="'assets/layer-preview-osm-base.png'"
+            [initiallyVisible]="true"
     ></mgl-layer>
   }
 

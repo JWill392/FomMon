@@ -1,37 +1,30 @@
+import {ChangeDetectionStrategy, Component, DestroyRef, effect, inject, input, signal,} from '@angular/core';
 import {
-  ChangeDetectionStrategy,
-  Component,
-  DestroyRef,
-  effect,
-  inject,
-  input,
-  signal,
-} from '@angular/core';
-import {
-  MapComponent as MglMapComponent,
-  LayerComponent,
+  AttributionControlDirective,
   ControlComponent,
-  ScaleControlDirective,
+  LayerComponent,
+  MapComponent as MglMapComponent,
   NavigationControlDirective,
-  GeolocateControlDirective, RasterSourceComponent,
+  RasterSourceComponent,
+  ScaleControlDirective,
 } from '@maplibre/ngx-maplibre-gl';
-import type {Map as MapLibreMap, FeatureIdentifier, MapGeoJSONFeature, GeoJSONSource, LayerSpecification} from 'maplibre-gl';
-import { HttpClient } from '@angular/common/http';
-import { MaplibreTerradrawControl } from '@watergis/maplibre-gl-terradraw';
-import { AreaWatchService } from '../area-watch/area-watch.service';
-import { AreaWatchList } from '../area-watch/area-watch-list/area-watch-list';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { UserService } from '../user/user.service';
-import { LayerTypeService } from '../layer-type/layer-type.service';
-import { AreaAlertService } from '../area-alert/area-alert.service';
-import { CommonModule } from '@angular/common';
+import type {FeatureIdentifier, Map as MapLibreMap, MapGeoJSONFeature} from 'maplibre-gl';
+import {HttpClient} from '@angular/common/http';
+import {MaplibreTerradrawControl} from '@watergis/maplibre-gl-terradraw';
+import {AreaWatchService} from '../area-watch/area-watch.service';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {UserService} from '../user/user.service';
+import {LayerTypeService} from '../layer-type/layer-type.service';
+import {AreaAlertService} from '../area-alert/area-alert.service';
+import {CommonModule} from '@angular/common';
 import {AreaWatchLayer} from "./layer/area-watch-layer/area-watch-layer";
 import {FeatureLayer} from "./layer/feature-layer/feature-layer";
 import {MapLayerDirective} from "./layer/base-layer-switcher/map-layer.directive";
 import {BaseLayerSwitcher} from "./layer/base-layer-switcher/base-layer-switcher";
 import {MapLayerService} from "./layer/map-layer.service";
 import {LayerKind} from "../layer-type/layer-type.model";
-
+import {Sidebar} from "./sidebar/sidebar";
+import {RouterOutlet} from "@angular/router";
 
 
 @Component({
@@ -40,17 +33,18 @@ import {LayerKind} from "../layer-type/layer-type.model";
     CommonModule,
     MglMapComponent,
     LayerComponent,
-    AreaWatchList,
     ControlComponent,
     ScaleControlDirective,
     NavigationControlDirective,
-    GeolocateControlDirective,
     RasterSourceComponent,
     AreaWatchLayer,
     FeatureLayer,
     MapLayerDirective,
     BaseLayerSwitcher,
     MapLayerDirective,
+    Sidebar,
+    RouterOutlet,
+    AttributionControlDirective,
   ],
   templateUrl: './ngx-map.html',
   styleUrl: './ngx-map.css',
@@ -121,12 +115,18 @@ export class NgxMap {
   // Usage: use tile/sprite/glyph URLs like "local://./tileserver/project_features.1/{z}/{x}/{y}"
   transformLocalUrl = (url: string) => {
     if (/^local:\/\//.test(url)) {
-      return { url: new URL(url.substr('local://'.length), location.href).href };
+      const protocol = window.location.protocol;
+      const host = window.location.host;
+
+      const strippedUrl = url.substr('local://'.length);
+
+      return {url: new URL(protocol + '//' + host + '/' + strippedUrl).href};
     }
     return { url };
   };
 
 
+  // TODO refactor to a signal to enter 'drawing mode' with drawFinish callback.  perhaps rxJs.
   private registerDrawing() {
     if (!this.map) return;
 

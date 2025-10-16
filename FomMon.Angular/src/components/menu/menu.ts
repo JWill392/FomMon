@@ -1,6 +1,6 @@
 import { Component, inject, Signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import {User} from "../../types/user";
+import {User} from "../user/user";
 import {UserService} from '../user/user.service';
 
 @Component({
