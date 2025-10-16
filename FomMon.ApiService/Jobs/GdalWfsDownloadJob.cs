@@ -1,13 +1,18 @@
+using System.Data.Common;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using FomMon.ApiService.Infrastructure;
 using FomMon.Data.Configuration.Layer;
 using FomMon.Data.Contexts;
+using FomMon.Data.Models;
 using FomMon.Data.Shared;
 using FomMon.ServiceDefaults;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
 using NodaTime;
+using Npgsql;
 using OpenTelemetry.Trace;
 
 namespace FomMon.ApiService.Jobs;
@@ -41,7 +46,6 @@ public static class WfsDownloadJobExtensions
                 $"{nameof(GdalWfsDownloadJob.DownloadToDbAsync)}.{layerKind}", 
                 x => x.DownloadToDbAsync(layerKind, null, Duration.FromHours(11), CancellationToken.None), 
                 Cron.Daily(7, (i*10) % 60));
-            
             
             // run immediately once
             if (parentJobId is null)
@@ -98,9 +102,6 @@ public class GdalWfsDownloadJob(
         configuration.GetConnectionString("application") ??
         throw new Exception("Connection string not found");
 
-   
-    
-    
     
     public async Task DownloadToDbAsync(
         LayerKind kind,  
@@ -111,28 +112,75 @@ public class GdalWfsDownloadJob(
         using var activity = ActivitySource.StartActivity();
         activity?.SetTag("layer.kind", kind.ToString());
 
-        var layerCfg = LayerRegistry.Get(kind);
-        if (layerCfg.WfsUrl is null) throw new ArgumentException($"Layer type {kind} has no WfsUrl configured");
-        if (layerCfg.WfsLayer is null) throw new ArgumentException($"Layer type {kind} has no WfsLayer configured");
-        activity?.SetTag("layer.name", layerCfg.TableName);
-        activity?.SetTag("wfs.url", layerCfg.WfsUrl);
-        
-        var layer = await db.LayerTypes.FindAsync([kind], c) 
-            ?? throw new ArgumentException($"Layer type {kind} not found");
-
-        if (layer.FeatureCount > 0 && updateAge is not null && clock.Now - layer.LastDownloaded < updateAge)
+        await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
-            logger.LogInformation("Skipped downloading because layer {kind} was updated more recently than {updateAge}", kind, updateAge);
-            return;
+            await using var transaction = await db.Database.BeginTransactionAsync(c);
+
+            var layerCfg = LayerRegistry.Get(kind);
+            if (layerCfg.WfsUrl is null) throw new ArgumentException($"Layer type {kind} has no WfsUrl configured");
+            if (layerCfg.WfsLayer is null)
+                throw new ArgumentException($"Layer type {kind} has no WfsLayer configured");
+            activity?.SetTag("layer.name", layerCfg.TableName);
+            activity?.SetTag("wfs.url", layerCfg.WfsUrl);
+
+            var layer = await TryGetLayerWithLock(kind, c);
+            if (layer is null)
+            {
+                logger.LogWarning("Skipped downloading because layer {kind} is currently being downloaded.", kind);
+                return;
+            }
+
+
+            if (layer.FeatureCount > 0 && updateAge is not null && clock.Now - layer.LastDownloaded < updateAge)
+            {
+                logger.LogInformation(
+                    "Skipped downloading because layer {kind} was updated more recently than {updateAge}", kind,
+                    updateAge);
+                return;
+            }
+
+            await RunOgr2Ogr(limit, layerCfg, activity, layer, c);
+            
+            
+            await transaction.CommitAsync(c);
+        });
+    }
+
+    /// <summary>
+    /// Try to get exclusive lock on layer.  Returns null if lock is not available.
+    /// </summary>
+    private async Task<LayerType?> TryGetLayerWithLock(LayerKind kind, CancellationToken c)
+    { 
+        try
+        {
+            await db.Database.ExecuteSqlRawAsync($@"
+                SELECT 1
+                FROM {LayerRegistry.Schema}.layer_types
+                WHERE kind = @kind
+                FOR UPDATE NOWAIT
+             ",
+                new NpgsqlParameter("kind", kind.ToString())
+            );
+            return await db.LayerTypes.FindAsync([kind], c);
         }
+        catch (PostgresException ex)
+        {
+            // NOTE: error logged by EF Core can be ignored
+            logger.LogDebug("Failed to get lock on layer {kind}: {ex}", kind, ex.Message);
+            return null;
+        }
+    }
 
+    private async Task RunOgr2Ogr(int? limit, LayerConfig layerCfg, Activity? activity, LayerType layer,
+        CancellationToken c)
+    {
         // Build PostgreSQL connection string for ogr2ogr
-        var builder = new Npgsql.NpgsqlConnectionStringBuilder(_pgConnectionString);
+        var builder = new NpgsqlConnectionStringBuilder(_pgConnectionString);
         var pgString = $"PG:host={builder.Host} port={builder.Port} dbname={builder.Database} " +
-                      $"user={builder.Username} password={builder.Password} " +
-                      $"active_schema={LayerRegistry.Schema}";
+                       $"user={builder.Username} password={builder.Password} " +
+                       $"active_schema={LayerRegistry.Schema}";
 
-        
+            
         // Build ogr2ogr arguments
         var args = new List<string>
         {
@@ -148,14 +196,14 @@ public class GdalWfsDownloadJob(
             "-lco", $"GEOMETRY_NAME={LayerRegistry.GeometryColumn}",
             "-lco", $"SCHEMA={LayerRegistry.Schema}",
             "-lco", $"DESCRIPTION={layerCfg.Description}",
-            
+                
         };
         if (limit.HasValue)
         {
             args.Add("-limit");
             args.Add(limit.Value.ToString());
         }
-        
+            
 
         // Execute ogr2ogr with timeout
         using (var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(c))
@@ -182,7 +230,7 @@ public class GdalWfsDownloadJob(
                 activity?.AddException(ex);
                 throw;
             }
-        
+            
             if (result.ExitCode != 0)
             {
                 activity?.SetStatus(ActivityStatusCode.Error, $"Exit code: {result.ExitCode}");
@@ -190,20 +238,20 @@ public class GdalWfsDownloadJob(
                     $"ogr2ogr failed with exit code {result.ExitCode}. Error: {result.Error}");
             }
         }
-        
-        
+            
+            
         // ogr2ogr generates its own PK, so index real source key
         // (tried -preserve_fid, -lco FID=column, even sql select objectid as fid/ogc_fid etc.
         await CreateIndexAsync(LayerRegistry.Schema, layerCfg.TableName, layerCfg.SourceIdColumn, c);
-        
+            
         // Update metadata
         layer.FeatureCount = await GetFeatureCountAsync(layerCfg.TableName, c);
         layer.LastDownloaded = clock.Now;
-        
+            
         activity?.SetTag("feature.count", layer.FeatureCount);
-        
+            
         await db.SaveChangesAsync(c);
-        
+            
         logger.LogInformation(
             "Successfully downloaded WFS layer {LayerName} with {FeatureCount} features",
             layerCfg.TableName, layer.FeatureCount);

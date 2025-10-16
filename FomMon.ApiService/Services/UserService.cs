@@ -120,8 +120,11 @@ public sealed class UserService(AppDbContext db,
         mapper.Map(dto, user); // patch fields
         //user.Email = dto.Email;
         //user.DisplayName = dto.DisplayName;
-        logger.LogInformation($"Updating user {user.Id} with email {user.Email} state: {db.Entry(user)} user is tracked: {
-            ReferenceEquals(user, db.ChangeTracker.Entries<User>().FirstOrDefault(u => u.Entity.Id == user.Id)?.Entity)}");
+        if (db.Entry(user).State != EntityState.Unchanged)
+        {
+            logger.LogInformation($"Updating user {user.Id} with email {user.Email} state: {db.Entry(user)} user is tracked: {
+                ReferenceEquals(user, db.ChangeTracker.Entries<User>().FirstOrDefault(u => u.Entity.Id == user.Id)?.Entity)}");    
+        }
         try
         {
             await db.SaveChangesAsync(c);
