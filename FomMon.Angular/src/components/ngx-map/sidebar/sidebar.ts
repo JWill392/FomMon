@@ -23,6 +23,7 @@ export class Sidebar implements OnInit {
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
   private userService = inject(UserService);
+  protected isAuthenticated = this.userService.state.isReady;
 
   navCollapsed = signal<boolean>(false);
   contentClosed = signal<boolean>(true);

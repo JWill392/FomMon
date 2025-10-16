@@ -3,7 +3,7 @@
   <a routerLink="/map/area-watch-add" class="action-item">Add</a>
 </div>
 <div>
-  @if (awService.state.isLoading()) {
+  @if (awService.state.isLoading() || awService.state.isIdle()) {
     <p>Loading...</p>
 
   } @else if (awService.state.isError()) {
