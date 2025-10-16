@@ -62,7 +62,7 @@ export class NgxMap {
   defaultCenter = input<[number, number]>([-120.5, 50.6]);
   defaultZoom = input<[number]>([7]);
 
-  map?: MapLibreMap;
+  readonly map = signal<MapLibreMap | undefined>(undefined);
 
   private layerService = inject(LayerTypeService);
   private userService = inject(UserService);
@@ -85,7 +85,9 @@ export class NgxMap {
     effect(() => {
       const layerList = this.layerService.data();
       const layerAlertMap = this.areaAlertService.byLayer();
-      if (!layerList || !layerAlertMap) return;
+      const map = this.map();
+
+      if (!map || !layerList || !layerAlertMap) return;
 
       for (const layer of layerList) {
         const kind = layer.kind;
@@ -101,15 +103,15 @@ export class NgxMap {
           id: id,
         });
 
-        oldAlerts.difference(newAlerts).forEach((id) => this.map.setFeatureState(getId(id), { alert: false }))
-        newAlerts.difference(oldAlerts).forEach((id) => this.map.setFeatureState(getId(id), { alert: true }))
+        oldAlerts.difference(newAlerts).forEach((id) => this.map().setFeatureState(getId(id), { alert: false }))
+        newAlerts.difference(oldAlerts).forEach((id) => this.map().setFeatureState(getId(id), { alert: true }))
         this.alertedFeatures.set(kind, newAlerts);
       }
     });
   }
 
   onMapLoad(map: MapLibreMap) {
-    this.map = map;
+    this.map.set(map);
 
     this.registerDrawing();
     this.registerInteractivity();
@@ -134,7 +136,7 @@ export class NgxMap {
       modes: ['polygon', 'select', 'delete-selection', 'render'],
       open: true,
     });
-    this.map.addControl(drawControl);
+    this.map().addControl(drawControl);
 
     const draw = drawControl.getTerraDrawInstance();
     if (!draw) {
@@ -188,19 +190,19 @@ export class NgxMap {
     let selectedFeatureId: FeatureIdentifier | null = null;
 
     // Selection on click
-    this.map.on('click', getLayerIdsBy('selectable'), async (e) => {
+    this.map().on('click', getLayerIdsBy('selectable'), async (e) => {
       if (!this.map) return;
       const priorSelected = selectedFeatureId;
 
       if (e.features && e.features.length > 0) {
         selectedFeatureId = this.getIdentifier(e.features[0]);
-        this.map.setFeatureState(selectedFeatureId, { selected: true });
+        this.map().setFeatureState(selectedFeatureId, { selected: true });
       } else {
         selectedFeatureId = null;
       }
 
       if (priorSelected) {
-        this.map.setFeatureState(priorSelected, { selected: false });
+        this.map().setFeatureState(priorSelected, { selected: false });
         if (this.identifierEquals(priorSelected, selectedFeatureId)) {
           selectedFeatureId = null;
         }
@@ -210,40 +212,40 @@ export class NgxMap {
     });
 
     // Deselect on empty click
-    this.map.on('click', async (e) => {
+    this.map().on('click', async (e) => {
       if (!this.map || e.defaultPrevented) return;
       if (selectedFeatureId) {
-        this.map.setFeatureState(selectedFeatureId, { selected: false });
+        this.map().setFeatureState(selectedFeatureId, { selected: false });
         selectedFeatureId = null;
       }
     });
 
 
     // Cursor changes
-    this.map.on('mouseenter', getLayerIdsBy('clickable'), () => {
-      if (this.map) this.map.getCanvas().style.cursor = 'pointer';
+    this.map().on('mouseenter', getLayerIdsBy('clickable'), () => {
+      if (this.map) this.map().getCanvas().style.cursor = 'pointer';
     });
-    this.map.on('mouseleave', getLayerIdsBy('clickable'), () => {
-      if (this.map) this.map.getCanvas().style.cursor = '';
+    this.map().on('mouseleave', getLayerIdsBy('clickable'), () => {
+      if (this.map) this.map().getCanvas().style.cursor = '';
     });
 
     // Hover states
     getLayerIdsBy('hoverable').forEach((layerId) => {
       let hoveredFeatureId: FeatureIdentifier | null = null;
-      this.map!.on('mousemove', layerId, (e: any) => {
+      this.map().on('mousemove', layerId, (e: any) => {
         if (!this.map) return;
         if (e.features && e.features.length > 0) {
           if (hoveredFeatureId) {
-            this.map.setFeatureState(hoveredFeatureId, { hover: false });
+            this.map().setFeatureState(hoveredFeatureId, { hover: false });
           }
           hoveredFeatureId = this.getIdentifier(e.features[0]);
-          this.map.setFeatureState(hoveredFeatureId, { hover: true });
+          this.map().setFeatureState(hoveredFeatureId, { hover: true });
         }
       });
 
-      this.map!.on('mouseleave', layerId, () => {
+      this.map().on('mouseleave', layerId, () => {
         if (!this.map || !hoveredFeatureId) return;
-        this.map.setFeatureState(hoveredFeatureId, { hover: false });
+        this.map().setFeatureState(hoveredFeatureId, { hover: false });
         hoveredFeatureId = null;
       });
     });

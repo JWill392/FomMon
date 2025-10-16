@@ -10,15 +10,13 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
   selector: 'app-area-watch-list',
   imports: [
     AreaWatchCard,
-    RouterLink,
-    AreaWatchAddComponent
+    RouterLink
   ],
   templateUrl: './area-watch-list.html',
   styleUrl: './area-watch-list.css'
 })
 export class AreaWatchList implements OnInit {
   awService = inject(AreaWatchService);
-  notService = inject(NotificationService);
   destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
