@@ -18,10 +18,11 @@ export class LayerTypeService implements ServiceWithState {
   private _data = signal<LayerType[] | undefined>(undefined);
   readonly data = this._data.asReadonly();
 
-  byKind = computed(() =>
+  byKind = computed(() => this._data() === undefined ? undefined :
       Object.fromEntries(this.data()?.map(l => [l.kind, l]))
     );
-  kinds = computed(() => this.data()?.map(l => l.kind));
+  kinds = computed(() =>  this._data() === undefined ? undefined :
+    this.data()?.map(l => l.kind));
 
   initialize$(): Observable<never> {
     let loadUrl = '/api/layer';
