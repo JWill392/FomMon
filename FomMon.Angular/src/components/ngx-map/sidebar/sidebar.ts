@@ -1,11 +1,9 @@
 import {Component, effect, inject, OnInit, signal} from '@angular/core';
 import {ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet} from "@angular/router";
 import {filter} from "rxjs";
-import {HasRolesDirective} from "keycloak-angular";
-import {ControlComponent} from "@maplibre/ngx-maplibre-gl";
 import {UserService} from "../../user/user.service";
 import {SidebarItem} from "./sidebar-item/sidebar-item";
-import {NgIconComponent, NgIconStack, provideIcons} from "@ng-icons/core";
+import {NgIconComponent, provideIcons} from "@ng-icons/core";
 import {
   phosphorStack,
   phosphorBinoculars,
@@ -22,8 +20,7 @@ import {
     RouterOutlet,
     RouterLink,
     SidebarItem,
-    NgIconComponent,
-    NgIconStack
+    NgIconComponent
   ],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',

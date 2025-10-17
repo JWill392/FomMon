@@ -1,6 +1,5 @@
 import {ChangeDetectionStrategy, Component, DestroyRef, effect, inject, input, signal,} from '@angular/core';
 import {
-  AttributionControlDirective,
   ControlComponent,
   LayerComponent,
   MapComponent as MglMapComponent,
@@ -44,7 +43,6 @@ import {RouterOutlet} from "@angular/router";
     MapLayerDirective,
     Sidebar,
     RouterOutlet,
-    AttributionControlDirective,
   ],
   templateUrl: './ngx-map.html',
   styleUrl: './ngx-map.css',
