@@ -10,7 +10,7 @@
   /*min-width: 250px;*/
   /*transition: width 0.3s ease-in-out;*/
   height: 100%;
-  background: #dff0d8;
+  background: #f3f3f3;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
 /* NOTE: see styles.css hack to make maplibre control container full height */
@@ -20,7 +20,6 @@ nav {
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  background-color: #f8f9fa;
   justify-content: space-between;
   border-right: 1px solid #dee2e6;
 
@@ -39,7 +38,6 @@ nav:not(.collapsed) {
 .top-container {
   display: flex;
   flex-direction: column;
-  gap: 5px;
 }
 
 .header-logo {
@@ -54,7 +52,7 @@ nav:not(.collapsed) {
   line-height: 0;
 
   text-wrap: nowrap;
-  padding-top: 4px;
+  padding: 4px 0;
   width: 100%;
 }
 .header-logo-text {
@@ -111,7 +109,6 @@ hr {
 .content {
   flex: 1 1 auto;
   min-width: 0;
-  background: #dff0d8;
 
   transition: width 0.2s ease-in-out;
   overflow: auto;
