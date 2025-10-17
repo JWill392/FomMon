@@ -5,21 +5,32 @@ import {HasRolesDirective} from "keycloak-angular";
 import {ControlComponent} from "@maplibre/ngx-maplibre-gl";
 import {UserService} from "../../user/user.service";
 import {SidebarItem} from "./sidebar-item/sidebar-item";
+import {NgIconComponent, NgIconStack, provideIcons} from "@ng-icons/core";
+import {
+  phosphorStack,
+  phosphorBinoculars,
+  phosphorCaretLeft,
+  phosphorMagnifyingGlass
+} from "@ng-icons/phosphor-icons/regular";
+import {
+  phosphorTreeEvergreenFill
+} from "@ng-icons/phosphor-icons/fill";
 
 @Component({
   selector: 'app-sidebar',
   imports: [
     RouterOutlet,
     RouterLink,
-    RouterLinkActive,
-    HasRolesDirective,
-    ControlComponent,
-    SidebarItem
+    SidebarItem,
+    NgIconComponent,
+    NgIconStack
   ],
   templateUrl: './sidebar.html',
-  styleUrl: './sidebar.css'
+  styleUrl: './sidebar.css',
+  providers: [provideIcons({phosphorStack, phosphorBinoculars, phosphorCaretLeft,
+    phosphorTreeEvergreenFill, phosphorMagnifyingGlass})]
 })
-export class Sidebar implements OnInit {
+class Sidebar implements OnInit {
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
   private userService = inject(UserService);
@@ -60,3 +71,5 @@ export class Sidebar implements OnInit {
   }
 
 }
+
+export default Sidebar

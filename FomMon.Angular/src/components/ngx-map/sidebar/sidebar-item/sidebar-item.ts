@@ -1,11 +1,13 @@
-import {Component, input, Input} from '@angular/core';
+import {Component, input, Input, output} from '@angular/core';
 import {RouterLink, RouterLinkActive} from "@angular/router";
+import {NgIcon, provideIcons} from "@ng-icons/core";
 
 @Component({
   selector: 'app-sidebar-item',
   imports: [
     RouterLink,
-    RouterLinkActive
+    RouterLinkActive,
+    NgIcon
   ],
   templateUrl: './sidebar-item.html',
   styleUrl: './sidebar-item.css'
@@ -13,7 +15,8 @@ import {RouterLink, RouterLinkActive} from "@angular/router";
 export class SidebarItem {
   icon = input.required<string>();
   title = input.required<string>();
-  routerLink = input.required<string>();
   collapsed = input.required<boolean>();
+
+  routerLink = input.required<string>();
 
 }

@@ -23,7 +23,7 @@ import {MapLayerDirective} from "./layer/base-layer-switcher/map-layer.directive
 import {BaseLayerSwitcher} from "./layer/base-layer-switcher/base-layer-switcher";
 import {MapLayerService} from "./layer/map-layer.service";
 import {LayerKind} from "../layer-type/layer-type.model";
-import {Sidebar} from "./sidebar/sidebar";
+import Sidebar from "./sidebar/sidebar";
 import {RouterOutlet} from "@angular/router";
 
 

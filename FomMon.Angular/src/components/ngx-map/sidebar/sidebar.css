@@ -43,18 +43,49 @@ nav:not(.collapsed) {
 }
 
 .header-logo {
-  padding: 5px 10px;
-  border-bottom: 1px solid #dee2e6;
-  min-height: 42px;
+  display: flex;
+  flex-direction: column;
+  color: #1e351e;
 }
-.header-logo img {
+.header-logo-icons {
+  display: block;
+  overflow: hidden;
+  line-height: 0;
+
+  text-wrap: nowrap;
+  padding-top: 4px;
   width: 100%;
+}
+.header-logo-text {
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1em;
+  letter-spacing: -1px;
+  padding: 0 5px;
+  font-family: 'Montserrat', sans-serif;
+  overflow: hidden;
+  transition: height 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.header-logo-text.collapsed {
+  height: 0;
+  color: transparent;
+}
+.header-logo-text:not(.collapsed) {
+  height: 40px;
+}
+
+
+hr {
+  border: none;
+  height: 2px;
+  background-color: #dee2e6;
 }
 
 .actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
 }
 
 
@@ -63,17 +94,18 @@ nav:not(.collapsed) {
 .nav-collapse-button {
   display: flex;
   justify-content: end;
-  padding: 5px;
+  padding: 10px;
+  font-size: 24px;
+  cursor: pointer;
 }
-.nav-collapse-button.collapsed img {
+.nav-collapse-button.collapsed ng-icon {
   transition: transform 0.2s ease-in-out;
   transform: rotate(180deg);
 }
-.nav-collapse-button:not(.collapsed) img {
+.nav-collapse-button:not(.collapsed) ng-icon {
   transition: transform 0.2s ease-in-out;
   transform: rotate(0deg);
 }
-
 
 .content {
   flex: 1 1 auto;
