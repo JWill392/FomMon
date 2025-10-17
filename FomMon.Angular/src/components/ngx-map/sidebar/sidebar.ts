@@ -1,5 +1,5 @@
 import {Component, effect, inject, OnInit, signal} from '@angular/core';
-import {ActivatedRoute, NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet} from "@angular/router";
+import {ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet} from "@angular/router";
 import {filter} from "rxjs";
 import {UserService} from "../../user/user.service";
 import {SidebarItem} from "./sidebar-item/sidebar-item";
@@ -56,7 +56,7 @@ class Sidebar implements OnInit {
 
   private updateContentVisibility() {
     const hasActiveChild = this.activatedRoute.children.length > 0;
-    this.contentClosed.update(v => !hasActiveChild);
+    this.contentClosed.update(_ => !hasActiveChild);
   }
 
   // TODO check if router content empty; hide

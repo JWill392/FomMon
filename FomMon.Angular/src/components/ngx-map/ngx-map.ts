@@ -69,7 +69,7 @@ export class NgxMap {
 
 
   private readonly alertedFeatures = new Map<LayerKind, Set<string>>();
-  constructor(private http: HttpClient) {
+  constructor() {
 
     // Set alert feature states
     effect(() => {
@@ -158,9 +158,6 @@ export class NgxMap {
       draw.setMode('select');
     });
 
-    draw.on('change', (e: any) => {
-      // TODO handle changes
-    });
   }
 
   // TODO use NGX hover
