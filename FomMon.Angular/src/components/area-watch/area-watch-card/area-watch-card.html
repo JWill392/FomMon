@@ -15,7 +15,7 @@
 
   <div class="action-container">
     @if (data().localState === LocalState.added) {
-      <button class="action-item action-delete" (click)="delete()">✖</button>
+      <ng-icon name="phosphorXCircleFill" class="action-item action-delete" (click)="delete()" />
     }
 
 <!--    TODO icon, throbber while deleting-->

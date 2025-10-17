@@ -12,12 +12,17 @@ import {AreaWatchService} from '../area-watch.service';
 import {NotificationService} from '../../shared/snackbar/notification.service';
 import {LayerTypeService} from '../../layer-type/layer-type.service';
 import {LocalState} from "../../shared/service/local-state";
+import {NgIcon, provideIcons} from "@ng-icons/core";
+import {phosphorXCircleFill} from "@ng-icons/phosphor-icons/fill";
 
 @Component({
   selector: 'app-area-watch-card',
-  imports: [],
+  imports: [
+    NgIcon
+  ],
   templateUrl: './area-watch-card.html',
-  styleUrl: './area-watch-card.css'
+  styleUrl: './area-watch-card.css',
+  providers: [provideIcons({phosphorXCircleFill})]
 })
 export class AreaWatchCard implements AfterViewInit, OnInit {
   awService = inject(AreaWatchService);

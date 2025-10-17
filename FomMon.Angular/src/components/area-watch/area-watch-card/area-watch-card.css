@@ -65,12 +65,8 @@
   color: transparent;
 }
 :host:hover .action-item {
-  padding: 3px 6px;
-  background: #cccfca;
-  color: #9c0f14;
-  font-size: 14px;
-  font-weight: bold;
-  border-radius: 50%;
+  color: #333;
+  font-size: 24px;
   cursor: pointer;
   transition: color 0.1s ease, background-color 0.1s ease;
 }
