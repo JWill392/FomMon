@@ -5,14 +5,14 @@
   align-items: center;
   overflow: hidden;
   text-wrap: nowrap;
+
+  padding: 4px 0;
 }
 .action-item-icon {
-  flex: 0 0 40px;
-  width: 30px;
+  flex: 0 0 auto;
+  width: 40px;
   height: 30px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: block;
 }
 .action-item-title {
   font-size: 14px;
@@ -21,7 +21,7 @@
   display: block;
   cursor: pointer;
 
-  transition: color 0.2s ease-in-out;
+  transition: color 0.2s ease-in-out, display 0.2s linear;
 }
 
 .action-item-title:not(.collapsed) {

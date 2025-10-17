@@ -13,6 +13,7 @@ import {
 import {
   phosphorTreeEvergreenFill
 } from "@ng-icons/phosphor-icons/fill";
+import {LocalStorageService} from "../../shared/local-storage.service";
 
 @Component({
   selector: 'app-sidebar',
@@ -31,7 +32,10 @@ class Sidebar implements OnInit {
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
   private userService = inject(UserService);
+  private localStorageService = inject(LocalStorageService);
   protected isAuthenticated = this.userService.state.isReady;
+
+  private readonly localStorageKeyCollapsed = 'sidebar.collapsed';
 
   navCollapsed = signal<boolean>(false);
   contentClosed = signal<boolean>(true);
@@ -43,15 +47,11 @@ class Sidebar implements OnInit {
     ).subscribe(() => {
       this.updateContentVisibility();
     })
-
-    effect(() => {
-      this.userService.state.isReady();
-      this.updateContentVisibility();
-    })
   }
 
   ngOnInit(): void {
     this.updateContentVisibility();
+    this.navCollapsed.set(this.localStorageService.get(this.localStorageKeyCollapsed) ?? false);
   }
 
   private updateContentVisibility() {
@@ -59,12 +59,11 @@ class Sidebar implements OnInit {
     this.contentClosed.update(_ => !hasActiveChild);
   }
 
-  // TODO check if router content empty; hide
 
 
   toggleNav() {
     this.navCollapsed.update(v => !v);
-    // TODO save in local storage
+    this.localStorageService.set(this.localStorageKeyCollapsed, this.navCollapsed())
   }
 
 }

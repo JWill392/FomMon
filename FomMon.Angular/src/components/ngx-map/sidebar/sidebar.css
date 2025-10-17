@@ -29,7 +29,7 @@ nav {
 }
 
 nav.collapsed {
-  width: 40px;
+  width: 41px; /*  to accomodate border-right 1px */
 }
 nav:not(.collapsed) {
   width: 110px;
@@ -46,6 +46,7 @@ nav:not(.collapsed) {
   display: flex;
   flex-direction: column;
   color: #1e351e;
+  cursor: pointer;
 }
 .header-logo-icons {
   display: block;
@@ -65,6 +66,7 @@ nav:not(.collapsed) {
   font-family: 'Montserrat', sans-serif;
   overflow: hidden;
   transition: height 0.2s ease-in-out, color 0.2s ease-in-out;
+  cursor: pointer;
 }
 
 .header-logo-text.collapsed {
@@ -85,7 +87,6 @@ hr {
 .actions {
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
 
 
@@ -113,8 +114,8 @@ hr {
   background: #dff0d8;
 
   transition: width 0.2s ease-in-out;
-  overflow: scroll;
-  scrollbar-gutter: stable;
+  overflow: auto;
+  scrollbar-width: thin;
 }
 .content:not(.closed) {
   width: 250px;
