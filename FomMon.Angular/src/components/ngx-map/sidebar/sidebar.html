@@ -1,7 +1,7 @@
 <div class="sidebar" [class.collapsed]="navCollapsed()">
   <nav [class.collapsed]="navCollapsed()">
     <div class="top-container">
-      <div class="header-logo">
+      <div class="header-logo" routerLink="/map"  [preserveFragment]="true">
         <div class="header-logo-icons">
           <ng-icon name="phosphorTreeEvergreenFill" size="40px" />
 <!--          <ng-icon name="phosphorMagnifyingGlass" size="40px" />-->
@@ -10,11 +10,10 @@
       </div>
       <hr/>
       <div class="actions">
-
-        <app-sidebar-item title="Layers" icon="phosphorStack" routerLink="layers" [collapsed]="navCollapsed()" />
+        <app-sidebar-item title="Layers" icon="phosphorStack" link="layers" [collapsed]="navCollapsed()" />
 
         @if (isAuthenticated()) {
-        <app-sidebar-item title="Watches" icon="phosphorBinoculars" routerLink="area-watch-list"
+        <app-sidebar-item title="Watches" icon="phosphorBinoculars" link="area-watch-list"
                           [collapsed]="navCollapsed()" />
         }
       </div>

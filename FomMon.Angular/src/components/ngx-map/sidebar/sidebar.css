@@ -112,7 +112,7 @@ hr {
   min-width: 0;
   background: #dff0d8;
 
-  transition: width 0.3s ease-in-out;
+  transition: width 0.2s ease-in-out;
   overflow: scroll;
   scrollbar-gutter: stable;
 }

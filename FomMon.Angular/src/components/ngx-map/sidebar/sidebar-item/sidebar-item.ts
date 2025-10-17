@@ -17,6 +17,6 @@ export class SidebarItem {
   title = input.required<string>();
   collapsed = input.required<boolean>();
 
-  routerLink = input.required<string>();
+  link = input.required<string>();
 
 }
