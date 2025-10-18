@@ -1,19 +1,23 @@
-import {Component, computed, inject} from '@angular/core';
+import {Component, computed, inject, OnDestroy} from '@angular/core';
 import {GeoJSONSourceComponent, LayerComponent} from "@maplibre/ngx-maplibre-gl";
 import {FeatureCollection} from "geojson";
 import {AreaWatchService} from "../../../area-watch/area-watch.service";
+import {MapLayerDirective} from "../base-layer-switcher/map-layer.directive";
+import {MapLayerService} from "../map-layer.service";
 
 @Component({
   selector: 'app-area-watch-layer',
   imports: [
     GeoJSONSourceComponent,
-    LayerComponent
+    LayerComponent,
+    MapLayerDirective
   ],
   templateUrl: './area-watch-layer.html',
   styleUrl: './area-watch-layer.css'
 })
 export class AreaWatchLayer {
   private areaWatchService = inject(AreaWatchService);
+  protected mapLayerService = inject(MapLayerService);
 
   protected areaWatchFeatures = computed<FeatureCollection>(() => {
     return {

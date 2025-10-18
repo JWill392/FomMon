@@ -20,6 +20,14 @@
           0.3
         ]
       }"
+
+          [layout]="mapLayerService.getLayout('area-watch')"
+          appMapLayer
+          category="feature"
+          group="area-watches"
+          name="Watches"
+          thumbnailImg="assets/layer-preview-areawatch.png"
+          [initiallyVisible]="true"
   ></mgl-layer>
 
   <mgl-layer
@@ -35,6 +43,13 @@
           1
         ]
       }"
+          [layout]="mapLayerService.getLayout('area-watch-line')"
+          appMapLayer
+          category="feature"
+          group="area-watches"
+          name="Watches"
+          thumbnailImg="assets/layer-preview-areawatch.png"
+          [initiallyVisible]="true"
   ></mgl-layer>
 
   <mgl-layer
@@ -42,15 +57,23 @@
           id="area-watch-name"
           type="symbol"
           [minzoom]="8"
-          [layout]="{
-        'text-field': ['get', 'name'],
-        'text-font': ['Noto Sans Regular'],
-        'text-size': 14
-      }"
+
           [paint]="{
         'text-color': '#3bb2d0',
         'text-halo-color': '#ffffff',
         'text-halo-width': 2
+      }"
+          [layout]="mapLayerService.getLayout('area-watch-name')"
+          appMapLayer
+          category="feature"
+          group="area-watches"
+          name="Watches"
+          thumbnailImg="assets/layer-preview-areawatch.png"
+          [initiallyVisible]="true"
+          [additionalLayout]="{
+        'text-field': ['get', 'name'],
+        'text-font': ['Noto Sans Regular'],
+        'text-size': 14
       }"
   ></mgl-layer>
 </mgl-geojson-source>

@@ -3,17 +3,15 @@ import {MapLayerService} from "../map-layer.service";
 
 @Component({
   selector: 'app-base-layer-switcher',
-  imports: [
-  ],
   templateUrl: './base-layer-switcher.html',
-  styleUrl: './base-layer-switcher.css'
+  styleUrl: './base-layer-switcher.css',
 })
 export class BaseLayerSwitcher {
   private mapLayerService = inject(MapLayerService);
 
-  protected baseLayers = this.mapLayerService.baseLayers;
+  protected baseGroups = this.mapLayerService.baseGroups;
 
-  protected selectBaseLayer(id: string): void {
-    this.mapLayerService.selectBaseLayer(id);
+  protected selectBaseGroup(groupId: string): void {
+    this.mapLayerService.selectBaseLayer(groupId);
   }
 }

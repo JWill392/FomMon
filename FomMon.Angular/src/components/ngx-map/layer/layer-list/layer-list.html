@@ -1,8 +1,8 @@
-@for (layer of featureLayers(); track layer.id) {
-  <div class="layer-thumb"
-       [class.active]="layer.visible"
-       (click)="toggleGroupVisibility(layer.group)">
-    <img [src]="layer.thumbnailImg" [alt]="layer.name" />
-    <span>{{ layer.name }}</span>
-  </div>
+<div class="header">
+  <h2>Layers</h2>
+</div>
+<div class="layer-list">
+@for (layerGroup of featureGroups(); track layerGroup.id) {
+  <app-layer-card [layerGroupId]="layerGroup.id" [class.item-odd]="$odd" />
 }
+</div>

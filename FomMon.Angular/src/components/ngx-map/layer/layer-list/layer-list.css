@@ -1,0 +1,20 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px;
+  background: #99b88c;
+  border-bottom: 2px solid #7c9571;
+  height: 50px;
+}
+
+h2 {
+  color: #fff;
+}
+
+.layer-list {
+  display: flex;
+  flex-direction: column;
+}
+
+

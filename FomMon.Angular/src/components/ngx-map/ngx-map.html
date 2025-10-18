@@ -63,7 +63,9 @@
     <app-feature-layer [layer]="layer" url="local://./tileserver/{{layer.tileSource}}/{z}/{x}/{y}"/>
   }
 
-  <app-area-watch-layer/>
+  @if (isAuthenticated()) {
+    <app-area-watch-layer/>
+  }
 
 
   <mgl-control position="top-right">

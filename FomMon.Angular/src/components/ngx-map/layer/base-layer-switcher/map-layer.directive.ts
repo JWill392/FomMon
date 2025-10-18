@@ -3,6 +3,11 @@ import { LayerComponent } from '@maplibre/ngx-maplibre-gl';
 import {LayerSpecification} from "maplibre-gl";
 import {LayerCategory, MapLayerService} from "../map-layer.service";
 
+
+/// Directive to register a layer with the map layer service
+/// for managing visibility
+/// NOTE: MUST manually wire up layout to the service, eg:
+/// [layout]="mapLayerService.getLayout(idOutline)"
 @Directive({
   selector: 'mgl-layer[appMapLayer]',
   standalone: true,
@@ -32,15 +37,18 @@ export class MapLayerDirective implements OnInit, OnDestroy {
       return;
     }
 
-    // Register this layer with the service
-    this.mapLayerService.registerLayer({
-      id: this.layerId(),
+    this.mapLayerService.tryAddGroup({
+      id: this.group(),
       name: this.name(),
       thumbnailImg: this.thumbnailImg(),
       visible: this.initiallyVisible(),
-      layout: this.additionalLayout(),
       category: this.category(),
-      group: this.group(),
+    })
+
+    this.mapLayerService.registerLayer({
+      id: this.layerId(),
+      groupId: this.group(),
+      layout: this.additionalLayout(),
     });
 
   }

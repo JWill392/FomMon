@@ -160,7 +160,7 @@ export class NgxMap {
 
   }
 
-  // TODO use NGX hover
+  // TODO replace all this with NGX hover; it's the last legacy of old pure js map
   private registerInteractivity() {
     if (!this.map) return;
 

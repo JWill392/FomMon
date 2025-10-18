@@ -1,17 +1,19 @@
 import {Component, inject} from '@angular/core';
 import {MapLayerService} from "../map-layer.service";
 
+import {RouterLink} from "@angular/router";
+import {LayerCard} from "./layer-card/layer-card";
+
 @Component({
   selector: 'app-layer-list',
-  imports: [],
+  imports: [
+    LayerCard
+  ],
   templateUrl: './layer-list.html',
-  styleUrl: './layer-list.css'
+  styleUrl: './layer-list.css',
 })
 export class LayerList {
   private mapLayerService = inject(MapLayerService);
-  protected featureLayers = this.mapLayerService.featureLayers;
+  protected featureGroups = this.mapLayerService.featureGroups;
 
-  protected toggleGroupVisibility(group: string): void {
-    this.mapLayerService.toggleVisibility(group);
-  }
 }
