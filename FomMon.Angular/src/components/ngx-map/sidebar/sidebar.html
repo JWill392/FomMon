@@ -10,11 +10,20 @@
       </div>
       <hr/>
       <div class="actions">
-        <app-sidebar-item title="Layers" icon="phosphorStack" link="layers" [collapsed]="navCollapsed()" />
+        <app-sidebar-item
+            title="Layers"
+            icon="phosphorStack"
+            link="layers"
+            closeLink="/map"
+            [collapsed]="navCollapsed()" />
 
         @if (isAuthenticated()) {
-        <app-sidebar-item title="Watches" icon="phosphorBinoculars" link="area-watch-list"
-                          [collapsed]="navCollapsed()" />
+          <app-sidebar-item
+              title="Watches"
+              icon="phosphorBinoculars"
+              link="area-watch-list"
+              closeLink="/map"
+              [collapsed]="navCollapsed()" />
         }
       </div>
     </div>

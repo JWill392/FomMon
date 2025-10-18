@@ -1,0 +1,22 @@
+@if (isAuthenticated()) {
+<img
+    [src]="profileImageUrl()"
+    alt="User profile image"
+    class="user-bubble"
+    (click)="openMenu($event)"
+/>
+<!--  TODO make dialog; close on click outside-->
+<dialog #menu closedby="any" class="menu-dialog">
+  <div class="menu">
+    <div class="menu-header">
+      <span>{{ user().displayName }}</span>
+    </div>
+    <div class="menu-body">
+      <a class="menu-item" (click)="logout()">Logout</a>
+    </div>
+  </div>
+</dialog>
+} @else {
+  <a class="action-login" (click)="login()">Login</a>
+<!--  TODO add register button -->
+}

@@ -69,12 +69,15 @@
 
 
   <mgl-control position="top-right">
+    <app-user-menu />
+  </mgl-control>
+  <mgl-control position="bottom-right">
     <app-base-layer-switcher/>
   </mgl-control>
 
   <!-- Controls -->
-  <mgl-control mglNavigation [showCompass]="false" position="top-right"></mgl-control>
   <mgl-control mglScale [maxWidth]="100" unit="metric" position="bottom-right"></mgl-control>
+  <mgl-control mglNavigation [showCompass]="false" position="bottom-right"></mgl-control>
 <!--  <mgl-control mglGeolocate-->
 <!--               [positionOptions]="{ enableHighAccuracy: false }"-->
 <!--               [trackUserLocation]="true"-->

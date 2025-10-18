@@ -1,0 +1,48 @@
+:host {
+  background: #f2f4f0;
+  padding: 5px;
+
+  display: flex;
+  gap: 10px;
+
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+:host(.item-odd) {
+  background: #fafafa;
+}
+
+:host:hover {
+  background: #e0eadc;
+}
+
+.layer-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 1 1 auto;
+  padding-right: 20px;
+  font-size: 14px;
+}
+
+
+.layer-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 6px;
+  object-fit: cover;
+  overflow: hidden;
+}
+
+.layer-toggle {
+  font-size: 20px;
+  color: #5a6c52;
+}
+
+.layer-visible {
+  color: transparent;
+}
+:host:hover .layer-visible {
+  color: #5a6c52;
+}
+

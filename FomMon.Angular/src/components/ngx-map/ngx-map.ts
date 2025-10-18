@@ -8,7 +8,6 @@ import {
   ScaleControlDirective,
 } from '@maplibre/ngx-maplibre-gl';
 import type {FeatureIdentifier, Map as MapLibreMap, MapGeoJSONFeature} from 'maplibre-gl';
-import {HttpClient} from '@angular/common/http';
 import {MaplibreTerradrawControl} from '@watergis/maplibre-gl-terradraw';
 import {AreaWatchService} from '../area-watch/area-watch.service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -24,6 +23,7 @@ import {MapLayerService} from "./layer/map-layer.service";
 import {LayerKind} from "../layer-type/layer-type.model";
 import Sidebar from "./sidebar/sidebar";
 import {RouterOutlet} from "@angular/router";
+import {UserMenu} from "../user/user-menu/user-menu";
 
 
 @Component({
@@ -43,6 +43,7 @@ import {RouterOutlet} from "@angular/router";
     MapLayerDirective,
     Sidebar,
     RouterOutlet,
+    UserMenu,
   ],
   templateUrl: './ngx-map.html',
   styleUrl: './ngx-map.css',
@@ -132,7 +133,7 @@ export class NgxMap {
       modes: ['polygon', 'select', 'delete-selection', 'render'],
       open: true,
     });
-    this.map().addControl(drawControl);
+    this.map().addControl(drawControl, 'bottom-right');
 
     const draw = drawControl.getTerraDrawInstance();
     if (!draw) {

@@ -2,7 +2,7 @@ namespace FomMon.Data.Configuration;
 
 public static class ObjectStorageConfiguration
 {
-    public const string UserProfileImageBucket = "profile-images";
+    public const string ImageBucket = "fommon-images";
 
     
     

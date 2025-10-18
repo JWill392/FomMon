@@ -1,7 +1,9 @@
 <a class="action-item"
-   [routerLink]="link()" [preserveFragment]="true"
+   [class.collapsed]="collapsed()"
+   (click)="onClickToggleRouting($event, rla.isActive)"
+   #rla="routerLinkActive"
    routerLinkActive="action-item-router-active"
-   [class.collapsed]="collapsed()">
+   [routerLink]="link()" [preserveFragment]="true">
   <ng-icon class="action-item-icon" [name]="icon()" aria-hidden="true" />
   <label class="action-item-title" [class.collapsed]="collapsed()">{{title()}}</label>
 </a>

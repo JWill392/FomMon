@@ -24,7 +24,8 @@ public interface IUserService
     
     Task<Result<User>> UpdateAsync(CreateUserRequest dto, CancellationToken c = default);
     
-    Task<Result<User>> SetProfileImageObjectAsync(Guid userId, string imageUrl, CancellationToken c = default);
+    Task<Result> SetProfileImageObjectAsync(Guid userId, string objectName, CancellationToken c = default);
+    
 }
 
 public sealed class UserService(AppDbContext db, 
@@ -145,15 +146,15 @@ public sealed class UserService(AppDbContext db,
         return Result.Ok(user);
     }
 
-    public async Task<Result<User>> SetProfileImageObjectAsync(Guid userId, string imageUrl, CancellationToken c = default)
+    public async Task<Result> SetProfileImageObjectAsync(Guid userId, string objectName, CancellationToken c = default)
     {
         var (user, errors) = await GetAsync(userId, c);
-        if (errors.Any()) return Result.Fail(errors);
+        if (errors is not null) return Result.Fail(errors);
         
-        user.ProfileImageObjectName = imageUrl;
+        user.ProfileImageObjectName = objectName;
         
         await db.SaveChangesAsync(c);
 
-        return Result.Ok(user);
+        return Result.Ok();
     }
 }

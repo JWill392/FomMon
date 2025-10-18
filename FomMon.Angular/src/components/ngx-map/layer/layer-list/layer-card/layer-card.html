@@ -1,0 +1,12 @@
+<img class="layer-thumb" [src]="layerGroup().thumbnailImg" [alt]="layerGroup.name" />
+<div class="layer-text">
+  <span>{{ layerGroup().name }}</span>
+
+  <div class="layer-toggle">
+    @if (layerGroup().visible) {
+      <ng-icon class="layer-visible" name="phosphorEye" />
+    } @else {
+      <ng-icon class="layer-invisible" name="phosphorEyeSlash" />
+    }
+  </div>
+</div>

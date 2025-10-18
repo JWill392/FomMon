@@ -1,6 +1,6 @@
-import {Component, input, Input, output} from '@angular/core';
-import {RouterLink, RouterLinkActive} from "@angular/router";
-import {NgIcon, provideIcons} from "@ng-icons/core";
+import {Component, inject, input} from '@angular/core';
+import {Router, RouterLink, RouterLinkActive} from "@angular/router";
+import {NgIcon} from "@ng-icons/core";
 
 @Component({
   selector: 'app-sidebar-item',
@@ -18,5 +18,15 @@ export class SidebarItem {
   collapsed = input.required<boolean>();
 
   link = input.required<string>();
+  closeLink = input.required<string>();
 
+  private router = inject(Router)
+
+  onClickToggleRouting(event: PointerEvent, isActive: boolean) {
+    if (isActive) {
+      event.preventDefault();
+
+      this.router.navigate([this.closeLink()], {preserveFragment: true})
+    }
+  }
 }

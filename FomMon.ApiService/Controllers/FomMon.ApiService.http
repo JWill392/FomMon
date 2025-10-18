@@ -113,3 +113,22 @@ Content-Type: application/json
 
 ### Layers Get
 GET http://localhost:5389/layer
+
+### Profile Image Post
+POST http://localhost:5389/User/ProfileImage
+Authorization: Bearer {{access_token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="profileImage.png"
+
+< /home/jackwill/Dropbox/Projects/FomMon/FomMon.Angular/public/assets/user-profile-dummy.png
+--boundary--
+
+### Profile Image delete
+DELETE http://localhost:5389/User/ProfileImage
+Authorization: Bearer {{access_token}}
+
+### Profile Image Get
+GET http://localhost:5389/User/ProfileImage
+Authorization: Bearer {{access_token}}

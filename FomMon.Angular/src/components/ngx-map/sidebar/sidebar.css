@@ -8,7 +8,7 @@
 
   height: 100%;
   background: #f3f3f3;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
 }
 /* NOTE: see styles.css hack to make maplibre control container full height */
 
@@ -53,6 +53,7 @@ nav:not(.collapsed) {
   width: 100%;
 }
 .header-logo-text {
+  display: block;
   font-size: 20px;
   font-weight: bold;
   line-height: 1em;
@@ -69,7 +70,7 @@ nav:not(.collapsed) {
   color: transparent;
 }
 .header-logo-text:not(.collapsed) {
-  height: 40px;
+  height: 44px;
 }
 
 

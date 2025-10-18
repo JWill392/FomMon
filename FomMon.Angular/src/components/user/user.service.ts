@@ -32,6 +32,9 @@ export class UserService implements ServiceWithState {
   private _data = signal<User | undefined>(undefined);
   readonly data = this._data.asReadonly();
 
+  private _profileImageUrl = signal<string | undefined>(undefined);
+  readonly profileImageUrl = this._profileImageUrl.asReadonly();
+
   constructor() {
     effect(() => {
       const keycloakEvent = this.keycloakSignal();
@@ -44,14 +47,23 @@ export class UserService implements ServiceWithState {
           this.load$()
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe();
+
+          this.loadImageUrl$()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe();
         }
       }
 
       if (keycloakEvent.type === KeycloakEventType.AuthLogout) {
-        this._data.set(undefined);
-        this._state.reset();
+        this.clearData();
       }
     });
+  }
+
+  private clearData() {
+    this._data.set(undefined);
+    this._profileImageUrl.set(undefined);
+    this._state.reset();
   }
 
   private load$() {
@@ -69,6 +81,22 @@ export class UserService implements ServiceWithState {
           next: u => this._data.set(u),
         }),
         this._state.loadState
+      )
+  }
+
+  private loadImageUrl$() {
+    return this.http.get<{url: string}>('api/user/profileimage')
+      .pipe(
+        catchError(error => throwError(() => {
+          const e = new Error("Failed to load profile image", error);
+          this.errorService.handleError(e); // TODO warning not error
+          return e;
+        })),
+        map(body => body?.url ?? undefined),
+        tap({
+          next: u => this._profileImageUrl.set(u),
+        })
+        // not reflected in service state; non-critical
       )
   }
 

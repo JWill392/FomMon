@@ -117,11 +117,12 @@ public class GdalWfsDownloadJob(
             await using var transaction = await db.Database.BeginTransactionAsync(c);
 
             var layerCfg = LayerRegistry.Get(kind);
-            if (layerCfg.WfsUrl is null) throw new ArgumentException($"Layer type {kind} has no WfsUrl configured");
-            if (layerCfg.WfsLayer is null)
-                throw new ArgumentException($"Layer type {kind} has no WfsLayer configured");
+            ArgumentNullException.ThrowIfNull(layerCfg.WfsUrl);
+            ArgumentNullException.ThrowIfNull(layerCfg.WfsLayer);
+            
             activity?.SetTag("layer.name", layerCfg.TableName);
             activity?.SetTag("wfs.url", layerCfg.WfsUrl);
+            activity?.SetTag("wfs.layer", layerCfg.WfsLayer);
 
             var layer = await TryGetLayerWithLock(kind, c);
             if (layer is null)
@@ -189,7 +190,7 @@ public class GdalWfsDownloadJob(
             "-f", "PostgreSQL",
             pgString,
             $"WFS:{layerCfg.WfsUrl}",
-            layerCfg.WfsLayer, // layer name
+            layerCfg.WfsLayer!, // layer name
             "-nln", $"{LayerRegistry.Schema}.{layerCfg.TableName}",
             "-overwrite",
             "-t_srs", LayerRegistry.DefaultSridString,
