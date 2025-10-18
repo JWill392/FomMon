@@ -5,10 +5,12 @@ using FomMon.ApiService.Jobs;
 using FomMon.ApiService.Jobs.FomDownload;
 using FomMon.ApiService.Services;
 using FomMon.ApiService.Shared;
+using FomMon.Data.Configuration;
 using FomMon.Data.Contexts;
 using FomMon.ServiceDefaults;
 using Hangfire;
 using Hangfire.Redis.StackExchange;
+using Minio;
 using Extensions = FomMon.ServiceDefaults.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +46,16 @@ builder.Services.AddAppDbContext(builder.Configuration, builder.Environment.IsDe
 
 // Redis
 builder.AddRedisClient(connectionName: "cache");
+
+// Object storage
+builder.Services.AddMinio(c =>
+{
+    var config = ObjectStorageConfiguration.ParseMinioConnectionString(
+        builder.Configuration.GetConnectionString("minio") 
+        ?? throw new ArgumentException("Missing minio connection string"));
+    c.WithEndpoint(config.endpoint);
+    c.WithCredentials(config.username, config.password);
+});
 
 // Outgoing API
 builder.Services.AddHttpClient<FomApiClient>(c => c.BaseAddress = new Uri("https://fom.nrs.gov.bc.ca/")); // TODO put in config

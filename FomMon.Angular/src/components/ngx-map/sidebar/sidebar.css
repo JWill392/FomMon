@@ -6,9 +6,6 @@
 .sidebar {
   display: flex;
 
-  /*overflow: hidden;*/
-  /*min-width: 250px;*/
-  /*transition: width 0.3s ease-in-out;*/
   height: 100%;
   background: #f3f3f3;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
@@ -23,7 +20,7 @@ nav {
   justify-content: space-between;
   border-right: 1px solid #dee2e6;
 
-  transition: width 0.2s ease-in-out;
+  transition: width 0.1s ease-in-out;
   overflow: hidden;
 }
 
@@ -63,7 +60,7 @@ nav:not(.collapsed) {
   padding: 0 5px;
   font-family: 'Montserrat', sans-serif;
   overflow: hidden;
-  transition: height 0.2s ease-in-out, color 0.2s ease-in-out;
+  transition: height 0.1s ease-in-out, color 0.1s ease-in-out;
   cursor: pointer;
 }
 
@@ -98,11 +95,11 @@ hr {
   cursor: pointer;
 }
 .nav-collapse-button.collapsed ng-icon {
-  transition: transform 0.2s ease-in-out;
+  transition: transform 0.1s ease-in-out;
   transform: rotate(180deg);
 }
 .nav-collapse-button:not(.collapsed) ng-icon {
-  transition: transform 0.2s ease-in-out;
+  transition: transform 0.1s ease-in-out;
   transform: rotate(0deg);
 }
 
@@ -110,7 +107,7 @@ hr {
   flex: 1 1 auto;
   min-width: 0;
 
-  transition: width 0.2s ease-in-out;
+  transition: width 0.1s ease-in-out;
   overflow: auto;
   scrollbar-width: thin;
 }

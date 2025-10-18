@@ -2,6 +2,7 @@
 using FomMon.AppHost.Extensions;
 using FomMon.Data.Configuration.Layer;
 using Microsoft.Extensions.Hosting;
+using MinIO.MinIO.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -25,9 +26,18 @@ var applicationDb = postgres
 var keycloakDb = postgres
     .AddDatabase("keycloak-db");
 
+
+var minioUser = builder.AddParameter("minioUsername", secret: true);
+var minioPwd =  builder.AddParameter("minioPassword", secret: true);
+var minio = builder.AddMinio("minio", minioUser, minioPwd)
+    .WithLifetime(ContainerLifetime.Persistent);
+
+
 var migrations = builder.AddProject<Projects.FomMon_MigrationService>("migrations")
     .WithReference(applicationDb)
     .WaitFor(applicationDb)
+    .WithReference(minio)
+    .WaitFor(minio)
     .WithParentRelationship(applicationDb);
 
 var tileserver = builder.AddMapLibreMartin("tileserver", 
@@ -62,8 +72,7 @@ var cache = builder.AddRedis("cache")
         interval: TimeSpan.FromMinutes(5),
         keysChangedThreshold: 100
         )
-    .WithLifetime(ContainerLifetime.Persistent)
-    ; 
+    .WithLifetime(ContainerLifetime.Persistent); 
 
 // hangfire dashboard: http://localhost:5389/hangfire
 var apiService = builder.AddProject<Projects.FomMon_ApiService>("apiservice")
@@ -73,6 +82,7 @@ var apiService = builder.AddProject<Projects.FomMon_ApiService>("apiservice")
     .WithReference(keycloak)
     .WithReference(cache)
     .WaitFor(cache)
+    .WithReference(minio)
     .WithHttpHealthCheck("/health")
     .PublishAsDockerFile();
 

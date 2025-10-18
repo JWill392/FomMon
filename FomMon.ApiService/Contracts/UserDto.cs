@@ -13,6 +13,8 @@ public record UserDto
     [MaxLength(255)]
     public required string Email { get; init; }
 
+    [MaxLength(255)]
+    public string ProfileImageObjectName { get; init; } = string.Empty;
 }
 
 public class UserIdentityDto

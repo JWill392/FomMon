@@ -26,6 +26,9 @@ public sealed class User : IVersioned
     [MaxLength(50)]
     public string Subject { get; set; } = string.Empty;
 
+    [MaxLength(255)]
+    public string ProfileImageObjectName { get; set; } = string.Empty;
+
     public override string ToString()
     {
         return $"User(Id={Id}, DisplayName={DisplayName}, Email={Email})";

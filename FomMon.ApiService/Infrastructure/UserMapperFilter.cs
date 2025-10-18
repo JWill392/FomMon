@@ -1,9 +1,13 @@
 ﻿using System.Security.Claims;
+using FluentResults;
 using FomMon.ApiService.Contracts;
 using FomMon.ApiService.Services;
+using FomMon.Data.Contexts;
+using FomMon.Data.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.EntityFrameworkCore;
 
 namespace FomMon.ApiService.Infrastructure;
 
@@ -52,7 +56,7 @@ internal static class CurrentUserHttpContextAccessor
 /// Action filter that maps external authentication claims to internal user records.
 /// </summary>
 /// <param name="userService">The user service for managing user records.</param>
-public sealed class UserMapperFilter(IUserService userService) : IAsyncActionFilter
+public sealed class UserMapperFilter(IUserService userService, AppDbContext db) : IAsyncActionFilter
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
@@ -78,13 +82,24 @@ public sealed class UserMapperFilter(IUserService userService) : IAsyncActionFil
             }
 
             // TODO still gets duplicate calls if SPA messes up call order.  should just move into single user setup call.
-            var result = await userService.UpsertAsync(new CreateUserRequest()
+            Result<User> result = Result.Fail("Upsert not executed");
+            await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
             {
-                Issuer = iss,
-                Subject = sub,
-                Email = emailVerified ? email : null,
-                DisplayName = name
-            }, context.HttpContext.RequestAborted);
+                await using var transaction = await db.Database.BeginTransactionAsync();
+                
+                result = await userService.UpsertAsync(new CreateUserRequest()
+                {
+                    Issuer = iss,
+                    Subject = sub,
+                    Email = emailVerified ? email : null,
+                    DisplayName = name
+                }, context.HttpContext.RequestAborted);
+                if (!result.IsFailed)
+                {
+                    await transaction.CommitAsync();
+                }
+            });
+            
 
             if (result.IsFailed)
             {

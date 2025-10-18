@@ -342,6 +342,12 @@ namespace FomMon.Data.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("issuer");
 
+                    b.Property<string>("ProfileImageObjectName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("profile_image_object_name");
+
                     b.Property<string>("Subject")
                         .IsRequired()
                         .HasMaxLength(50)

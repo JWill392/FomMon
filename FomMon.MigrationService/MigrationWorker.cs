@@ -1,12 +1,14 @@
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using FomMon.Data.Contexts;
-using FomMon.Data.Seeding;
+using FomMon.MigrationService.Seeding;
+using Minio.DataModel.Args;
 
 namespace FomMon.MigrationService;
 
 public class MigrationWorker(
     IServiceProvider serviceProvider,
+    MinioInitializer minioInitializer,
     IHostApplicationLifetime hostApplicationLifetime,
     ILogger<MigrationWorker> logger) : BackgroundService
 {
@@ -43,6 +45,8 @@ public class MigrationWorker(
             logger.LogCritical(ex, "Error occurred while migrating database");
             throw;
         }
+        
+        await minioInitializer.EnsureBucketsExistAsync(cancellationToken);
 
         hostApplicationLifetime.StopApplication();
     }
@@ -69,5 +73,5 @@ public class MigrationWorker(
             await new DevDataSeeder(logger).SeedAsync(db, force);
         });
     }
-
+    
 }

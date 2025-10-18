@@ -19,5 +19,4 @@ public record CreateUserRequest
     [Required]
     [MaxLength(50)]
     public string Subject { get; set; } = string.Empty;
-
 }

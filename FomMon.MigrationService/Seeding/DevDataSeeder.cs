@@ -1,9 +1,8 @@
 ﻿using FomMon.Data.Contexts;
 using FomMon.Data.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
-namespace FomMon.Data.Seeding;
+namespace FomMon.MigrationService.Seeding;
 
 
 public sealed class DevDataSeeder(ILogger logger)
@@ -18,16 +17,13 @@ public sealed class DevDataSeeder(ILogger logger)
         {
             db.Users.Add(new User
             {
-                // Use deterministic keys where possible
                 Id = new Guid("9903ED01-A73C-4874-8ABF-D2678E3AE23E"),
                 Email = adminEmail,
                 DisplayName = "Admin",
-                // other required fields...
             });
         }
         else if (force)
         {
-            // Optionally update fields in force mode
             admin.DisplayName = "Admin";
             db.Users.Update(admin);
         }

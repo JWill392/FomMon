@@ -17,6 +17,15 @@ using OpenTelemetry.Trace;
 
 namespace FomMon.ApiService.Jobs;
 
+public interface IWfsDownloadJob
+{
+    public Task DownloadToDbAsync(
+        LayerKind kind,  
+        int? limit, 
+        Duration? updateAge,
+        CancellationToken c);
+}
+
 public static class WfsDownloadJobExtensions
 {
     public static IServiceCollection AddWfsDownloadJob(this IServiceCollection services,
@@ -30,7 +39,7 @@ public static class WfsDownloadJobExtensions
 
         services.AddScoped<IWfsDownloadJob, GdalWfsDownloadJob>(); // for direct call in testing/admin
 
-        services.ConfigureOpenTelemetryTracerProvider(t => { t.AddSource(GdalWfsDownloadJob.ActivitySourceName); });
+        services.ConfigureOpenTelemetryTracerProvider(t => t.AddSource(GdalWfsDownloadJob.ActivitySourceName));
 
         return services;
     }
@@ -63,15 +72,6 @@ public static class WfsDownloadJobExtensions
         }
     }
 
-}
-
-public interface IWfsDownloadJob
-{
-    public Task DownloadToDbAsync(
-        LayerKind kind,  
-        int? limit, 
-        Duration? updateAge,
-        CancellationToken c);
 }
 
 public sealed class WfsDownloadJobSettings
@@ -139,7 +139,7 @@ public class GdalWfsDownloadJob(
                 return;
             }
 
-            await RunOgr2Ogr(limit, layerCfg, activity, layer, c);
+            await RunOgr2Ogr(limit, layerCfg, layer, c);
             
             
             await transaction.CommitAsync(c);
@@ -171,7 +171,7 @@ public class GdalWfsDownloadJob(
         }
     }
 
-    private async Task RunOgr2Ogr(int? limit, LayerConfig layerCfg, Activity? activity, LayerType layer,
+    private async Task RunOgr2Ogr(int? limit, LayerConfig layerCfg, LayerType layer,
         CancellationToken c)
     {
         // Build PostgreSQL connection string for ogr2ogr
@@ -220,20 +220,20 @@ public class GdalWfsDownloadJob(
             {
                 var ex = new TimeoutException(
                     $"ogr2ogr operation timed out after {_settings.TimeoutSeconds} seconds");
-                activity?.SetStatus(ActivityStatusCode.Error, "Timeout");
-                activity?.AddException(ex);
+                Activity.Current?.SetStatus(ActivityStatusCode.Error, "Timeout");
+                Activity.Current?.AddException(ex);
                 throw ex;
             }
             catch (Exception ex)
             {
-                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-                activity?.AddException(ex);
+                Activity.Current?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                Activity.Current?.AddException(ex);
                 throw;
             }
             
             if (result.ExitCode != 0)
             {
-                activity?.SetStatus(ActivityStatusCode.Error, $"Exit code: {result.ExitCode}");
+                Activity.Current?.SetStatus(ActivityStatusCode.Error, $"Exit code: {result.ExitCode}");
                 throw new Exception(
                     $"ogr2ogr failed with exit code {result.ExitCode}. Error: {result.Error}");
             }
@@ -248,13 +248,14 @@ public class GdalWfsDownloadJob(
         layer.FeatureCount = await GetFeatureCountAsync(layerCfg.TableName, c);
         layer.LastDownloaded = clock.Now;
             
-        activity?.SetTag("feature.count", layer.FeatureCount);
+        Activity.Current?.SetTag("feature.count", layer.FeatureCount);
             
         await db.SaveChangesAsync(c);
             
         logger.LogInformation(
             "Successfully downloaded WFS layer {LayerName} with {FeatureCount} features",
             layerCfg.TableName, layer.FeatureCount);
+        Activity.Current?.SetStatus(ActivityStatusCode.Ok);
     }
 
 

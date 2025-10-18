@@ -23,6 +23,8 @@ public interface IUserService
     Task<Result<User>> UpsertAsync(CreateUserRequest dto, CancellationToken c = default);
     
     Task<Result<User>> UpdateAsync(CreateUserRequest dto, CancellationToken c = default);
+    
+    Task<Result<User>> SetProfileImageObjectAsync(Guid userId, string imageUrl, CancellationToken c = default);
 }
 
 public sealed class UserService(AppDbContext db, 
@@ -30,6 +32,7 @@ public sealed class UserService(AppDbContext db,
     ILogger<UserService> logger) : IUserService
 {
     
+    // TODO either user FluentResults everywhere, or remove this.  Just playing with it.
     public async Task<Result<User>> CreateAsync(CreateUserRequest dto, CancellationToken c = default)
     {
         if (string.IsNullOrWhiteSpace(dto.Email))
@@ -39,7 +42,7 @@ public sealed class UserService(AppDbContext db,
         
         var user = mapper.Map<User>(dto);
         user.Id = Guid.CreateVersion7();
-        user.Email = user.Email?.ToLowerInvariant().Trim();
+        user.Email = user.Email?.ToLowerInvariant().Trim() ?? string.Empty;
         
         
         
@@ -138,6 +141,18 @@ public sealed class UserService(AppDbContext db,
         {
             return Result.Fail(new DuplicateEmailError(dto.Email ?? ""));
         }
+
+        return Result.Ok(user);
+    }
+
+    public async Task<Result<User>> SetProfileImageObjectAsync(Guid userId, string imageUrl, CancellationToken c = default)
+    {
+        var (user, errors) = await GetAsync(userId, c);
+        if (errors.Any()) return Result.Fail(errors);
+        
+        user.ProfileImageObjectName = imageUrl;
+        
+        await db.SaveChangesAsync(c);
 
         return Result.Ok(user);
     }
