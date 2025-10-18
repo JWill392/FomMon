@@ -75,16 +75,16 @@ export class MapLayerService {
       .forEach(g => this.setVisibility(g.id, g.id === groupId));
   }
 
-  toggleVisibility(groupId: string): void {
-    this.setVisibility(groupId, 'toggle');
-  }
+  // setVisibility(groupId: string, visible: boolean): void {
+  //   this.setVisibility(groupId, visible);
+  // }
 
-  private setVisibility(groupId: string, value : boolean | 'toggle'): void {
+  setVisibility(groupId: string, value : boolean): void {
     let group = this.getGroup(groupId);
     if (!group) return;
     group = {
       ...group,
-      visible: value === 'toggle' ? !group.visible : value as boolean
+      visible: value
     }
 
     this._groups.update(groups => groups.map(g => g.id === groupId ? group : g))

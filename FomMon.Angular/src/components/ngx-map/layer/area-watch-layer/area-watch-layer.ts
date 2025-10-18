@@ -19,6 +19,8 @@ export class AreaWatchLayer {
   private areaWatchService = inject(AreaWatchService);
   protected mapLayerService = inject(MapLayerService);
 
+  public readonly layerGroupId = 'area-watches';
+
   protected areaWatchFeatures = computed<FeatureCollection>(() => {
     return {
       type: 'FeatureCollection',
