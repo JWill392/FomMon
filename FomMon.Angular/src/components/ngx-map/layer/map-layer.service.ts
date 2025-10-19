@@ -40,7 +40,7 @@ export class MapLayerService {
   private readonly layerVisibilityDefault : Map<string, boolean>;
 
   constructor() {
-    this.layerVisibilityDefault = this.localStorageService.get(MapLayerService.layerVisibilityKey) ?? new Map<string, boolean>();
+    this.layerVisibilityDefault = this.localStorageService.get(MapLayerService.layerVisibilityKey, 1) ?? new Map<string, boolean>();
     console.log('layerVisibilityDefault', this.layerVisibilityDefault);
   }
 
@@ -115,7 +115,7 @@ export class MapLayerService {
     }));
 
     this.layerVisibilityDefault.set(groupId, value);
-    this.localStorageService.set(MapLayerService.layerVisibilityKey, this.layerVisibilityDefault);
+    this.localStorageService.set(MapLayerService.layerVisibilityKey, this.layerVisibilityDefault, 1);
   }
 
   getGroup(id: string) : LayerGroup | undefined {

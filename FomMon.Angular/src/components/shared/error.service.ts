@@ -5,7 +5,10 @@ import {Injectable, ErrorHandler} from '@angular/core';
 })
 export class ErrorService implements ErrorHandler {
   handleError(error: any): void {
-    console.error('ErrorService:');
-    console.error(error); // TODO add error handling
+    console.error('ErrorService:', error); // TODO add error handling
+  }
+
+  warn(s: string) {
+    console.warn(s);
   }
 }

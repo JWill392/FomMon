@@ -51,7 +51,7 @@ class Sidebar implements OnInit {
 
   ngOnInit(): void {
     this.updateContentVisibility();
-    this.navCollapsed.set(this.localStorageService.get(this.localStorageKeyCollapsed) ?? false);
+    this.navCollapsed.set(this.localStorageService.get(this.localStorageKeyCollapsed, 1) ?? false);
   }
 
   private updateContentVisibility() {
@@ -63,7 +63,7 @@ class Sidebar implements OnInit {
 
   toggleNav() {
     this.navCollapsed.update(v => !v);
-    this.localStorageService.set(this.localStorageKeyCollapsed, this.navCollapsed())
+    this.localStorageService.set(this.localStorageKeyCollapsed, this.navCollapsed(), 1)
   }
 
 }
