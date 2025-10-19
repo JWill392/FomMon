@@ -84,7 +84,7 @@ export class AreaWatchService implements ServiceWithState {
   add$(addDto : AreaWatchDto) {
     this._state.assertReady();
     const addAw = {...addDto, localState: LocalState.pending_add};
-    if (this.find(addDto.id)) {
+    if (this.get(addDto.id)) {
       // already exists
       return EMPTY;
     }
@@ -107,7 +107,7 @@ export class AreaWatchService implements ServiceWithState {
 
   delete$(del : AreaWatch) {
     this._state.assertReady();
-    if (!this.find(del.id)) {
+    if (!this.get(del.id)) {
       // already deleted
       return EMPTY;
     }
@@ -129,7 +129,7 @@ export class AreaWatchService implements ServiceWithState {
   patch$(pat : Partial<AreaWatch>) {
     this._state.assertReady();
 
-    const original = {...this.find(pat.id)};
+    const original = {...this.get(pat.id)};
     if (!original) {
       // does not exist
       return EMPTY;
@@ -155,7 +155,7 @@ export class AreaWatchService implements ServiceWithState {
     return this._data().find(a => a.featureId === fid);
   }
 
-  private find(id : string) : AreaWatch | undefined {
+  public get(id : string) : AreaWatch | undefined {
     return this._data().find(a => a.id === id);
   }
   private removeLocal(aw : AreaWatch) {

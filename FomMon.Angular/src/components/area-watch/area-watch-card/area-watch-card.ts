@@ -25,7 +25,8 @@ import {MapSelectionService} from "../../ngx-map/map-selection-service";
   styleUrl: './area-watch-card.css',
   providers: [provideIcons({phosphorXCircleFill})],
   host: {
-    '[class.selected]': 'selected() === data().id'
+    '[class.selected]': 'selected() === data().id',
+    '(click)': 'select()'
   }
 })
 export class AreaWatchCard implements AfterViewInit, OnInit {
@@ -81,4 +82,7 @@ export class AreaWatchCard implements AfterViewInit, OnInit {
     // no destroyref; component is destroyed when deleted
   }
 
+  select() {
+    this.mapSelectionService.selectAreaWatch(this.data().id);
+  }
 }

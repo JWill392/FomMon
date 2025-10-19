@@ -29,13 +29,28 @@ export class MapSelectionService {
   private _selected = signal<MapSelection | null>(null);
   readonly selected = this._selected.asReadonly();
 
-  selectAreaWatch(id: string | null): void {
+  selectAreaWatch(id: string): void {
     // TODO
-    throw new Error('Method not implemented.');
+    const layerGroup = this.mapLayerService.getGroup(AreaWatchLayer.layerGroupId);
+    if (!layerGroup) {
+      this.errorService.handleError(`No layer group found for ${AreaWatchLayer.layerGroupId}`);
+      return;
+    }
+
+    const areaWatch = this.areaWatchService.get(id);
+    if (!areaWatch) {
+      this.errorService.handleError(`No area watch found for ${id}`);
+      return;
+    }
+
+    this.selectFeature({source: layerGroup.source, sourceLayer: layerGroup.sourceLayer, id: areaWatch.featureId})
+  }
+  clearAreaWatch() {
+    this.clearFeature()
   }
 
   selectFeature(id: FeatureIdentifier): void {
-    if (id === null) {this.clearFeatureSelection(); return;}
+    if (id === null) {this.clearFeature(); return;}
 
     const groupId = this.mapLayerService.getGroupIdBySource(id.source, id.sourceLayer);
     if (groupId === undefined) {
@@ -50,7 +65,7 @@ export class MapSelectionService {
     this._selected.set(mapSelection);
 
   }
-  clearFeatureSelection(): void {
+  clearFeature(): void {
     this._selected.set(null);
   }
 

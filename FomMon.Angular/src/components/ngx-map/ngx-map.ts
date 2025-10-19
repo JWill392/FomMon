@@ -97,7 +97,7 @@ export class NgxMap {
       if (this.previousSelection) {
         // toggle
         if (this.identifierEquals(this.previousSelection?.featureId, selected?.featureId)) {
-          this.selectionService.clearFeatureSelection();
+          this.selectionService.clearFeature();
         } else {
           this.map().setFeatureState(this.previousSelection.featureId, { selected: false });
         }
@@ -223,7 +223,7 @@ export class NgxMap {
         selectedFeatureId = this.getIdentifier(e.features[0]);
         this.selectionService.selectFeature(selectedFeatureId);
       } else {
-        this.selectionService.clearFeatureSelection();
+        this.selectionService.clearFeature();
         selectedFeatureId = null;
       }
 
@@ -233,7 +233,7 @@ export class NgxMap {
     // Deselect on empty click
     this.map().on('click', async (e) => {
       if (e.defaultPrevented) return;
-      this.selectionService.clearFeatureSelection();
+      this.selectionService.clearFeature();
     });
 
 
