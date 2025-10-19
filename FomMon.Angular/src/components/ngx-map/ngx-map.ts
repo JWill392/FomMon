@@ -1,4 +1,13 @@
-import {ChangeDetectionStrategy, Component, DestroyRef, effect, inject, input, signal,} from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  input,
+  linkedSignal,
+  signal,
+} from '@angular/core';
 import {
   ControlComponent,
   LayerComponent,
@@ -12,7 +21,7 @@ import {MaplibreTerradrawControl} from '@watergis/maplibre-gl-terradraw';
 import {AreaWatchService} from '../area-watch/area-watch.service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {UserService} from '../user/user.service';
-import {LayerTypeService} from '../layer-type/layer-type.service';
+import {LayerConfigService} from '../layer-type/layer-config.service';
 import {AreaAlertService} from '../area-alert/area-alert.service';
 import {CommonModule} from '@angular/common';
 import {AreaWatchLayer} from "./layer/area-watch-layer/area-watch-layer";
@@ -24,6 +33,7 @@ import {LayerKind} from "../layer-type/layer-type.model";
 import Sidebar from "./sidebar/sidebar";
 import {RouterOutlet} from "@angular/router";
 import {UserMenu} from "../user/user-menu/user-menu";
+import {MapSelection, MapSelectionService} from "./map-selection-service";
 
 
 @Component({
@@ -55,27 +65,51 @@ export class NgxMap {
 
   readonly map = signal<MapLibreMap | undefined>(undefined);
 
-  private layerService = inject(LayerTypeService);
+  private layerConfigService = inject(LayerConfigService);
   private userService = inject(UserService);
-  private areaWatchService = inject(AreaWatchService);
-  private areaAlertService = inject(AreaAlertService);
+  private watchService = inject(AreaWatchService);
+  private alertService = inject(AreaAlertService);
+
+  protected mapLayerService = inject(MapLayerService);
+  protected selectionService = inject(MapSelectionService);
+  private previousSelection : MapSelection | null = null;
+
   private destroyRef = inject(DestroyRef);
 
   readonly isAuthenticated = this.userService.state.isReady;
 
-  protected domainLayers = this.layerService.data;
-
-  protected mapLayerService = inject(MapLayerService);
+  protected domainLayers = this.layerConfigService.data;
 
 
 
   private readonly alertedFeatures = new Map<LayerKind, Set<string>>();
-  constructor() {
 
-    // Set alert feature states
+  // selection
+  constructor() {
+    // selection
     effect(() => {
-      const layerList = this.layerService.data();
-      const layerAlertMap = this.areaAlertService.byLayer();
+      var selected = this.selectionService.selected();
+
+      if (selected !== null) {
+        this.map().setFeatureState(selected.featureId, { selected: true });
+      }
+
+      if (this.previousSelection) {
+        // toggle
+        if (this.identifierEquals(this.previousSelection?.featureId, selected?.featureId)) {
+          this.selectionService.clearFeatureSelection();
+        } else {
+          this.map().setFeatureState(this.previousSelection.featureId, { selected: false });
+        }
+      }
+
+      this.previousSelection = selected;
+    });
+
+    // alert status
+    effect(() => {
+      const layerList = this.layerConfigService.data();
+      const layerAlertMap = this.alertService.byLayer();
       const map = this.map();
 
       if (!map || !layerList || !layerAlertMap) return;
@@ -144,14 +178,14 @@ export class NgxMap {
     draw.on('finish', (id: any) => {
       const feature = draw.getSnapshotFeature(id);
 
-      const addAw = this.areaWatchService.createId({
+      const addAw = this.watchService.createId({
         geometry: feature?.geometry,
         name: 'New Area Watch',
         layers: ['FomCutblock' as LayerKind, 'FomRoad' as LayerKind],
       });
       draw.removeFeatures([id]);
 
-      this.areaWatchService
+      this.watchService
         .add$(addAw)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe();
@@ -185,21 +219,12 @@ export class NgxMap {
 
     // Selection on click
     this.map().on('click', getLayerIdsBy('selectable'), async (e) => {
-      if (!this.map) return;
-      const priorSelected = selectedFeatureId;
-
       if (e.features && e.features.length > 0) {
         selectedFeatureId = this.getIdentifier(e.features[0]);
-        this.map().setFeatureState(selectedFeatureId, { selected: true });
+        this.selectionService.selectFeature(selectedFeatureId);
       } else {
+        this.selectionService.clearFeatureSelection();
         selectedFeatureId = null;
-      }
-
-      if (priorSelected) {
-        this.map().setFeatureState(priorSelected, { selected: false });
-        if (this.identifierEquals(priorSelected, selectedFeatureId)) {
-          selectedFeatureId = null;
-        }
       }
 
       e.preventDefault();
@@ -207,11 +232,8 @@ export class NgxMap {
 
     // Deselect on empty click
     this.map().on('click', async (e) => {
-      if (!this.map || e.defaultPrevented) return;
-      if (selectedFeatureId) {
-        this.map().setFeatureState(selectedFeatureId, { selected: false });
-        selectedFeatureId = null;
-      }
+      if (e.defaultPrevented) return;
+      this.selectionService.clearFeatureSelection();
     });
 
 
@@ -257,6 +279,4 @@ export class NgxMap {
     if (!a || !b) return false;
     return a.source === b.source && a.sourceLayer === b.sourceLayer && a.id === b.id;
   }
-
-  protected readonly Object = Object;
 }

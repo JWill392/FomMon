@@ -18,7 +18,7 @@ export class MapLayerDirective implements OnInit, OnDestroy {
   initiallyVisible = input<boolean>(false);
 
   category = input.required<LayerCategory>();
-  group = input.required<string>();
+  groupId = input.required<string>();
 
   additionalLayout = input<LayerSpecification['layout']>();
 
@@ -32,22 +32,34 @@ export class MapLayerDirective implements OnInit, OnDestroy {
     // Get the layer ID from the LayerComponent
     this.layerId = this.layerComponent.id;
 
+
     if (!this.layerId) {
-      console.error('BaseLayerSwitchableDirective: Layer must have an id');
-      return;
+      throw new Error('Layer must have an id');
     }
 
-    this.mapLayerService.tryAddGroup({
-      id: this.group(),
+    if (!this.mapLayerService.tryAddGroup({
+      id: this.groupId(),
       name: this.name(),
       thumbnailImg: this.thumbnailImg(),
       visible: this.initiallyVisible(),
       category: this.category(),
-    })
+      source: this.layerComponent.source(),
+      sourceLayer: this.layerComponent.sourceLayer()
+    })) {
+      const group = this.mapLayerService.getGroup(this.groupId());
+      if (this.layerComponent.source() !== group.source) {
+        throw new Error(`Layer source must match group source.  
+        Group: ${group.source}, Layer: ${this.layerComponent.source()}`);
+      }
+      if (this.layerComponent.sourceLayer() !== group?.sourceLayer) {
+        throw new Error('Layer sourceLayer must match group sourceLayer.  ' +
+          'Group: ' + group?.sourceLayer + ', Layer: ' + this.layerComponent.sourceLayer());
+      }
+    }
 
     this.mapLayerService.registerLayer({
       id: this.layerId(),
-      groupId: this.group(),
+      groupId: this.groupId(),
       layout: this.additionalLayout(),
     });
 

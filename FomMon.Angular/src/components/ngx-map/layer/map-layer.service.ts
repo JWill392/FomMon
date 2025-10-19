@@ -1,5 +1,5 @@
 import {computed, effect, Injectable, signal} from '@angular/core';
-import {LayerSpecification} from "maplibre-gl";
+import {FeatureIdentifier, LayerSpecification} from "maplibre-gl";
 
 export type LayerCategory = "base"|"feature";
 
@@ -9,6 +9,9 @@ export interface LayerGroup {
   thumbnailImg: string;
   visible: boolean;
   category: LayerCategory;
+
+  source: string;
+  sourceLayer: string | undefined;
 }
 export interface LayerInfo {
   id: string;
@@ -16,20 +19,20 @@ export interface LayerInfo {
   layout: LayerSpecification['layout'];
 }
 
+
 @Injectable({
   providedIn: 'root'
 })
 export class MapLayerService {
   private _groups = signal<LayerGroup[]>([]);
   private _groupsById = computed(() => new Map(this._groups().map(g => [g.id, g])));
+  private _groupsBySource = computed(() => new Map(this._groups().map(g => [this.toSourceKey(g.source, g.sourceLayer), g])));
   private _groupsByCategory = computed(() => Map.groupBy(this._groups(), g => g.category));
 
   public readonly baseGroups = computed(() => this._groupsByCategory().get('base'));
   public readonly featureGroups = computed(() => this._groupsByCategory().get('feature'));
 
   private _layers = signal<LayerInfo[]>([]);
-  public readonly baseLayers = computed(() => this._layers().filter(l => this.baseGroups().some(g => g.id === l.groupId)));
-  public readonly featureLayers = computed(() => this._layers().filter(l => this.featureGroups().some(g => g.id === l.groupId)));
 
   tryAddGroup(group: LayerGroup): boolean {
     if (this.getGroup(group.id)) return false;
@@ -102,6 +105,11 @@ export class MapLayerService {
     return this._groupsById().get(id)
   }
 
+  private toSourceKey = (source : string, sourceLayer?: string) => source + sourceLayer?`:${sourceLayer}`:'';
+  getGroupIdBySource(source: string, sourceLayer?: string) : string | undefined {
+    return this._groupsBySource().get(this.toSourceKey(source, sourceLayer)).id;
+  }
+
   getLayer(id: string) {
     return this._layers().find(l => l.id === id);
   }
@@ -109,11 +117,13 @@ export class MapLayerService {
     return this.getLayer(id)?.layout;
   }
 
+
   private layoutWithVisibility(layout: LayerSpecification['layout'], visible: boolean): LayerSpecification['layout'] {
     return {
       ...layout,
       visibility: visible ? 'visible' : 'none'
     };
   }
+
 
 }

@@ -27,7 +27,7 @@
             [layout]="mapLayerService.getLayout(idFill)"
             appMapLayer
             category="feature"
-            [group]="layer().kind"
+            [groupId]="layer().kind"
             [name]="layer().name"
             [thumbnailImg]="'assets/layer-preview-osm-base.png'"
             [initiallyVisible]="true"
@@ -58,7 +58,7 @@
             [layout]="mapLayerService.getLayout(idOutline)"
             appMapLayer
             category="feature"
-            [group]="layer().kind"
+            [groupId]="layer().kind"
             [name]="layer().name"
             [thumbnailImg]="'assets/layer-preview-osm-base.png'"
             [initiallyVisible]="true"
@@ -88,7 +88,7 @@
             [layout]="mapLayerService.getLayout(idLine)"
             appMapLayer
             category="feature"
-            [group]="layer().kind"
+            [groupId]="layer().kind"
             [name]="layer().name"
             [thumbnailImg]="'assets/layer-preview-osm-base.png'"
             [initiallyVisible]="true"

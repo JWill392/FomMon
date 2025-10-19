@@ -7,7 +7,7 @@ import {ServiceLoadState} from "../shared/service/service-load-state";
 import {tap} from "rxjs/operators";
 import {LocalState} from "../shared/service/local-state";
 import {UserService} from "../user/user.service";
-import {LayerTypeService} from "../layer-type/layer-type.service";
+import {LayerConfigService} from "../layer-type/layer-config.service";
 
 
 @Injectable({providedIn: 'root'})

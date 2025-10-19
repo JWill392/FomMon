@@ -2,7 +2,7 @@ import {Component, DestroyRef, effect, inject, Injectable} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import {Snackbar} from '../components/shared/snackbar/snackbar';
-import {LayerTypeService} from '../components/layer-type/layer-type.service';
+import {LayerConfigService} from '../components/layer-type/layer-config.service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {UserService} from '../components/user/user.service';
 import {AreaAlertService} from "../components/area-alert/area-alert.service";
@@ -25,7 +25,7 @@ import {AreaWatchService} from "../components/area-watch/area-watch.service";
   `],
 })
 export class App {
-  private layerService = inject(LayerTypeService)
+  private layerService = inject(LayerConfigService)
   private projectService = inject(ProjectService)
 
   private userService = inject(UserService)

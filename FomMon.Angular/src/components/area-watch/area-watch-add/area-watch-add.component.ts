@@ -3,7 +3,7 @@ import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/
 import {AreaWatchService} from '../area-watch.service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {NotificationService} from '../../shared/snackbar/notification.service';
-import {LayerTypeService} from '../../layer-type/layer-type.service';
+import {LayerConfigService} from '../../layer-type/layer-config.service';
 import {LayerKind} from "../../layer-type/layer-type.model";
 
 @Component({
@@ -15,7 +15,7 @@ import {LayerKind} from "../../layer-type/layer-type.model";
   styleUrl: './area-watch-add.component.css'
 })
 export class AreaWatchAddComponent {
-  layerService = inject(LayerTypeService);
+  layerService = inject(LayerConfigService);
 
   form = new FormGroup({
     name: new FormControl<string>('', {

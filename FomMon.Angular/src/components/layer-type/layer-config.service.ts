@@ -9,7 +9,7 @@ import {Observable} from "rxjs";
 @Injectable({
   providedIn: 'root'
 })
-export class LayerTypeService implements ServiceWithState {
+export class LayerConfigService implements ServiceWithState {
   private http = inject(HttpClient);
 
   private _state = new ServiceLoadState();

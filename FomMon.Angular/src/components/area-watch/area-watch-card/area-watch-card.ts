@@ -5,15 +5,16 @@ import {
   input,
   ViewChild,
   AfterViewInit,
-  OnInit
+  OnInit, signal
 } from '@angular/core';
 import {AreaWatch} from '../area-watch.model';
 import {AreaWatchService} from '../area-watch.service';
 import {NotificationService} from '../../shared/snackbar/notification.service';
-import {LayerTypeService} from '../../layer-type/layer-type.service';
+import {LayerConfigService} from '../../layer-type/layer-config.service';
 import {LocalState} from "../../shared/service/local-state";
 import {NgIcon, provideIcons} from "@ng-icons/core";
 import {phosphorXCircleFill} from "@ng-icons/phosphor-icons/fill";
+import {MapSelectionService} from "../../ngx-map/map-selection-service";
 
 @Component({
   selector: 'app-area-watch-card',
@@ -22,11 +23,14 @@ import {phosphorXCircleFill} from "@ng-icons/phosphor-icons/fill";
   ],
   templateUrl: './area-watch-card.html',
   styleUrl: './area-watch-card.css',
-  providers: [provideIcons({phosphorXCircleFill})]
+  providers: [provideIcons({phosphorXCircleFill})],
+  host: {
+    '[class.selected]': 'selected() === data().id'
+  }
 })
 export class AreaWatchCard implements AfterViewInit, OnInit {
   awService = inject(AreaWatchService);
-  layerService = inject(LayerTypeService);
+  layerService = inject(LayerConfigService);
   notService = inject(NotificationService);
 
   data = input.required<AreaWatch>();
@@ -35,6 +39,8 @@ export class AreaWatchCard implements AfterViewInit, OnInit {
 
   @ViewChild('thumb') thumb!: ElementRef<HTMLImageElement>;
 
+  private mapSelectionService = inject(MapSelectionService);
+  protected selected = this.mapSelectionService.selectedAreaWatchId;
 
   ngOnInit(): void {
   }
