@@ -3,8 +3,8 @@ import {AreaWatchService} from '../area-watch.service';
 import {AreaWatchCard} from '../area-watch-card/area-watch-card';
 import {RouterLink} from '@angular/router';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {MapLayerService} from "../../ngx-map/layer/map-layer.service";
-import {MapSelectionService} from "../../ngx-map/map-selection-service";
+import {MapLayerService} from "../../map/layer/map-layer.service";
+import {MapSelectionService} from "../../map/map-selection-service";
 
 @Component({
   selector: 'app-area-watch-list',

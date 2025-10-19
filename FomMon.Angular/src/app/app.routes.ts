@@ -1,12 +1,12 @@
 import { Routes } from '@angular/router';
 import {HomeComponent} from "../components/home/home";
-import {MapComponent} from '../components/ngx-map/map.component';
+import {MapComponent} from '../components/map/map.component';
 import {AreaWatchList} from '../components/area-watch/area-watch-list/area-watch-list';
 import {AreaWatchAddComponent} from '../components/area-watch/area-watch-add/area-watch-add.component';
 import {ForbiddenComponent} from "../components/shared/forbidden/forbidden.component";
 import {NotFoundComponent} from "../components/shared/not-found/not-found.component";
 import {canActivateAuthRole} from "../guards/auth-role.guard";
-import {LayerList} from "../components/ngx-map/layer/layer-list/layer-list";
+import {LayerList} from "../components/map/layer/layer-list/layer-list";
 import {MenuLayout} from "../components/shared/menu-layout/menu-layout";
 
 export const routes: Routes = [
