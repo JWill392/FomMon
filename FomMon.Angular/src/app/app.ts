@@ -13,16 +13,8 @@ import {AreaWatchService} from "../components/area-watch/area-watch.service";
 @Component({
   selector: 'app-root',
   imports: [CommonModule, RouterOutlet, Snackbar],
-  template: `
-    <app-snackbar />
-    <main>
-      <router-outlet></router-outlet>
-    </main>
-  `,
-  styles: [`
-    :host {display: flex; flex-direction: column; height: 100vh;}
-    main {flex: 1 0 auto;}
-  `],
+  templateUrl: './app.html',
+  styleUrl: './app.css',
 })
 export class App {
   private layerService = inject(LayerConfigService)

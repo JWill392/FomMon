@@ -7,10 +7,9 @@ import {ForbiddenComponent} from "../components/shared/forbidden/forbidden.compo
 import {NotFoundComponent} from "../components/shared/not-found/not-found.component";
 import {canActivateAuthRole} from "../guards/auth-role.guard";
 import {LayerList} from "../components/ngx-map/layer/layer-list/layer-list";
+import {MenuLayout} from "../components/shared/menu-layout/menu-layout";
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/home', pathMatch: 'full'},
-  { path: 'home', component: HomeComponent},
   { path: 'map',
     component: NgxMap,
     children: [
@@ -31,12 +30,13 @@ export const routes: Routes = [
       }
     ]
   },
+  { path: '',
+    component: MenuLayout,
+    children: [
+      { path: '', redirectTo: 'home', pathMatch: 'full'},
+      { path: 'home', component: HomeComponent},
 
-
-
-
-
-
-  { path: 'forbidden', component: ForbiddenComponent },
-  { path: '**', component: NotFoundComponent }
+      { path: 'forbidden', component: ForbiddenComponent },
+      { path: '**', component: NotFoundComponent }
+    ]},
 ];
