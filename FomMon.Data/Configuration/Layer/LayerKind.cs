@@ -8,12 +8,8 @@ namespace FomMon.Data.Configuration.Layer;
 /// </summary>
 [JsonConverter(typeof(TypedCodeJsonConverter<LayerKind>))]
 [System.ComponentModel.TypeConverter(typeof(TypedCodeTypeConverter<LayerKind>))]
-public sealed class LayerKind : TypedCode<LayerKind>
+public sealed class LayerKind(string value) : TypedCode<LayerKind>(value)
 {
-    public LayerKind(string value) : base(value)
-    {
-    }
-
     static LayerKind()
     {
         ConfigureValidator(kind =>

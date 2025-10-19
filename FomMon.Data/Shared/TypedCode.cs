@@ -5,10 +5,20 @@ using System.Text.Json.Serialization;
 
 namespace FomMon.Data.Shared;
 
+/// <summary>
+/// Statically typed code value.  Behaves like a string, but with type safety.
+/// Uses CRTP (curiously recurring template pattern; TypedCode<TSelf>) to provide type safety.
+/// </summary>
+/// <typeparam name="TSelf"></typeparam>
 public abstract class TypedCode<TSelf>
     where TSelf : TypedCode<TSelf>
 {
-    protected TypedCode(string value) => Value = value;
+    protected TypedCode(string value)
+    {
+        Value = value;
+        
+        Validator?.Invoke((TSelf)this);
+    }
 
     public string Value { get; }
 

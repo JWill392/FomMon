@@ -24,7 +24,7 @@ public static class LayerRegistry
         SqlUtil.ValidateSqlIdentifier(GeometryColumn);
         All = [
             new(
-                Kind: new LayerKind("FomCutblock"),
+                Kind: LayerKind.From("FomCutblock"),
                 Name: "Cutblocks",
                 Description: "FOM Cutblocks",
                 TableName: "fom_cutblock",
@@ -37,7 +37,7 @@ public static class LayerRegistry
                 Attribution: "Forest Operations Map NRS BC"
             ),
             new(
-                Kind: new LayerKind("FomRoad"),
+                Kind: LayerKind.From("FomRoad"),
                 Name: "Roads",
                 Description: "FOM Roads",
                 TableName: "fom_road",
@@ -50,7 +50,7 @@ public static class LayerRegistry
                 Attribution: "Forest Operations Map NRS BC"
             ),
             new(
-                Kind: new LayerKind("FomRetention"),
+                Kind: LayerKind.From("FomRetention"),
                 Name: "Retention",
                 Description: "FOM Retention",
                 TableName: "fom_retention",
@@ -63,7 +63,7 @@ public static class LayerRegistry
                 Attribution: "Forest Operations Map NRS BC"
             ),
             new(
-                Kind: new LayerKind("FireCurrent"),
+                Kind: LayerKind.From("FireCurrent"),
                 Name: "Current Wildfires",
                 Description: "Perimiters of current wildfires in BC.",
                 TableName: "fire_current",

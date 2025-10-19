@@ -41,7 +41,7 @@ namespace FomMon.Data.Contexts
         }
         private class LayerKindConverter() : ValueConverter<LayerKind, string>(
             v => v.Value,
-            v => new LayerKind(v));
+            v => LayerKind.From(v));
 
 
         protected override void OnModelCreating(ModelBuilder builder)
