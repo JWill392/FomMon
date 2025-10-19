@@ -41,7 +41,7 @@ export class LocalStorageService {
       const value = localStorage.getItem(LocalStorageService.baseKey + key);
       if (!value) return null;
 
-      const wrapper: StorageWrapper<T> = JSON.parse(value, this.reviver);
+      const wrapper: StorageWrapper<T> = JSON.parse(value, this.reviver.bind(this));
 
       if (wrapper?.version !== expectedVersion) {
         this.errorService.warn(`Version mismatch for ${key}: expected ${expectedVersion}, got ${wrapper?.version}`);
