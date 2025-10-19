@@ -26,7 +26,7 @@ public static class MinioResourceBuilderExtensions
             .WithHttpEndpoint(name: MinioResource.HttpAdminEndpointName, port: minioAdminPort, targetPort: 9001)
             .WithEnvironment("MINIO_ROOT_USER", minioResource.RootUser)
             .WithEnvironment("MINIO_ROOT_PASSWORD", minioResource.RootPassword)
-            // .WithVolume("minio", "/data", isReadOnly:false)
+            .WithVolume("minio", "/data", isReadOnly:false)
             .WithArgs("server", "/data");
     }
     
