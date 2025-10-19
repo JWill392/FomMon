@@ -1,5 +1,6 @@
-import {computed, effect, Injectable, signal} from '@angular/core';
+import {computed, effect, inject, Injectable, OnInit, signal} from '@angular/core';
 import {FeatureIdentifier, LayerSpecification} from "maplibre-gl";
+import {LocalStorageService} from "../../shared/local-storage.service";
 
 export type LayerCategory = "base"|"feature";
 
@@ -34,8 +35,21 @@ export class MapLayerService {
 
   private _layers = signal<LayerInfo[]>([]);
 
+  private localStorageService = inject(LocalStorageService);
+  private static readonly layerVisibilityKey = 'layerVisibility';
+  private readonly layerVisibilityDefault : Map<string, boolean>;
+
+  constructor() {
+    this.layerVisibilityDefault = this.localStorageService.get(MapLayerService.layerVisibilityKey) ?? new Map<string, boolean>();
+    console.log('layerVisibilityDefault', this.layerVisibilityDefault);
+  }
+
   tryAddGroup(group: LayerGroup): boolean {
     if (this.getGroup(group.id)) return false;
+
+    if (this.layerVisibilityDefault.has(group.id)) {
+      group.visible = this.layerVisibilityDefault.get(group.id)!;
+    }
 
     this._groups.update(groups => [...groups, group]);
     return true;
@@ -99,6 +113,9 @@ export class MapLayerService {
         layout: this.layoutWithVisibility(l.layout, group.visible)
       });
     }));
+
+    this.layerVisibilityDefault.set(groupId, value);
+    this.localStorageService.set(MapLayerService.layerVisibilityKey, this.layerVisibilityDefault);
   }
 
   getGroup(id: string) : LayerGroup | undefined {
