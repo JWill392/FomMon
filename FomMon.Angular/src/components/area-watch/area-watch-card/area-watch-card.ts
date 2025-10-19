@@ -14,7 +14,7 @@ import {LayerConfigService} from '../../layer-type/layer-config.service';
 import {LocalState} from "../../shared/service/local-state";
 import {NgIcon, provideIcons} from "@ng-icons/core";
 import {phosphorXCircleFill} from "@ng-icons/phosphor-icons/fill";
-import {MapSelectionService} from "../../map/map-selection-service";
+import {MapSelectionService} from "../../map/map-selection.service";
 
 @Component({
   selector: 'app-area-watch-card',

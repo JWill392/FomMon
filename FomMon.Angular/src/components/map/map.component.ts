@@ -3,7 +3,7 @@ import {
   Component,
   DestroyRef,
   effect,
-  inject,
+  inject, InjectionToken,
   input,
   linkedSignal,
   signal,
@@ -33,7 +33,7 @@ import {LayerKind} from "../layer-type/layer-type.model";
 import Sidebar from "./sidebar/sidebar";
 import {RouterOutlet} from "@angular/router";
 import {UserMenu} from "../user/user-menu/user-menu";
-import {MapSelection, MapSelectionService} from "./map-selection-service";
+import {MapSelection, MapSelectionService} from "./map-selection.service";
 
 
 @Component({

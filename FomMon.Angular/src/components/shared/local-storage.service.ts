@@ -32,7 +32,7 @@ export class LocalStorageService {
       localStorage.setItem(LocalStorageService.baseKey + key, jsonValue);
 
     } catch (error) {
-      this.errorService.handleError(new Error('Error saving to local storage', error))
+      this.errorService.handleError(new Error('Error saving to local storage', {cause: error}))
     }
   }
 
@@ -51,7 +51,7 @@ export class LocalStorageService {
       return wrapper.data;
 
     } catch (error) {
-      this.errorService.handleError(new Error('Error getting from local storage', error))
+      this.errorService.handleError(new Error('Error getting from local storage', {cause: error}))
       return null;
     }
   }
@@ -61,7 +61,7 @@ export class LocalStorageService {
     try {
       localStorage.removeItem(key);
     } catch (error) {
-      this.errorService.handleError(new Error('Error removing from local storage', error))
+      this.errorService.handleError(new Error('Error removing from local storage', {cause: error}))
     }
   }
 

@@ -45,9 +45,6 @@ export class MapSelectionService {
 
     this.selectFeature({source: layerGroup.source, sourceLayer: layerGroup.sourceLayer, id: areaWatch.featureId})
   }
-  clearAreaWatch() {
-    this.clearFeature()
-  }
 
   selectFeature(id: FeatureIdentifier): void {
     if (id === null) {this.clearFeature(); return;}

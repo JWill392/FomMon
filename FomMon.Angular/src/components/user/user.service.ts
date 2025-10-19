@@ -71,7 +71,7 @@ export class UserService implements ServiceWithState {
       .pipe(
         catchError((error) => throwError(() => {
           this.logout();
-          const e = new Error("Failed to log in", error);
+          const e = new Error("Failed to log in", {cause: error});
 
           this.errorService.handleError(e);
           return e;
@@ -88,7 +88,7 @@ export class UserService implements ServiceWithState {
     return this.http.get<{url: string}>('api/user/profileimage')
       .pipe(
         catchError(error => throwError(() => {
-          const e = new Error("Failed to load profile image", error);
+          const e = new Error("Failed to load profile image", {cause: error});
           this.errorService.handleError(e); // TODO warning not error
           return e;
         })),
