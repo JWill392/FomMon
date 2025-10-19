@@ -33,7 +33,7 @@ import {LayerKind} from "../layer-type/layer-type.model";
 import Sidebar from "./sidebar/sidebar";
 import {RouterOutlet} from "@angular/router";
 import {UserMenu} from "../user/user-menu/user-menu";
-import {MapSelection, MapSelectionService} from "./map-selection.service";
+import {MapSelection, MapStateService} from "./map-state.service";
 
 
 @Component({
@@ -71,7 +71,7 @@ export class MapComponent {
   private alertService = inject(AreaAlertService);
 
   protected mapLayerService = inject(MapLayerService);
-  protected selectionService = inject(MapSelectionService);
+  protected selectionService = inject(MapStateService);
   private previousSelection : MapSelection | null = null;
 
   private destroyRef = inject(DestroyRef);

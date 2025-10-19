@@ -14,7 +14,7 @@ import {LayerConfigService} from '../../layer-type/layer-config.service';
 import {LocalState} from "../../shared/service/local-state";
 import {NgIcon, provideIcons} from "@ng-icons/core";
 import {phosphorXCircleFill} from "@ng-icons/phosphor-icons/fill";
-import {MapSelectionService} from "../../map/map-selection.service";
+import {AreaWatchLayerService} from "../../map/layer/area-watch-layer/area-watch-layer.service";
 
 @Component({
   selector: 'app-area-watch-card',
@@ -26,7 +26,7 @@ import {MapSelectionService} from "../../map/map-selection.service";
   providers: [provideIcons({phosphorXCircleFill})],
   host: {
     '[class.selected]': 'selected() === data().id',
-    '(click)': 'select()'
+    '(click)': 'select($event)'
   }
 })
 export class AreaWatchCard implements AfterViewInit, OnInit {
@@ -40,8 +40,8 @@ export class AreaWatchCard implements AfterViewInit, OnInit {
 
   @ViewChild('thumb') thumb!: ElementRef<HTMLImageElement>;
 
-  private mapSelectionService = inject(MapSelectionService);
-  protected selected = this.mapSelectionService.selectedAreaWatchId;
+  private areaWatchLayerService = inject(AreaWatchLayerService);
+  protected selected = this.areaWatchLayerService.selectedAreaWatchId;
 
   ngOnInit(): void {
   }
@@ -68,11 +68,12 @@ export class AreaWatchCard implements AfterViewInit, OnInit {
     // });
   }
 
-  delete() {
+  delete(event: PointerEvent) {
+    event.stopPropagation();
     this.awService.delete$(this.data())
       .subscribe({
         next: (_) => {
-          this.notService.pushMessage(`Watch '${this.data().name}' deleted`);
+          this.notService.pushMessage(`Watch deleted - ${this.data().name}`);
           },
         error: (e) => {
           console.error('Failed to delete watch', e);
@@ -82,7 +83,7 @@ export class AreaWatchCard implements AfterViewInit, OnInit {
     // no destroyref; component is destroyed when deleted
   }
 
-  select() {
-    this.mapSelectionService.selectAreaWatch(this.data().id);
+  select(event: PointerEvent) {
+    this.areaWatchLayerService.select(this.data().id);
   }
 }
