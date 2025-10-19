@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import {HomeComponent} from "../components/home/home";
-import {NgxMap} from '../components/ngx-map/ngx-map';
+import {MapComponent} from '../components/ngx-map/map.component';
 import {AreaWatchList} from '../components/area-watch/area-watch-list/area-watch-list';
 import {AreaWatchAddComponent} from '../components/area-watch/area-watch-add/area-watch-add.component';
 import {ForbiddenComponent} from "../components/shared/forbidden/forbidden.component";
@@ -11,7 +11,7 @@ import {MenuLayout} from "../components/shared/menu-layout/menu-layout";
 
 export const routes: Routes = [
   { path: 'map',
-    component: NgxMap,
+    component: MapComponent,
     children: [
       { path: 'area-watch-list',
         component: AreaWatchList,

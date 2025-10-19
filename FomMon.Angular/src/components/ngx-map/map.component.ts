@@ -55,11 +55,11 @@ import {MapSelection, MapSelectionService} from "./map-selection-service";
     RouterOutlet,
     UserMenu,
   ],
-  templateUrl: './ngx-map.html',
-  styleUrl: './ngx-map.css',
+  templateUrl: './map.component.html',
+  styleUrl: './map.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class NgxMap {
+export class MapComponent {
   defaultCenter = input<[number, number]>([-120.5, 50.6]);
   defaultZoom = input<[number]>([7]);
 
