@@ -219,6 +219,11 @@ namespace FomMon.Data.Migrations
                         {
                             Kind = "FomRetention",
                             Version = 0u
+                        },
+                        new
+                        {
+                            Kind = "FireCurrent",
+                            Version = 0u
                         });
                 });
 

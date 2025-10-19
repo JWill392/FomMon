@@ -4,6 +4,11 @@ using NetTopologySuite.IO;
 
 namespace FomMon.Data.Configuration.Layer;
 
+/// <summary>
+/// Configuration for layers.
+/// NOTE: currently requires a migration.  WFS download will run automatically on apiservice start,
+/// but tileserver needs restart after first run (structure change).
+/// </summary>
 public static class LayerRegistry
 {
     
@@ -56,6 +61,19 @@ public static class LayerRegistry
                 Color: "#80D39B",
                 GeometryType: "POLYGON",
                 Attribution: "Forest Operations Map NRS BC"
+            ),
+            new(
+                Kind: new LayerKind("FireCurrent"),
+                Name: "Current Wildfires",
+                Description: "Perimiters of current wildfires in BC.",
+                TableName: "fire_current",
+                SourceIdColumn: "objectid",
+                WfsUrl: "https://openmaps.gov.bc.ca/geo/pub/wfs?service=WFS",
+                WfsLayer: "pub:WHSE_LAND_AND_NATURAL_RESOURCE.PROT_CURRENT_FIRE_POLYS_SP",
+                TileSource: "fire_current",
+                Color: "#ED7527",
+                GeometryType: "POLYGON",
+                Attribution: "BC Wildfire Service"
             ),
         ];
         ByKind = All.ToDictionary(k=>k.Kind);
