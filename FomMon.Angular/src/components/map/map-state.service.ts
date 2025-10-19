@@ -10,7 +10,7 @@ export interface MapSelection {
   featureId: FeatureIdentifier;
 }
 
-export type MapMode = 'select' | 'draw' | 'none';
+export type MapMode = 'select' | 'draw' | 'none'; // TODO map mode
 
 @Injectable({providedIn: 'root'})
 export class MapStateService {

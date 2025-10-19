@@ -66,7 +66,11 @@ var keycloak = builder.AddKeycloak("keycloak", 8080)
     .WithLifetime(ContainerLifetime.Persistent);
 
 var cache = builder.AddRedis("cache")
-    .WithRedisInsight(c => c.WithHostPort(46235)) // arbitrary stable port
+    .WithRedisInsight(c =>
+    {
+        c.WithHostPort(46235);
+        c.WithEnvironment("RI_ACCEPT_TERMS_AND_CONDITIONS", "true");
+    })
     .WithDataVolume(isReadOnly: false)
     .WithPersistence(
         interval: TimeSpan.FromMinutes(5),
