@@ -1,6 +1,7 @@
 using FomMon.ApiService.Infrastructure;
 using FomMon.ApiService.Services;
 using Microsoft.AspNetCore.Mvc;
+using SixLabors.ImageSharp;
 
 namespace FomMon.ApiService.Controllers;
 
@@ -17,26 +18,8 @@ public class UserProfileController(
     {
         try
         {
-            var (user, errors) = await userService.GetAsync(currentUser.Id!.Value, c);
+            var (objectName, errors) = await userService.UploadProfileImage(currentUser.Id!.Value, file, c);
             if (errors is not null) return BadRequest(errors);
-            
-            // version existing image; see minio policy for deletion schedule
-            bool imageExists = !String.IsNullOrEmpty(user.ProfileImageObjectName);
-            string objectName = imageExists ? user.ProfileImageObjectName : 
-                $"{currentUser.Id!.Value}.{Guid.NewGuid().ToString()}.png";
-            
-            await objectStorageService.UploadImageAsync(objectName, file, c);
-
-            if (!imageExists)
-            {
-                var userResult = await userService.SetProfileImageObjectAsync(currentUser.Id!.Value, objectName, c);
-                if (userResult.IsFailed)
-                {
-                    await objectStorageService.DeleteImageAsync(objectName, c);
-                    return BadRequest(userResult.Errors);
-                }
-            }
-            
             
             return Ok(new { message = "Profile image uploaded successfully", objectName });
         }
@@ -50,50 +33,40 @@ public class UserProfileController(
     [HttpGet]
     public async Task<IActionResult> GetProfileImageUrl(CancellationToken c = default)
     {
-        try
-        {
-            var (user, errors) = await userService.GetAsync(currentUser.Id!.Value, c);
-            if (errors is not null) return BadRequest(errors);
+        var (user, errors) = await userService.GetAsync(currentUser.Id!.Value, c);
+        if (errors is not null) return BadRequest(errors);
 
-            if (String.IsNullOrEmpty(user.ProfileImageObjectName))
-            {
-                return NotFound(new { error = "Profile image not found" });
-            }
-            
-            // Generate presigned URL (valid for 1 hour)
-            var url = await objectStorageService.GetImageUrlAsync(user.ProfileImageObjectName, 3600, c);
-            return Ok(new { url });
-        }
-        catch (Exception ex)
+        if (String.IsNullOrEmpty(user.ProfileImageObjectName))
         {
             return NotFound(new { error = "Profile image not found" });
         }
+        
+        // Generate presigned URL (valid for 1 hour)
+        var url = await objectStorageService.GetImageUrlAsync(user.ProfileImageObjectName, 3600, c);
+        return Ok(new { url });
     }
 
     [HttpDelete]
     public async Task<IActionResult> DeleteProfileImage(CancellationToken c = default)
     {
-        try
-        {
-            var (user, errors) = await userService.GetAsync(currentUser.Id!.Value, c);
-            if (errors is not null) return BadRequest(errors);
-            if (String.IsNullOrEmpty(user.ProfileImageObjectName))
-                return NotFound(new { error = "Profile image not found" });
-            
-            await objectStorageService.DeleteImageAsync(user.ProfileImageObjectName, c);
-            
-            var userResult = await userService.SetProfileImageObjectAsync(currentUser.Id!.Value, String.Empty, c);
-            if (userResult.IsFailed)
-            {
-                // TODO undelete
-                throw new Exception("Failed to delete profile image");
-            }
-            
-            return NoContent();
-        }
-        catch (Exception ex)
-        {
-            return NotFound(new { error = "Profile image not found" });
-        }
+        var result = await userService.DeleteProfileImage(currentUser.Id!.Value, c);
+        
+        if (result.HasError<NotFoundError>()) return NotFound();
+        if (result.IsFailed) return BadRequest(result.Errors);
+
+        return NoContent();
+    }
+
+    [HttpGet("identicon")]
+    public async Task<IActionResult> GenerateIdenticon(CancellationToken c = default)
+    {
+        var (img, errors) = await userService.GenerateIdenticonAsync(currentUser.Id!.Value, c);
+        if (errors is not null) return BadRequest(errors);
+        
+        using var image = img;
+        using var imgStream = new MemoryStream();
+        await img.SaveAsWebpAsync(imgStream, c);
+        imgStream.Position = 0;
+        return File(imgStream.ToArray(), "image/webp");
     }
 }

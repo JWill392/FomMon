@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using FluentResults;
 using Minio;
 using Minio.DataModel.Args;
 using OpenTelemetry.Trace;
@@ -9,7 +10,9 @@ namespace FomMon.ApiService.Services;
 
 public interface IObjectStorageService
 {
-    Task UploadImageAsync(string objectName, IFormFile file, CancellationToken c = default);
+
+    Task<Result> UploadImageAsync(string objectName, Stream imageStream, long length, string contentType,
+        CancellationToken c = default);
     Task<Stream> GetImageAsync(string objectName, CancellationToken c = default);
     Task<string> GetImageUrlAsync(string objectName, int expiresInSeconds = 3600, CancellationToken c = default);
     Task DeleteImageAsync(string objectName, CancellationToken c = default);
@@ -27,6 +30,9 @@ public static class MinioObjectStorageServiceExtensions
     }
 }
 
+public class InvalidFileTypeError : Error;
+public class FileSizeError(string message) : Error(message);
+
 public class MinioObjectStorageService(
     IMinioClient minioClient,
     ILogger<MinioObjectStorageService> logger)
@@ -38,41 +44,33 @@ public class MinioObjectStorageService(
 
     public const string ActivitySourceName = "FomMon.ProfileImageService";
     private static readonly ActivitySource ActivitySource = new(ActivitySourceName);
-    
-    
-    public async Task UploadImageAsync(string objectName, IFormFile file, CancellationToken c = default)
+
+    public async Task<Result> UploadImageAsync(string objectName, Stream imageStream, long length, string contentType, CancellationToken c = default)
     {
         using var activity = ActivitySource.StartActivity();
         activity?.SetTag("object.name", objectName);
-        activity?.SetTag("object.size", file.Length);
-        activity?.SetTag("object.type", file.ContentType);
-        
+        activity?.SetTag("object.size", length);
+        activity?.SetTag("object.type", contentType);
+
         ArgumentException.ThrowIfNullOrWhiteSpace(objectName);
-        if (file == null || file.Length == 0)
-            throw new ArgumentException("File is required");
 
         // Validate file type
-        // TODO use results instead of exceptions so controller can return error message
-        if (!await IsValidFormat(file, ["image/jpeg", "image/png", "image/webp"], c))
-        {
-            throw new ArgumentException("Invalid file type");
-        }
+        string? imgMimeType = await ValidFormat(imageStream, ["image/jpeg", "image/png", "image/webp"], c);
+        if(imgMimeType is null) return Result.Fail(new InvalidFileTypeError());
 
         // Validate file size
         // TODO configure max size
-        if (file.Length > MaxSizeMb * 1024 * 1024) 
-            throw new ArgumentException($"File size exceeds {MaxSizeMb}MB limit");
+        if (imageStream.Length > MaxSizeMb * 1024 * 1024) 
+            return Result.Fail(new FileSizeError($"File size exceeds {MaxSizeMb}MB limit"));
         
         try
         {
-            await using var stream = file.OpenReadStream();
-            
             var putObjectArgs = new PutObjectArgs()
                 .WithBucket(BucketName)
                 .WithObject(objectName)
-                .WithStreamData(stream)
-                .WithObjectSize(file.Length)
-                .WithContentType(file.ContentType);
+                .WithStreamData(imageStream)
+                .WithObjectSize(imageStream.Length)
+                .WithContentType(imgMimeType); 
 
             await minioClient.PutObjectAsync(putObjectArgs, c);
         }
@@ -84,28 +82,25 @@ public class MinioObjectStorageService(
         }
         
         activity?.SetStatus(ActivityStatusCode.Ok);
+        return Result.Ok();
     }
 
-    private  async Task<bool> IsValidFormat(IFormFile file, string[] allowedMimetypes, CancellationToken c = default)
+    private static async Task<string?> ValidFormat(Stream imageStream, string[] allowedMimetypes, CancellationToken c = default)
     {
-        await using var stream = file.OpenReadStream();
         try
         {
-            var format = await Image.DetectFormatAsync(stream, c);
+            var format = await Image.DetectFormatAsync(imageStream, c);
 
-            bool valid = format.MimeTypes.Intersect(allowedMimetypes).Any();
-            
-            if (!valid) logger.LogWarning("Invalid image format: {format}", format.Name);
-            
-            return valid;
+            string? allowedType = format.MimeTypes.Intersect(allowedMimetypes).FirstOrDefault();
+
+            return allowedType;
         }
         catch (Exception ex) when (ex is InvalidImageContentException or 
                                        NotSupportedException or 
                                        UnknownImageFormatException)
         {
-            return false;
+            return null;
         }
-
     }
 
     public async Task<Stream> GetImageAsync(string objectName, CancellationToken c = default)
@@ -114,8 +109,6 @@ public class MinioObjectStorageService(
         activity?.SetTag("object.name", objectName);
         
         ArgumentException.ThrowIfNullOrWhiteSpace(objectName);
-        
-        if (String.IsNullOrEmpty(objectName)) return Stream.Null;
 
         try
         {

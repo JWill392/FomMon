@@ -132,3 +132,7 @@ Authorization: Bearer {{access_token}}
 ### Profile Image Get
 GET http://localhost:5389/User/ProfileImage
 Authorization: Bearer {{access_token}}
+
+### Profile Identicon Generate
+GET http://localhost:5389/User/ProfileImage/identicon
+Authorization: Bearer {{access_token}}
