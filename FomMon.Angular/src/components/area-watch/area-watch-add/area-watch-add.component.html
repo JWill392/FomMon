@@ -8,7 +8,7 @@
     <label for="layers">Layers:</label>
 <!--    TODO multiselect that isn't garbage -->
     <select name="layers" id="layers" formControlName="layers" multiple>
-      @for (layer of layerService.data(); track layer.kind) {
+      @for (layer of layers(); track layer.kind) {
         <option id="layer-{{ layer.kind" [value]="layer.kind">{{layer.name}}</option>
       }
     </select>
@@ -19,6 +19,9 @@
     }
     @if (form.controls.layers.touched && form.controls.layers.hasError('required')) {
       <p class="error">At least one layer is required</p>
+    }
+    @if (form.controls.layers.touched && form.controls.geometry.hasError('required')) {
+      <p class="error">Draw an area to monitor on the map</p>
     }
   </div>
   <button type="submit">Add</button>

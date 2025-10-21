@@ -1,10 +1,14 @@
-import {Component, DestroyRef, inject} from '@angular/core';
+import {Component, DestroyRef, inject, OnDestroy, OnInit} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {AreaWatchService} from '../area-watch.service';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {NotificationService} from '../../shared/snackbar/notification.service';
 import {LayerConfigService} from '../../layer-type/layer-config.service';
 import {LayerKind} from "../../layer-type/layer-type.model";
+import {MapStateService} from "../../map/map-state.service";
+import {Geometry} from "geojson";
+import {Router} from "@angular/router";
+import {AreaWatchLayerService} from "../../map/layer/area-watch-layer/area-watch-layer.service";
 
 @Component({
   selector: 'app-area-watch-add',
@@ -14,8 +18,17 @@ import {LayerKind} from "../../layer-type/layer-type.model";
   templateUrl: './area-watch-add.component.html',
   styleUrl: './area-watch-add.component.css'
 })
-export class AreaWatchAddComponent {
-  layerService = inject(LayerConfigService);
+export class AreaWatchAddComponent implements OnInit, OnDestroy {
+  private layerService = inject(LayerConfigService);
+  protected layers = this.layerService.data;
+
+  private mapStateService = inject(MapStateService);
+  private awService = inject(AreaWatchService);
+  private awLayerService = inject(AreaWatchLayerService);
+  private notService = inject(NotificationService);
+  private router = inject(Router);
+
+  private destroyRef = inject(DestroyRef);
 
   form = new FormGroup({
     name: new FormControl<string>('', {
@@ -24,36 +37,50 @@ export class AreaWatchAddComponent {
     layers: new FormControl<LayerKind[]>([], {
       validators: [Validators.required],
     }),
+    geometry: new FormControl<Geometry | null>(null, {
+      validators: [Validators.required],
+    }),
   })
-
-  awService = inject(AreaWatchService);
-  private destroyRef = inject(DestroyRef);
-  notService = inject(NotificationService);
-
+  ngOnInit(): void {
+    this.startDrawMode();
+  }
+  ngOnDestroy(): void {
+      this.mapStateService.endDrawMode();
+  }
+  private startDrawMode(): void {
+    this.mapStateService.startDrawMode()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (geometry) => {
+          this.form.patchValue({ geometry });
+        }
+      });
+  }
 
   onSubmit() {
     this.form.markAllAsTouched();
     if (this.form.invalid) {return;}
+
+
     const addAw = this.awService.createId({
       name: this.form.value.name,
       layers: this.form.value.layers,
-      geometry: {
-        type: 'Point',
-        coordinates: [0, 0] // TODO get geom from map
-      },
+      geometry: this.form.value.geometry,
     });
+
     this.awService.add$(addAw)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      // do NOT take until destroyed, as we navigate away immediately
       .subscribe({
           next: (result) => {
             this.notService.pushMessage(`Watch '${result.name}' added`);
-            // TODO navigate back to list
           },
           error: error => {
             console.error('AreaWatch create error', error);
             this.notService.pushMessage("Failed to add watch.  Please try again.");
           }
       });
-    this.form.reset();
+
+    this.awLayerService.select(addAw.id);
+    this.router.navigate(['/map/area-watch-list']);
   }
 }

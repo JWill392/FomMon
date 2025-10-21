@@ -31,7 +31,7 @@ export class AreaWatchLayerService {
 
       if (!selected) return;
       if (!this.areaWatchService.get(selected)) {
-        this.mapStateService.clearFeature();
+        this.mapStateService.clearSelection();
         return;
       }
     })
@@ -51,7 +51,7 @@ export class AreaWatchLayerService {
     }
 
 
-    this.mapStateService.selectFeature({
+    this.mapStateService.select({
       source: layerGroup.source,
       sourceLayer: layerGroup.sourceLayer,
       id: areaWatch.featureId

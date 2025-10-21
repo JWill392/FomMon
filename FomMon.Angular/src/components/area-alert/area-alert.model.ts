@@ -10,13 +10,12 @@ export interface AreaAlert extends LocalStateItem{
   featureReference: {
     id: number
     layerKind: LayerKind,
-    sourceFeatureId: string,
+    sourceFeatureId: number,
 
     firstSeenAt: string,
     lastSeenAt: string,
     deletedAt: string,
     isDeleted: Boolean,
 
-    geometry: Geometry
   }
 }

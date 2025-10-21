@@ -6,10 +6,10 @@ using NodaTime;
 
 namespace FomMon.ApiService.Contracts;
 
-public class FeatureReferenceDto : IDisposable
+public class FeatureReferenceDto
 {
     public int Id { get; set; }
-    public LayerKind LayerKind { get; set; }
+    public LayerKind LayerKind { get; set; } = null!;
 
     [MaxLength(100)]
     public string SourceFeatureId { get; set; } = null!; // Value from the layer's source ID column
@@ -20,12 +20,6 @@ public class FeatureReferenceDto : IDisposable
     public Instant? DeletedAt { get; set; }
     public bool IsDeleted { get; set; } // Mark as deleted if missing from layer
 
-    public required Geometry Geometry { get; set; }
-
-
-    public JsonDocument? AttributesSnapshot { get; set; } // JSON
-
-    public void Dispose() => AttributesSnapshot?.Dispose();
     
 }
 

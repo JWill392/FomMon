@@ -90,7 +90,7 @@ export class AreaWatchService implements ServiceWithState {
     }
 
     this.addLocal(addAw);
-
+    console.log('adding', addAw);
     return this.http.post<AreaWatch>('api/areawatch', addAw)
       .pipe(
         catchError((error) => throwError(() => {

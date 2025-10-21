@@ -45,7 +45,10 @@ export class AreaAlertService implements ServiceWithState {
           if (!Array.isArray(body)) {
             throw new Error(`Invalid response type @ GET api/areaalert; expected array, found ${typeof (body)}`);
           }
-          body.forEach(aw => aw.localState = LocalState.added);
+          body.forEach(a => {
+            a.localState = LocalState.added;
+            a.featureReference.sourceFeatureId = Number(a.featureReference.sourceFeatureId);
+          });
           this._data.set(body);
         }),
         this._state.loadState,

@@ -9,5 +9,4 @@ export enum LocalState {
 
 export interface LocalStateItem {
   localState: LocalState;
-  pendingLocalState?: LocalState;
 }

@@ -3,9 +3,8 @@ import {
   Component,
   DestroyRef,
   effect,
-  inject, InjectionToken,
+  inject,
   input,
-  linkedSignal,
   signal,
 } from '@angular/core';
 import {
@@ -18,8 +17,8 @@ import {
 } from '@maplibre/ngx-maplibre-gl';
 import type {FeatureIdentifier, Map as MapLibreMap, MapGeoJSONFeature} from 'maplibre-gl';
 import {MaplibreTerradrawControl} from '@watergis/maplibre-gl-terradraw';
+import {TerraDraw} from 'terra-draw';
 import {AreaWatchService} from '../area-watch/area-watch.service';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {UserService} from '../user/user.service';
 import {LayerConfigService} from '../layer-type/layer-config.service';
 import {AreaAlertService} from '../area-alert/area-alert.service';
@@ -34,6 +33,7 @@ import Sidebar from "./sidebar/sidebar";
 import {RouterOutlet} from "@angular/router";
 import {UserMenu} from "../user/user-menu/user-menu";
 import {MapSelection, MapStateService} from "./map-state.service";
+import {ErrorService} from "../shared/error.service";
 
 
 @Component({
@@ -67,12 +67,15 @@ export class MapComponent {
 
   private layerConfigService = inject(LayerConfigService);
   private userService = inject(UserService);
-  private watchService = inject(AreaWatchService);
   private alertService = inject(AreaAlertService);
+  private errorService = inject(ErrorService);
 
   protected mapLayerService = inject(MapLayerService);
-  protected selectionService = inject(MapStateService);
+
+  protected mapStateService = inject(MapStateService);
   private previousSelection : MapSelection | null = null;
+
+  protected isDrawMode = signal(false);
 
   private destroyRef = inject(DestroyRef);
 
@@ -82,13 +85,13 @@ export class MapComponent {
 
 
 
-  private readonly alertedFeatures = new Map<LayerKind, Set<string>>();
+  private readonly alertedFeatures = new Map<LayerKind, Set<number>>();
 
   // selection
   constructor() {
     // selection
     effect(() => {
-      var selected = this.selectionService.selected();
+      var selected = this.mapStateService.selected();
 
       if (selected !== null) {
         this.map().setFeatureState(selected.featureId, { selected: true });
@@ -97,7 +100,7 @@ export class MapComponent {
       if (this.previousSelection) {
         // toggle
         if (this.identifierEquals(this.previousSelection?.featureId, selected?.featureId)) {
-          this.selectionService.clearFeature();
+          this.mapStateService.clearSelection();
         } else {
           this.map().setFeatureState(this.previousSelection.featureId, { selected: false });
         }
@@ -105,6 +108,19 @@ export class MapComponent {
 
       this.previousSelection = selected;
     });
+
+    // draw mode
+    effect(() => {
+      const mode = this.mapStateService.mode();
+      if (!this.map()) return;
+
+      if (mode === 'draw') {
+        this.enterDrawMode();
+
+      } else {
+        this.exitDrawMode();
+      }
+    })
 
     // alert status
     effect(() => {
@@ -122,24 +138,30 @@ export class MapComponent {
 
         const newAlerts = new Set((layerAlertMap.get(kind) ?? []).map((a) => a.featureReference.sourceFeatureId) ?? []);
 
-        const getId = (id: string) => ({
+        const getId = (id: number) => ({
           source: kind,
           sourceLayer: layer.tileSource,
           id: id,
         });
 
-        oldAlerts.difference(newAlerts).forEach((id) => this.map().setFeatureState(getId(id), { alert: false }))
-        newAlerts.difference(oldAlerts).forEach((id) => this.map().setFeatureState(getId(id), { alert: true }))
+        oldAlerts.difference(newAlerts).forEach((id) => map.setFeatureState(getId(id), { alert: false }))
+        newAlerts.difference(oldAlerts).forEach((id) => map.setFeatureState(getId(id), { alert: true }))
         this.alertedFeatures.set(kind, newAlerts);
+
+        console.log('alerted features', this.alertedFeatures.values().reduce((acc, val) => acc+val.size , 0));
+        map.triggerRepaint();
       }
     });
   }
 
   onMapLoad(map: MapLibreMap) {
-    this.map.set(map);
+    // TODO remove debug setting
+    map.showCollisionBoxes = true;
+    map.showTileBoundaries = true;
 
-    this.registerDrawing();
-    this.registerInteractivity();
+    this.registerDrawing(map);
+    this.registerInteractivity(map);
+    this.map.set(map);
   }
 
 
@@ -158,47 +180,76 @@ export class MapComponent {
     return { url };
   };
 
-
-  // TODO refactor to a signal to enter 'drawing mode' with drawFinish callback.  perhaps rxJs.
-  private registerDrawing() {
-    if (!this.map) return;
-
-    const drawControl = new MaplibreTerradrawControl({
-      modes: ['polygon', 'select', 'delete-selection', 'render'],
-      open: true,
+  private drawControl : MaplibreTerradrawControl | undefined;
+  private draw : TerraDraw | undefined;
+  private registerDrawing(map: MapLibreMap) {
+    this.drawControl = new MaplibreTerradrawControl({
+      modes: ['polygon', 'select', 'delete-selection'],
+      open: true
     });
-    this.map().addControl(drawControl, 'bottom-right');
+    map.addControl(this.drawControl, 'top-right');
 
-    const draw = drawControl.getTerraDrawInstance();
-    if (!draw) {
-      console.error('Failed to get terra draw instance');
+    this.draw = this.drawControl.getTerraDrawInstance();
+    if (!this.draw) {
+      this.errorService.handleError(new Error('Failed to get terra draw instance'));
       return;
     }
-
-    draw.on('finish', (id: any) => {
-      const feature = draw.getSnapshotFeature(id);
-
-      const addAw = this.watchService.createId({
-        geometry: feature?.geometry,
-        name: 'New Area Watch',
-        layers: ['FomCutblock' as LayerKind, 'FomRoad' as LayerKind],
-      });
-      draw.removeFeatures([id]);
-
-      this.watchService
-        .add$(addAw)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe();
-
-      draw.setMode('select');
-    });
-
+    this.hideDrawControl();
   }
-
-  // TODO replace all this with NGX hover; it's the last legacy of old pure js map
-  private registerInteractivity() {
+  private enterDrawMode() : void {
+    if (this.isDrawMode()) return;
     if (!this.map) return;
 
+    this.isDrawMode.set(true);
+
+    this.showDrawControl();
+    this.draw.setMode('polygon');
+
+    this.draw.on('finish', (id: any) => {
+      const feature = this.draw.getSnapshotFeature(id);
+
+      if (feature?.geometry) {
+        this.mapStateService.drawResult$.next(feature.geometry);
+      }
+    });
+
+    // this.drawControl.activate();
+  }
+  private exitDrawMode() {
+    if (!this.isDrawMode()) return;
+    if (!this.map) return;
+
+    this.hideDrawControl()
+    this.draw.clear();
+
+
+    this.draw.setMode('select');
+    this.isDrawMode.set(false);
+  }
+
+
+  // toggle css visibility - hack to work around terradraw control not initializing properly when added/removed after map loaded.
+  private hideDrawControl() {
+    if (!this.drawControl) return;
+    const container = (this.drawControl as any).controlContainer;
+
+    if (container) {
+      container.style.display = 'none';
+    }
+  }
+
+  private showDrawControl() {
+    if (!this.drawControl) return;
+    const container = (this.drawControl as any).controlContainer;
+    if (container) {
+      container.style.display = 'block';
+    }
+  }
+
+
+
+  // TODO replace all this with NGX hover; it's the last legacy of old pure js map
+  private registerInteractivity(map: MapLibreMap) {
     interface LayerInteractivity {
       id: string;
       selectable?: boolean;
@@ -218,12 +269,12 @@ export class MapComponent {
     let selectedFeatureId: FeatureIdentifier | null = null;
 
     // Selection on click
-    this.map().on('click', getLayerIdsBy('selectable'), async (e) => {
+    map.on('click', getLayerIdsBy('selectable'), async (e) => {
       if (e.features && e.features.length > 0) {
         selectedFeatureId = this.getIdentifier(e.features[0]);
-        this.selectionService.selectFeature(selectedFeatureId);
+        this.mapStateService.select(selectedFeatureId);
       } else {
-        this.selectionService.clearFeature();
+        this.mapStateService.clearSelection();
         selectedFeatureId = null;
       }
 
@@ -231,37 +282,36 @@ export class MapComponent {
     });
 
     // Deselect on empty click
-    this.map().on('click', async (e) => {
+    map.on('click', async (e) => {
       if (e.defaultPrevented) return;
-      this.selectionService.clearFeature();
+      this.mapStateService.clearSelection();
     });
 
 
     // Cursor changes
-    this.map().on('mouseenter', getLayerIdsBy('clickable'), () => {
-      if (this.map) this.map().getCanvas().style.cursor = 'pointer';
+    map.on('mouseenter', getLayerIdsBy('clickable'), () => {
+      map.getCanvas().style.cursor = 'pointer';
     });
-    this.map().on('mouseleave', getLayerIdsBy('clickable'), () => {
-      if (this.map) this.map().getCanvas().style.cursor = '';
+    map.on('mouseleave', getLayerIdsBy('clickable'), () => {
+      map.getCanvas().style.cursor = '';
     });
 
     // Hover states
     getLayerIdsBy('hoverable').forEach((layerId) => {
       let hoveredFeatureId: FeatureIdentifier | null = null;
-      this.map().on('mousemove', layerId, (e: any) => {
-        if (!this.map) return;
+      map.on('mousemove', layerId, (e: any) => {
         if (e.features && e.features.length > 0) {
           if (hoveredFeatureId) {
-            this.map().setFeatureState(hoveredFeatureId, { hover: false });
+            map.setFeatureState(hoveredFeatureId, { hover: false });
           }
           hoveredFeatureId = this.getIdentifier(e.features[0]);
-          this.map().setFeatureState(hoveredFeatureId, { hover: true });
+          map.setFeatureState(hoveredFeatureId, { hover: true });
         }
       });
 
-      this.map().on('mouseleave', layerId, () => {
-        if (!this.map || !hoveredFeatureId) return;
-        this.map().setFeatureState(hoveredFeatureId, { hover: false });
+      map.on('mouseleave', layerId, () => {
+        if (!hoveredFeatureId) return;
+        map.setFeatureState(hoveredFeatureId, { hover: false });
         hoveredFeatureId = null;
       });
     });

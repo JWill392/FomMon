@@ -16,6 +16,7 @@
             'fill-color': [
               'case',
               ['boolean', ['feature-state', 'selected'], false], '#FFB347',
+              ['boolean', ['feature-state', 'alert'], false], '#f54a00',
               layer().color
             ],
             'fill-opacity': [
@@ -74,7 +75,12 @@
             [sourceLayer]="layer().tileSource"
             [minzoom]="8"
             [paint]="{
-          'line-color': layer().color,
+          'line-color': [
+              'case',
+              ['boolean', ['feature-state', 'selected'], false], '#F58F00',
+              ['boolean', ['feature-state', 'alert'], false], '#f54a00',
+              layer().color
+            ],
           'line-width': [
             'case',
             ['boolean', ['feature-state', 'selected'], false], 3,
