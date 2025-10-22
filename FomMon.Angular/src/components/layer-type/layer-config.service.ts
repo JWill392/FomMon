@@ -6,6 +6,9 @@ import {ServiceLoadState} from "../shared/service/service-load-state";
 import {ServiceWithState} from "../shared/service/service-state";
 import {Observable} from "rxjs";
 
+/**
+ * Service for retrieving API config of feature layer types.
+ */
 @Injectable({
   providedIn: 'root'
 })

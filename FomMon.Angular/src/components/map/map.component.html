@@ -16,6 +16,12 @@
       [tileSize]="256"
       attribution="© OpenStreetMap contributors"
   >
+    <app-map-layer-group
+        groupId="osm-base"
+        thumbnailImg="assets/layer-preview-osm-base.png"
+        name="Map"
+        [initiallyVisible]="true"
+        category="base"/>
 
     <mgl-layer
         source="osm-base"
@@ -26,10 +32,6 @@
         [layout]="mapLayerService.getLayout('osm-base')"
 
         appMapLayer
-        [thumbnailImg]="'assets/layer-preview-osm-base.png'"
-        [name]="'Map'"
-        [initiallyVisible]="true"
-        category="base"
         groupId="osm-base"
     />
   </mgl-raster-source>
@@ -41,6 +43,12 @@
       [tileSize]="256"
       attribution="Esri, Maxar, Earthstar Geographics, and the GIS User Community"
   >
+    <app-map-layer-group
+        groupId="esri-imagery"
+        category="base"
+        thumbnailImg="assets/layer-preview-esri-imagery.png"
+        name="Satellite"
+    />
     <mgl-layer
         source="esri-imagery"
         id="esri-imagery"
@@ -50,9 +58,6 @@
         [layout]="mapLayerService.getLayout('esri-imagery')"
 
         appMapLayer
-        [thumbnailImg]="'assets/layer-preview-esri-imagery.png'"
-        [name]="'Satellite'"
-        category="base"
         groupId="esri-imagery"
     />
   </mgl-raster-source>

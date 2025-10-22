@@ -21,12 +21,16 @@ export class AreaWatchLayerService {
   private mapStateService = inject(MapStateService);
 
   readonly selectedAreaWatchId = computed(() => this.getAreaWatch(this.mapStateService.selected()));
+  readonly hoveredAreaWatchIds = computed(() => this.mapStateService.hovered().map(s => this.getAreaWatch(s)).filter(a => a !== null));
+
+  private _layerGroup = computed(() => this.mapLayerService.featureGroups().find(g => g.id === AreaWatchLayer.layerGroupId));
 
   constructor() {
 
     // deselect on delete
     effect(() => {
       const selected = this.selectedAreaWatchId();
+      // TODO make this generic and in group component or directive
       this.areaWatchService.data(); // subscribe to changes
 
       if (!selected) return;
@@ -38,24 +42,36 @@ export class AreaWatchLayerService {
   }
 
   select(id: string): void {
-    const layerGroup = this.mapLayerService.getGroup(AreaWatchLayer.layerGroupId);
-    if (!layerGroup) {
-      this.errorService.handleError(`No layer group found for ${AreaWatchLayer.layerGroupId}`);
-      return;
-    }
+    const fid = this.toFeatureIdentifier(id);
+    if (!fid) return;
 
+    this.mapStateService.select(fid);
+  }
+  addHover(id: string): void {
+    const fid = this.toFeatureIdentifier(id);
+    if (!fid) return;
+
+    this.mapStateService.addHover(fid);
+  }
+  removeHover(id: string): void {
+    const fid = this.toFeatureIdentifier(id);
+    if (!fid) return;
+    this.mapStateService.removeHover(fid);
+  }
+
+  private toFeatureIdentifier(id: string) : FeatureIdentifier | null {
     const areaWatch = this.areaWatchService.get(id);
     if (!areaWatch) {
       this.errorService.handleError(`No area watch found for ${id}`);
-      return;
+      return null;
     }
+    if (!this._layerGroup()) return null;
 
-
-    this.mapStateService.select({
-      source: layerGroup.source,
-      sourceLayer: layerGroup.sourceLayer,
+    return {
+      source: this._layerGroup()?.source,
+      sourceLayer: this._layerGroup()?.sourceLayer,
       id: areaWatch.featureId
-    })
+    };
   }
   private getAreaWatch(selection: MapSelection) {
     if (!selection) return null;

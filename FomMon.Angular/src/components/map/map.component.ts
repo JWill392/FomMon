@@ -15,10 +15,9 @@ import {
   RasterSourceComponent,
   ScaleControlDirective,
 } from '@maplibre/ngx-maplibre-gl';
-import type {FeatureIdentifier, Map as MapLibreMap, MapGeoJSONFeature} from 'maplibre-gl';
+import {FeatureIdentifier, Map as MapLibreMap, MapGeoJSONFeature, MapMouseEvent} from 'maplibre-gl';
 import {MaplibreTerradrawControl} from '@watergis/maplibre-gl-terradraw';
 import {TerraDraw} from 'terra-draw';
-import {AreaWatchService} from '../area-watch/area-watch.service';
 import {UserService} from '../user/user.service';
 import {LayerConfigService} from '../layer-type/layer-config.service';
 import {AreaAlertService} from '../area-alert/area-alert.service';
@@ -34,6 +33,7 @@ import {RouterOutlet} from "@angular/router";
 import {UserMenu} from "../user/user-menu/user-menu";
 import {MapSelection, MapStateService} from "./map-state.service";
 import {ErrorService} from "../shared/error.service";
+import {MapLayerGroupComponent} from "./layer/map-layer-group/map-layer-group.component";
 
 
 @Component({
@@ -54,59 +54,74 @@ import {ErrorService} from "../shared/error.service";
     Sidebar,
     RouterOutlet,
     UserMenu,
+    MapLayerGroupComponent,
   ],
   templateUrl: './map.component.html',
   styleUrl: './map.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MapComponent {
-  defaultCenter = input<[number, number]>([-120.5, 50.6]);
-  defaultZoom = input<[number]>([7]);
-
-  readonly map = signal<MapLibreMap | undefined>(undefined);
-
   private layerConfigService = inject(LayerConfigService);
   private userService = inject(UserService);
   private alertService = inject(AreaAlertService);
   private errorService = inject(ErrorService);
-
   protected mapLayerService = inject(MapLayerService);
-
   protected mapStateService = inject(MapStateService);
-  private previousSelection : MapSelection | null = null;
 
+  defaultCenter = input<[number, number]>([-120.5, 50.6]);
+  defaultZoom = input<[number]>([7]);
+
+  readonly map = signal<MapLibreMap | undefined>(undefined);
   protected isDrawMode = signal(false);
-
-  private destroyRef = inject(DestroyRef);
-
-  readonly isAuthenticated = this.userService.state.isReady;
-
-  protected domainLayers = this.layerConfigService.data;
-
-
-
   private readonly alertedFeatures = new Map<LayerKind, Set<number>>();
 
-  // selection
+  protected domainLayers = this.layerConfigService.data;
+  readonly isAuthenticated = this.userService.state.isReady;
+
+
   constructor() {
     // selection
+    let previousSelection : MapSelection | null = null;
     effect(() => {
       var selected = this.mapStateService.selected();
+      if (!this.map()) return;
 
       if (selected !== null) {
         this.map().setFeatureState(selected.featureId, { selected: true });
       }
 
-      if (this.previousSelection) {
+      if (previousSelection) {
         // toggle
-        if (this.identifierEquals(this.previousSelection?.featureId, selected?.featureId)) {
+        if (this.identifierEquals(previousSelection?.featureId, selected?.featureId)) {
           this.mapStateService.clearSelection();
         } else {
-          this.map().setFeatureState(this.previousSelection.featureId, { selected: false });
+          this.map().setFeatureState(previousSelection.featureId, { selected: false });
         }
       }
 
-      this.previousSelection = selected;
+
+
+      previousSelection = selected;
+    });
+
+    // hover
+    let previousHover : Set<MapSelection> = new Set();
+    effect(() => {
+      const newHover = new Set(this.mapStateService.hovered()); // reference equality is good enough
+      const map = this.map();
+      if (!map) return;
+
+
+      previousHover.difference(newHover).forEach((s) => map.setFeatureState(s.featureId, { hover: false }))
+      newHover.difference(previousHover).forEach((s) => map.setFeatureState(s.featureId, { hover: true }))
+
+      if (newHover.size > 0 && previousHover.size === 0) {
+        this.mapStateService.map().getCanvas().style.cursor = 'pointer';
+      } else if (newHover.size === 0 && previousHover.size > 0) {
+        this.mapStateService.map().getCanvas().style.cursor = '';
+      }
+
+      previousHover = newHover;
     });
 
     // draw mode
@@ -148,20 +163,21 @@ export class MapComponent {
         newAlerts.difference(oldAlerts).forEach((id) => map.setFeatureState(getId(id), { alert: true }))
         this.alertedFeatures.set(kind, newAlerts);
 
-        console.log('alerted features', this.alertedFeatures.values().reduce((acc, val) => acc+val.size , 0));
         map.triggerRepaint();
       }
     });
   }
 
   onMapLoad(map: MapLibreMap) {
-    // TODO remove debug setting
-    map.showCollisionBoxes = true;
-    map.showTileBoundaries = true;
+    // DEBUG tiles
+    // map.showCollisionBoxes = true;
+    // map.showTileBoundaries = true;
 
     this.registerDrawing(map);
     this.registerInteractivity(map);
     this.map.set(map);
+    this.mapStateService.initializeMap(map);
+    this.mapStateService.startSelectMode();
   }
 
 
@@ -247,74 +263,16 @@ export class MapComponent {
   }
 
 
-
-  // TODO replace all this with NGX hover; it's the last legacy of old pure js map
+  // TODO migrate to angular
   private registerInteractivity(map: MapLibreMap) {
-    interface LayerInteractivity {
-      id: string;
-      selectable?: boolean;
-      hoverable?: boolean;
-      clickable?: boolean;
-      clusterZoom?: boolean;
-    }
-
-    const LAYER_INTERACTIVITY: LayerInteractivity[] = [
-      { id: 'fom_cutblock', selectable: true, hoverable: true, clickable: true },
-      { id: 'area-watch', selectable: true, hoverable: true, clickable: true },
-    ];
-
-    const getLayerIdsBy = (key: keyof LayerInteractivity): string[] =>
-      LAYER_INTERACTIVITY.filter((layer) => layer[key]).map((layer) => layer.id);
-
-    let selectedFeatureId: FeatureIdentifier | null = null;
-
-    // Selection on click
-    map.on('click', getLayerIdsBy('selectable'), async (e) => {
-      if (e.features && e.features.length > 0) {
-        selectedFeatureId = this.getIdentifier(e.features[0]);
-        this.mapStateService.select(selectedFeatureId);
-      } else {
-        this.mapStateService.clearSelection();
-        selectedFeatureId = null;
-      }
-
-      e.preventDefault();
-    });
 
     // Deselect on empty click
     map.on('click', async (e) => {
+      if (this.mapStateService.mode() !== 'select') return;
       if (e.defaultPrevented) return;
       this.mapStateService.clearSelection();
     });
 
-
-    // Cursor changes
-    map.on('mouseenter', getLayerIdsBy('clickable'), () => {
-      map.getCanvas().style.cursor = 'pointer';
-    });
-    map.on('mouseleave', getLayerIdsBy('clickable'), () => {
-      map.getCanvas().style.cursor = '';
-    });
-
-    // Hover states
-    getLayerIdsBy('hoverable').forEach((layerId) => {
-      let hoveredFeatureId: FeatureIdentifier | null = null;
-      map.on('mousemove', layerId, (e: any) => {
-        if (e.features && e.features.length > 0) {
-          if (hoveredFeatureId) {
-            map.setFeatureState(hoveredFeatureId, { hover: false });
-          }
-          hoveredFeatureId = this.getIdentifier(e.features[0]);
-          map.setFeatureState(hoveredFeatureId, { hover: true });
-        }
-      });
-
-      map.on('mouseleave', layerId, () => {
-        if (!hoveredFeatureId) return;
-        map.setFeatureState(hoveredFeatureId, { hover: false });
-        hoveredFeatureId = null;
-      });
-    });
   }
 
   private getIdentifier(f: MapGeoJSONFeature): FeatureIdentifier {

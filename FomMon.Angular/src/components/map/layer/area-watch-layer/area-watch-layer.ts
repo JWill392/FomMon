@@ -4,13 +4,15 @@ import {FeatureCollection} from "geojson";
 import {AreaWatchService} from "../../../area-watch/area-watch.service";
 import {MapLayerDirective} from "../base-layer-switcher/map-layer.directive";
 import {MapLayerService} from "../map-layer.service";
+import {MapLayerGroupComponent} from "../map-layer-group/map-layer-group.component";
 
 @Component({
   selector: 'app-area-watch-layer',
   imports: [
     GeoJSONSourceComponent,
     LayerComponent,
-    MapLayerDirective
+    MapLayerDirective,
+    MapLayerGroupComponent
   ],
   templateUrl: './area-watch-layer.html',
   styleUrl: './area-watch-layer.css'

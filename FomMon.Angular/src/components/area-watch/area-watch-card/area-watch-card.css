@@ -15,6 +15,9 @@
 :host:hover {
   background: #e0eadc;
 }
+:host.mapHovered {
+  background: #e0eadc;
+}
 
 :host.selected {
   background: #99b88c;

@@ -3,10 +3,21 @@
 <mgl-geojson-source
         id="area-watches"
         [data]="areaWatchFeatures()"
+
 >
+  <app-map-layer-group
+      [groupId]="layerGroupId"
+      category="feature"
+      name="Watches"
+      thumbnailImg="assets/layer-preview-areawatch.png"
+      [initiallyVisible]="true"
+      [interactivity]="{select: true, hover: true}"
+    />
+
+  @let idFill = 'area-watch';
   <mgl-layer
           source="area-watches"
-          id="area-watch"
+          [id]="idFill"
           type="fill"
           [paint]="{
         'fill-color': [
@@ -21,18 +32,15 @@
         ]
       }"
 
-          [layout]="mapLayerService.getLayout('area-watch')"
+          [layout]="mapLayerService.getLayout(idFill)"
           appMapLayer
-          category="feature"
           [groupId]="layerGroupId"
-          name="Watches"
-          thumbnailImg="assets/layer-preview-areawatch.png"
-          [initiallyVisible]="true"
   ></mgl-layer>
 
+  @let idOutline = 'area-watch-outline';
   <mgl-layer
           source="area-watches"
-          id="area-watch-line"
+          [id]="idOutline"
           type="line"
           [paint]="{
 
@@ -48,18 +56,16 @@
           1
         ]
       }"
-          [layout]="mapLayerService.getLayout('area-watch-line')"
+          [layout]="mapLayerService.getLayout(idOutline)"
           appMapLayer
-          category="feature"
           [groupId]="layerGroupId"
-          name="Watches"
-          thumbnailImg="assets/layer-preview-areawatch.png"
-          [initiallyVisible]="true"
+          [overrideInteractivity]="{select: false, hover: false}"
   ></mgl-layer>
 
+  @let idName = 'area-watch-name';
   <mgl-layer
           source="area-watches"
-          id="area-watch-name"
+          [id]="idName"
           type="symbol"
           [minzoom]="8"
 
@@ -68,13 +74,10 @@
         'text-halo-color': '#ffffff',
         'text-halo-width': 2
       }"
-          [layout]="mapLayerService.getLayout('area-watch-name')"
+          [layout]="mapLayerService.getLayout(idName)"
           appMapLayer
-          category="feature"
           [groupId]="layerGroupId"
-          name="Watches"
-          thumbnailImg="assets/layer-preview-areawatch.png"
-          [initiallyVisible]="true"
+          [overrideInteractivity]="{select: false, hover: false}"
           [additionalLayout]="{
         'text-field': ['get', 'name'],
         'text-font': ['Noto Sans Regular'],

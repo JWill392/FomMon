@@ -4,6 +4,15 @@
         [attribution]="layer().attribution"
         [promoteId]="layer().sourceIdColumn"
 >
+  @let groupId=layer().kind;
+  <app-map-layer-group
+      [groupId]="groupId"
+      category="feature"
+      [name]="layer().name"
+      [thumbnailImg]="'assets/layer-preview-osm-base.png'"
+      [initiallyVisible]="true"
+      [interactivity]="{select: true, hover: true}"
+  />
   <!-- Polygon Fill layer -->
   @if (layer().geometryType === 'POLYGON') {
     @let idFill = layer().tileSource;
@@ -27,11 +36,7 @@
           }"
             [layout]="mapLayerService.getLayout(idFill)"
             appMapLayer
-            category="feature"
-            [groupId]="layer().kind"
-            [name]="layer().name"
-            [thumbnailImg]="'assets/layer-preview-osm-base.png'"
-            [initiallyVisible]="true"
+            [groupId]="groupId"
     ></mgl-layer>
 
     <!-- Polygon outline layer -->
@@ -58,11 +63,8 @@
         }"
             [layout]="mapLayerService.getLayout(idOutline)"
             appMapLayer
-            category="feature"
-            [groupId]="layer().kind"
-            [name]="layer().name"
-            [thumbnailImg]="'assets/layer-preview-osm-base.png'"
-            [initiallyVisible]="true"
+            [groupId]="groupId"
+            [overrideInteractivity]="{select: false, hover: false}"
     ></mgl-layer>
   } @else if (layer().geometryType === 'LINESTRING') {
 
@@ -93,11 +95,7 @@
         }"
             [layout]="mapLayerService.getLayout(idLine)"
             appMapLayer
-            category="feature"
-            [groupId]="layer().kind"
-            [name]="layer().name"
-            [thumbnailImg]="'assets/layer-preview-osm-base.png'"
-            [initiallyVisible]="true"
+            [groupId]="groupId"
     ></mgl-layer>
   }
 

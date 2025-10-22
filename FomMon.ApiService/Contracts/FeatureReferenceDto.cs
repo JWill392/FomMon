@@ -14,12 +14,10 @@ public class FeatureReferenceDto
     [MaxLength(100)]
     public string SourceFeatureId { get; set; } = null!; // Value from the layer's source ID column
 
-    // Application audit
     public Instant FirstSeenAt { get; set; }
     public Instant LastSeenAt { get; set; }
     public Instant? DeletedAt { get; set; }
     public bool IsDeleted { get; set; } // Mark as deleted if missing from layer
-
-    
+    // TODO detailed version of dto w geometry, stored attributes
 }
 

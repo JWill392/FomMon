@@ -1,9 +1,13 @@
-import {computed, effect, inject, Injectable, OnInit, signal} from '@angular/core';
-import {FeatureIdentifier, LayerSpecification} from "maplibre-gl";
+import {computed, inject, Injectable, signal} from '@angular/core';
+import {LayerSpecification} from "maplibre-gl";
 import {LocalStorageService} from "../../shared/local-storage.service";
 
 export type LayerCategory = "base"|"feature";
 
+export interface LayerInteractivity {
+  select: boolean;
+  hover: boolean;
+}
 export interface LayerGroup {
   id: string;
   name: string;
@@ -12,15 +16,26 @@ export interface LayerGroup {
   category: LayerCategory;
 
   source: string;
-  sourceLayer: string | undefined;
+  sourceLayer?: string;
+
+  interactivity: LayerInteractivity
 }
+export type LayerGroupAdd = Omit<LayerGroup, 'source' | 'sourceLayer'>;
 export interface LayerInfo {
   id: string;
   groupId: string;
   layout: LayerSpecification['layout'];
+
+  source: string;
+  sourceLayer: string | undefined;
 }
 
 
+/**
+ * Service for managing map layer visibility.  Introduces concept of layer groups; semantic layers
+ * as opposed to MapLibre's extremely granular rendering layers.
+ * All layers added to map should be registered with this service by using MapLayerDirective.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -30,8 +45,8 @@ export class MapLayerService {
   private _groupsBySource = computed(() => new Map(this._groups().map(g => [this.toSourceKey(g.source, g.sourceLayer), g])));
   private _groupsByCategory = computed(() => Map.groupBy(this._groups(), g => g.category));
 
-  public readonly baseGroups = computed(() => this._groupsByCategory().get('base'));
-  public readonly featureGroups = computed(() => this._groupsByCategory().get('feature'));
+  public readonly baseGroups = computed(() => this._groupsByCategory().get('base') ?? []);
+  public readonly featureGroups = computed(() => this._groupsByCategory().get('feature') ?? []);
 
   private _layers = signal<LayerInfo[]>([]);
 
@@ -44,14 +59,18 @@ export class MapLayerService {
       .get(MapLayerService.layerVisibilityKey, 1) ?? new Map<string, boolean>();
   }
 
-  tryAddGroup(group: LayerGroup): boolean {
-    if (this.getGroup(group.id)) return false;
+  addGroup(group: LayerGroupAdd): boolean {
+    if (this.getGroup(group.id)) throw new Error(`Group ${group.id} already exists`);
 
     if (this.layerVisibilityDefault.has(group.id)) {
       group.visible = this.layerVisibilityDefault.get(group.id)!;
     }
 
-    this._groups.update(groups => [...groups, group]);
+    this._groups.update(groups => [...groups, {
+      ...group,
+      source:'',
+      sourceLayer:''
+    }]);
     return true;
   }
 
@@ -66,6 +85,15 @@ export class MapLayerService {
 
     const group = this.getGroup(layerAdd.groupId);
     if (!group) throw new Error(`Group ${layerAdd.groupId} not found`);
+
+    if (!group.source) {
+      group.source = layerAdd.source;
+      group.sourceLayer = layerAdd.sourceLayer;
+    } else if (group.source !== layerAdd.source ||
+        group.sourceLayer !== layerAdd.sourceLayer) {
+
+      throw new Error(`Layer ${layerAdd.id} already registered with different source`);
+    }
 
     const addWithVisibility = {
       ...layerAdd
@@ -127,6 +155,15 @@ export class MapLayerService {
     return this._groupsBySource().get(this.toSourceKey(source, sourceLayer)).id;
   }
 
+  private getLayers(groupId: string | string[] | LayerGroup | LayerGroup[] = []) {
+    const groupIds = (Array.isArray(groupId) ? groupId : [groupId])
+      .map(g => typeof g === 'string' ? g : g.id);
+
+    return this._layers().filter(l => groupIds.includes(l.groupId));
+  }
+  getLayerIds(groupId: string | string[] | LayerGroup | LayerGroup[] = []) {
+    return this.getLayers(groupId).map(l => l.id);
+  }
   getLayer(id: string) {
     return this._layers().find(l => l.id === id);
   }
