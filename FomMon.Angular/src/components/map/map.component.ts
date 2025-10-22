@@ -73,100 +73,106 @@ export class MapComponent {
 
   readonly map = signal<MapLibreMap | undefined>(undefined);
   protected isDrawMode = signal(false);
-  private readonly alertedFeatures = new Map<LayerKind, Set<number>>();
 
   protected domainLayers = this.layerConfigService.data;
   readonly isAuthenticated = this.userService.state.isReady;
 
 
   constructor() {
-    // selection
     let previousSelection : MapSelection | null = null;
-    effect(() => {
-      var selected = this.mapStateService.selected();
-      if (!this.map()) return;
+    effect(() => previousSelection = this.handleSelectionChange(previousSelection));
 
-      if (selected !== null) {
-        this.map().setFeatureState(selected.featureId, { selected: true });
-      }
-
-      if (previousSelection) {
-        // toggle
-        if (this.identifierEquals(previousSelection?.featureId, selected?.featureId)) {
-          this.mapStateService.clearSelection();
-        } else {
-          this.map().setFeatureState(previousSelection.featureId, { selected: false });
-        }
-      }
-
-
-
-      previousSelection = selected;
-    });
-
-    // hover
     let previousHover : Set<MapSelection> = new Set();
-    effect(() => {
-      const newHover = new Set(this.mapStateService.hovered()); // reference equality is good enough
-      const map = this.map();
-      if (!map) return;
+    effect(() => previousHover = this.handleHoverChange(previousHover));
 
+    effect(() => this.handleModeChange())
 
-      previousHover.difference(newHover).forEach((s) => map.setFeatureState(s.featureId, { hover: false }))
-      newHover.difference(previousHover).forEach((s) => map.setFeatureState(s.featureId, { hover: true }))
-
-      if (newHover.size > 0 && previousHover.size === 0) {
-        this.mapStateService.map().getCanvas().style.cursor = 'pointer';
-      } else if (newHover.size === 0 && previousHover.size > 0) {
-        this.mapStateService.map().getCanvas().style.cursor = '';
-      }
-
-      previousHover = newHover;
-    });
-
-    // draw mode
-    effect(() => {
-      const mode = this.mapStateService.mode();
-      if (!this.map()) return;
-
-      if (mode === 'draw') {
-        this.enterDrawMode();
-
-      } else {
-        this.exitDrawMode();
-      }
-    })
-
-    // alert status
-    effect(() => {
-      const layerList = this.layerConfigService.data();
-      const layerAlertMap = this.alertService.byLayer();
-      const map = this.map();
-
-      if (!map || !layerList || !layerAlertMap) return;
-
-      for (const layer of layerList) {
-        const kind = layer.kind;
-
-        if (!this.alertedFeatures.has(kind)) {this.alertedFeatures.set(kind, new Set())}
-        const oldAlerts = this.alertedFeatures.get(kind)!;
-
-        const newAlerts = new Set((layerAlertMap.get(kind) ?? []).map((a) => a.featureReference.sourceFeatureId) ?? []);
-
-        const getId = (id: number) => ({
-          source: kind,
-          sourceLayer: layer.tileSource,
-          id: id,
-        });
-
-        oldAlerts.difference(newAlerts).forEach((id) => map.setFeatureState(getId(id), { alert: false }))
-        newAlerts.difference(oldAlerts).forEach((id) => map.setFeatureState(getId(id), { alert: true }))
-        this.alertedFeatures.set(kind, newAlerts);
-
-        map.triggerRepaint();
-      }
-    });
+    let alertedFeatures = new Map<LayerKind, Set<number>>();
+    effect(() => alertedFeatures = this.handleLayerAlertChange(alertedFeatures));
   }
+
+
+  private handleSelectionChange(previousSelection: MapSelection) {
+    const selected = this.mapStateService.selected();
+    if (!this.map()) return previousSelection;
+
+    if (selected !== null) {
+      this.map().setFeatureState(selected.featureId, {selected: true});
+    }
+
+    if (previousSelection) {
+      // toggle
+      if (this.identifierEquals(previousSelection?.featureId, selected?.featureId)) {
+        this.mapStateService.clearSelection();
+      } else {
+        this.map().setFeatureState(previousSelection.featureId, {selected: false});
+      }
+    }
+
+    return selected;
+  }
+
+  private handleHoverChange(previousHover: Set<MapSelection>) {
+    const newHover = new Set(this.mapStateService.hovered()); // reference equality is good enough
+    const map = this.map();
+    if (!map) return previousHover;
+
+
+    previousHover.difference(newHover).forEach((s) => map.setFeatureState(s.featureId, {hover: false}))
+    newHover.difference(previousHover).forEach((s) => map.setFeatureState(s.featureId, {hover: true}))
+
+    if (newHover.size > 0 && previousHover.size === 0) {
+      this.mapStateService.map().getCanvas().style.cursor = 'pointer';
+    } else if (newHover.size === 0 && previousHover.size > 0) {
+      this.mapStateService.map().getCanvas().style.cursor = '';
+    }
+
+    return newHover;
+  }
+  private handleLayerAlertChange(alertedFeatures: Map<LayerKind, Set<number>>) {
+    const layerList = this.layerConfigService.data();
+    const layerAlertMap = this.alertService.byLayer();
+    const map = this.map();
+
+    if (!map || !layerList || !layerAlertMap) return alertedFeatures;
+
+    for (const layer of layerList) {
+      const kind = layer.kind;
+
+      if (!alertedFeatures.has(kind)) {
+        alertedFeatures.set(kind, new Set())
+      }
+      const oldAlerts = alertedFeatures.get(kind)!;
+
+      const newAlerts = new Set((layerAlertMap.get(kind) ?? []).map((a) => a.featureReference.sourceFeatureId) ?? []);
+
+      const getId = (id: number) => ({
+        source: kind,
+        sourceLayer: layer.tileSource,
+        id: id,
+      });
+
+      oldAlerts.difference(newAlerts).forEach((id) => map.setFeatureState(getId(id), {alert: false}))
+      newAlerts.difference(oldAlerts).forEach((id) => map.setFeatureState(getId(id), {alert: true}))
+      alertedFeatures.set(kind, newAlerts);
+    }
+
+    return alertedFeatures;
+  }
+
+
+  private handleModeChange() {
+    const mode = this.mapStateService.mode();
+    if (!this.map()) return;
+
+    if (mode === 'draw') {
+      this.enterDrawMode();
+
+    } else {
+      this.exitDrawMode();
+    }
+  }
+
 
   onMapLoad(map: MapLibreMap) {
     // DEBUG tiles
