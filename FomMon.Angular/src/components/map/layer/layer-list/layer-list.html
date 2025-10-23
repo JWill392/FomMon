@@ -3,6 +3,6 @@
 </div>
 <div class="layer-list">
 @for (layerGroup of featureGroups(); track layerGroup.id) {
-  <app-layer-card [layerGroupId]="layerGroup.id" [class.item-odd]="$odd" />
+  <app-layer-card [layerGroupId]="layerGroup.id" [isOdd]="$odd" />
 }
 </div>

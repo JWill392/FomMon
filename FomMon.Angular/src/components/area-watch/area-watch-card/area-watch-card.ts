@@ -25,6 +25,7 @@ import {AreaWatchLayerService} from "../../map/layer/area-watch-layer/area-watch
   styleUrl: './area-watch-card.css',
   providers: [provideIcons({phosphorXCircleFill})],
   host: {
+    '[class.item-odd]': 'isOdd()',
     '[class.selected]': 'isSelected()',
     '[class.mapHovered]': 'isHovered()',
     '(click)': 'select($event)',
@@ -37,6 +38,7 @@ export class AreaWatchCard implements AfterViewInit, OnInit {
   layerService = inject(LayerConfigService);
   notService = inject(NotificationService);
 
+  isOdd = input.required<boolean>();
   data = input.required<AreaWatch>();
 
   protected readonly LocalState = LocalState;

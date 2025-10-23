@@ -1,0 +1,38 @@
+:host {
+  background: #f2f4f0;
+  padding: 5px;
+
+  display: flex;
+  gap: 10px;
+
+  cursor: pointer;
+  transition: background 0.1s ease;
+}
+:host(.item-odd) {
+  background: #fafafa;
+}
+
+:host:hover {
+  background: #e0eadc;
+}
+
+:host.selected {
+  background: #99b88c;
+}
+
+.action-container {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  padding: 0 5px;
+}
+
+
+h3 {
+  font-size: 12px;
+  font-weight: bold;
+  color: #214221;
+  margin-top: 4px;
+}

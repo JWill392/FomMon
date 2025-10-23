@@ -1,22 +1,22 @@
 
-  <img class="layer-thumb" #thumb [src]="'assets/areawatch-thumb-dummy.png'" alt="{{ data().name }}" />
+<img class="layer-thumb" #thumb [src]="'assets/areawatch-thumb-dummy.png'" alt="{{ data().name }}" />
 
-  <div class="label-container">
-    <h3 class="name">{{ data().name }}</h3>
-    <div class="layers">
+<div class="label-container">
+  <h3 class="name">{{ data().name }}</h3>
+  <div class="layers">
 
-      @if (layerService.state.isReady()) {
-        @for (l of data()?.layers; track l) {
-          <li class="badge"><p>{{ layerService.byKind()[l].name }}</p></li>
-        }
+    @if (layerService.state.isReady()) {
+      @for (l of data()?.layers; track l) {
+        <li class="badge"><p>{{ layerService.byKind()[l].name }}</p></li>
       }
-    </div>
-  </div>
-
-  <div class="action-container">
-    @if (data().localState === LocalState.added) {
-      <ng-icon name="phosphorXCircleFill" class="action-item action-delete" (click)="delete($event)" />
     }
+  </div>
+</div>
+
+<div class="action-container">
+  @if (data().localState === LocalState.added) {
+    <ng-icon name="phosphorXCircleFill" class="action-item action-delete" (click)="delete($event)" />
+  }
 
 <!--    TODO icon, throbber while deleting-->
-  </div>
+</div>
