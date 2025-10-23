@@ -8,6 +8,7 @@ using FomMon.Data.Models;
 using FomMon.Data.Shared;
 using FomMon.ServiceDefaults;
 using Hangfire;
+using Hangfire.Server;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
@@ -23,6 +24,7 @@ public interface IWfsDownloadJob
         LayerKind kind,  
         int? limit, 
         Duration? updateAge,
+        int zeroFeatureAttempts,
         CancellationToken c);
 }
 
@@ -53,19 +55,19 @@ public static class WfsDownloadJobExtensions
         {
             RecurringJob.AddOrUpdate<GdalWfsDownloadJob>(
                 $"{nameof(GdalWfsDownloadJob.DownloadToDbAsync)}.{layerKind}", 
-                x => x.DownloadToDbAsync(layerKind, null, Duration.FromHours(11), CancellationToken.None), 
+                x => x.DownloadToDbAsync(layerKind, null, Duration.FromHours(11), 0, CancellationToken.None), 
                 Cron.Daily(7, (i*10) % 60));
             
             // run immediately once
             if (parentJobId is null)
             {
                 parentJobId = BackgroundJob.Enqueue<GdalWfsDownloadJob>(x =>
-                    x.DownloadToDbAsync(layerKind, null, Duration.FromHours(11), CancellationToken.None));
+                    x.DownloadToDbAsync(layerKind, null, Duration.FromHours(11), 0, CancellationToken.None));
             }
             else
             {
                 parentJobId = BackgroundJob.ContinueJobWith<GdalWfsDownloadJob>(parentJobId,
-                    x => x.DownloadToDbAsync(layerKind, null, Duration.FromHours(11), CancellationToken.None));
+                    x => x.DownloadToDbAsync(layerKind, null, Duration.FromHours(11), 0, CancellationToken.None));
             }
 
             i++;
@@ -83,6 +85,7 @@ public sealed class WfsDownloadJobSettings
     public string Ogr2OgrPath { get; set; } = string.Empty;
     public int OgrWfsPageSize { get; set; }
     public bool OgrWfsPagingAllowed { get; set; }
+    public int AcceptZeroFeaturesAfterAttempts { get; set; } = 3;
 }
 
 public class GdalWfsDownloadJob(
@@ -107,6 +110,7 @@ public class GdalWfsDownloadJob(
         LayerKind kind,  
         int? limit, 
         Duration? updateAge,
+        int zeroFeatureAttempts,
         CancellationToken c)
     {
         using var activity = ActivitySource.StartActivity();
@@ -140,7 +144,34 @@ public class GdalWfsDownloadJob(
                 return;
             }
 
-            await RunOgr2Ogr(limit, layerCfg, layer, c);
+            
+            var downloadedCount = await RunOgr2Ogr(limit, layerCfg, layer, c);
+            Activity.Current?.SetTag("feature.count", downloadedCount);
+            
+            if (layer.FeatureCount > 0 && downloadedCount == 0 && zeroFeatureAttempts <= _settings.AcceptZeroFeaturesAfterAttempts)
+            {
+                logger.LogWarning("Skipped saving because remote layer {kind} returned no features.  " +
+                                  "Retry attempt {zeroFeatureAttempts}. Will accept after {AcceptZeroFeaturesAfterAttempts}", 
+                    kind, zeroFeatureAttempts, _settings.AcceptZeroFeaturesAfterAttempts);
+                
+                var nextAttempt = zeroFeatureAttempts + 1;
+                var delayMinutes = nextAttempt * nextAttempt; // 1, 4, 9
+                BackgroundJob.Schedule<GdalWfsDownloadJob>(x => 
+                        x.DownloadToDbAsync(kind, limit, updateAge, zeroFeatureAttempts, CancellationToken.None), 
+                    TimeSpan.FromMinutes(delayMinutes));
+                
+                return; // rollback trans; job scheduling not transactional
+            }
+            
+            layer.FeatureCount = downloadedCount;
+            layer.LastDownloaded = clock.Now;
+            
+            await db.SaveChangesAsync(c);
+            
+            logger.LogInformation(
+                "Successfully downloaded WFS layer {LayerName} with {FeatureCount} features",
+                layerCfg.TableName, layer.FeatureCount);
+            Activity.Current?.SetStatus(ActivityStatusCode.Ok);
             
             
             await transaction.CommitAsync(c);
@@ -172,7 +203,7 @@ public class GdalWfsDownloadJob(
         }
     }
 
-    private async Task RunOgr2Ogr(int? limit, LayerConfig layerCfg, LayerType layer,
+    private async Task<long> RunOgr2Ogr(int? limit, LayerConfig layerCfg, LayerType layer,
         CancellationToken c)
     {
         // Build PostgreSQL connection string for ogr2ogr
@@ -246,17 +277,7 @@ public class GdalWfsDownloadJob(
         await CreateIndexAsync(LayerRegistry.Schema, layerCfg.TableName, layerCfg.SourceIdColumn, c);
             
         // Update metadata
-        layer.FeatureCount = await GetFeatureCountAsync(layerCfg.TableName, c);
-        layer.LastDownloaded = clock.Now;
-            
-        Activity.Current?.SetTag("feature.count", layer.FeatureCount);
-            
-        await db.SaveChangesAsync(c);
-            
-        logger.LogInformation(
-            "Successfully downloaded WFS layer {LayerName} with {FeatureCount} features",
-            layerCfg.TableName, layer.FeatureCount);
-        Activity.Current?.SetStatus(ActivityStatusCode.Ok);
+        return await GetFeatureCountAsync(layerCfg.TableName, c);
     }
 
 

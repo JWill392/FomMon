@@ -24,7 +24,8 @@ public class WfsController(
         {
             await wfs.DownloadToDbAsync(kind, 
                 limit: limit, 
-                updateAge: null, 
+                updateAge: null,
+                zeroFeatureAttempts:0,
                 c: c);
 
             logger.LogInformation("Downloaded {kind}", kind);
