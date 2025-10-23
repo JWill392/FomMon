@@ -151,8 +151,8 @@ export class MapLayerService {
   }
 
   private toSourceKey = (source : string, sourceLayer?: string) => source + sourceLayer?`:${sourceLayer}`:'';
-  getGroupIdBySource(source: string, sourceLayer?: string) : string | undefined {
-    return this._groupsBySource().get(this.toSourceKey(source, sourceLayer)).id;
+  getGroupBySource(source: string, sourceLayer?: string) : LayerGroup | undefined {
+    return this._groupsBySource().get(this.toSourceKey(source, sourceLayer));
   }
 
   private getLayers(groupId: string | string[] | LayerGroup | LayerGroup[] = []) {

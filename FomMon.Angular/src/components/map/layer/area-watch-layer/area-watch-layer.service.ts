@@ -1,17 +1,11 @@
 import {computed, effect, inject, Injectable, signal} from "@angular/core";
-import type {FeatureIdentifier} from "maplibre-gl";
 import {MapLayerService} from "../map-layer.service";
 import {ErrorService} from "../../../shared/error.service";
 import {AreaWatchLayer} from "./area-watch-layer";
 import {AreaWatchService} from "../../../area-watch/area-watch.service";
-import {MapStateService} from "../../map-state.service";
+import {MapSelection, MapStateService} from "../../map-state.service";
+import {FeatureIdentifier} from "maplibre-gl";
 
-export interface MapSelection {
-  layerGroupId: string;
-  featureId: FeatureIdentifier;
-}
-
-export type MapMode = 'select' | 'draw' | 'none';
 
 @Injectable({providedIn: 'root'})
 export class AreaWatchLayerService {
@@ -21,7 +15,6 @@ export class AreaWatchLayerService {
   private mapStateService = inject(MapStateService);
 
   readonly selectedAreaWatchId = computed(() => this.getAreaWatch(this.mapStateService.selected()));
-  readonly hoveredAreaWatchIds = computed(() => this.mapStateService.hovered().map(s => this.getAreaWatch(s)).filter(a => a !== null));
 
   private _layerGroup = computed(() => this.mapLayerService.featureGroups().find(g => g.id === AreaWatchLayer.layerGroupId));
 
@@ -47,19 +40,9 @@ export class AreaWatchLayerService {
 
     this.mapStateService.select(fid);
   }
-  addHover(id: string): void {
-    const fid = this.toFeatureIdentifier(id);
-    if (!fid) return;
 
-    this.mapStateService.addHover(fid);
-  }
-  removeHover(id: string): void {
-    const fid = this.toFeatureIdentifier(id);
-    if (!fid) return;
-    this.mapStateService.removeHover(fid);
-  }
 
-  private toFeatureIdentifier(id: string) : FeatureIdentifier | null {
+  public toFeatureIdentifier(id: string) : FeatureIdentifier | null {
     const areaWatch = this.areaWatchService.get(id);
     if (!areaWatch) {
       this.errorService.handleError(`No area watch found for ${id}`);

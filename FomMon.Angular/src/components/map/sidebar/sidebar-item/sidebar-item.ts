@@ -24,7 +24,7 @@ export class SidebarItem {
 
   onClickToggleRouting(event: PointerEvent, isActive: boolean) {
     if (isActive) {
-      event.preventDefault();
+      event.stopPropagation();
 
       this.router.navigate([this.closeLink()], {preserveFragment: true})
     }

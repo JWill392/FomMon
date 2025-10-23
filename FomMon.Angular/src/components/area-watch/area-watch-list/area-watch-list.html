@@ -11,7 +11,7 @@
 
   } @else if (awService.state.isReady()) {
     @for (aw of awService.data(); track aw.id) {
-      <app-area-watch-card [data]="aw" [isOdd]="$odd" />
+      <app-area-watch-card [id]="aw.id" [isOdd]="$odd" />
     } @empty {
       <p class="empty">Add a watch to monitor an area</p>
     }

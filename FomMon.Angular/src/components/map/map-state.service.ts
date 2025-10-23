@@ -5,10 +5,11 @@ import {Observable, Subject} from "rxjs";
 import {Geometry} from "geojson";
 import {tap} from "rxjs/operators";
 import {FeatureIdentifier, Map as MapLibreMap} from 'maplibre-gl';
+import {fidEquals} from "./map-util";
 
 export interface MapSelection {
   layerGroupId: string;
-  featureId: FeatureIdentifier;
+  featureId: FeatureIdentifier; // TODO refactor so groupid === source + sourceLayer? equality is annoying though.
 }
 
 export type MapMode = 'select' | 'draw' | 'none'; // TODO map mode
@@ -85,11 +86,22 @@ export class MapStateService {
   }
 
 
+  toggleSelect(id: FeatureIdentifier): void {
+    if (this.isSelected(id)) {
+      this.clearSelection();
+    } else {
+      this.select(id);
+    }
+  }
   select(id: FeatureIdentifier): void {
-    if (id === null) {this.clearSelection(); return;}
+    if (id === null) return;
 
     const mapSelection = this.toMapSelection(id);
     this._selected.set(mapSelection);
+  }
+  unselect(id: FeatureIdentifier): void {
+    if (!fidEquals(this._selected().featureId, id)) return;
+    this.clearSelection();
   }
   clearSelection(): void {
     this._selected.set(null);
@@ -105,22 +117,31 @@ export class MapStateService {
     if (id === null) return;
     if (!this.isHovered(id)) return;
 
-    this._hovered.update(s => s.filter(s => s.featureId.id !== id.id));
+    this._hovered.update(s => s.filter(s => !fidEquals(s.featureId,id)));
   }
   clearHover(): void {
     this._hovered.set([]);
   }
 
-  private isHovered(id: FeatureIdentifier) : boolean {
-    return this._hovered().some(s => s.featureId.id === id.id);
+  private isHovered(id: FeatureIdentifier | null) : boolean {
+    if (id === null) return false;
+    return this._hovered().some(s => fidEquals(s.featureId, id));
+  }
+
+  private isSelected(id: FeatureIdentifier | null) : boolean {
+    if (id === null) return false;
+    return fidEquals(this._selected()?.featureId, id);
   }
 
   private toMapSelection(id: FeatureIdentifier) : MapSelection {
-    const groupId = this.mapLayerService.getGroupIdBySource(id.source, id.sourceLayer);
+    const groupId = this.mapLayerService.getGroupBySource(id.source, id.sourceLayer)?.id;
     if (groupId === undefined) {
       this.errorService.handleError(`No layer found for feature ${id.source}/${id.sourceLayer}/${id.id}`);
       return {layerGroupId: '', featureId: id};
     }
     return {layerGroupId: groupId, featureId: id};
   }
+
+
+
 }

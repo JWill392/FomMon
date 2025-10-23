@@ -66,7 +66,10 @@ export class MapLayerDirective implements OnInit, OnDestroy {
     if (!this.interactivity().select) return;
     if (this.mapStateService.mode() !== 'select') return;
     if (e.features && e.features.length > 0) {
-      this.mapStateService.select(this.getIdentifier(e.features[0]));
+      const clickId = this.getIdentifier(e.features[0]);
+      if (!clickId) return;
+
+      this.mapStateService.toggleSelect(clickId);
     } else {
       this.mapStateService.clearSelection();
     }

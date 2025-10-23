@@ -1,9 +1,11 @@
-import {Component, input} from '@angular/core';
+import {Component, input, signal} from '@angular/core';
 import {NgIcon} from "@ng-icons/core";
 
 @Component({
   selector: 'app-card-label',
-  template: `<ng-content>card-label</ng-content>`,
+  template: `<h3 class="label-title">{{title()}}</h3> 
+  <ng-content></ng-content>
+  `,
   styles: `:host {
     flex: 1 1 auto;
     display: flex;
@@ -15,33 +17,53 @@ import {NgIcon} from "@ng-icons/core";
     color: #222;
     font-weight: normal;
     overflow: hidden;
-  }`,
+  }
+
+  .label-title {
+    font-size: 14px;
+    font-weight: normal;
+    color: #1e351e;
+
+    width: 100%;
+    overflow: hidden;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+  }
+  `,
   host: {
     class: 'label-container'
   }
 })
 export class CardLabel {
-
+  title = input.required<string>();
 }
 
 
 @Component({
   selector: 'app-card-thumb',
-  template: `<ng-content>card-thumb</ng-content>`,
+  template: `<img [src]="src()" [alt]="alt()"/>`,
   styles: `:host {
     flex: 0 0 auto;
     width: 64px;
     height: 64px;
     border-radius: 6px;
-    object-fit: cover;
     overflow: hidden;
-  }`,
+    display: block;
+  }
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  `,
   host: {
     class: 'thumb-container'
   }
 })
 export class CardThumb {
-
+  alt = input.required<string>();
+  src = input.required<string>();
 }
 
 @Component({
@@ -53,13 +75,11 @@ export class CardThumb {
     cursor: pointer;
     font-size: 20px;
     padding: 0;
-    color: transparent;
+
+    color: var(--card-action-color);
     transition: color 0.1s ease, background-color 0.1s ease;
   }
 
-  :host-context(app-card:hover) {
-    color: #5a6c52;
-  }
   `,
   host: {
     class: 'action-item'
@@ -76,9 +96,10 @@ export class CardAction {
   templateUrl: './card.html',
   styleUrl: './card.css',
   host: {
-    '[class.item-odd]': 'isOdd()'
+    '[class.item-odd]': 'isOdd()',
   }
 })
 export class Card {
   isOdd = input.required<boolean>();
+
 }

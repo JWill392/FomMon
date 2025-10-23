@@ -5,9 +5,8 @@ import {
   input,
   ViewChild,
   AfterViewInit,
-  OnInit, signal, computed
+  OnInit, computed
 } from '@angular/core';
-import {AreaWatch} from '../area-watch.model';
 import {AreaWatchService} from '../area-watch.service';
 import {NotificationService} from '../../shared/snackbar/notification.service';
 import {LayerConfigService} from '../../layer-type/layer-config.service';
@@ -15,22 +14,23 @@ import {LocalState} from "../../shared/service/local-state";
 import {NgIcon, provideIcons} from "@ng-icons/core";
 import {phosphorXCircleFill} from "@ng-icons/phosphor-icons/fill";
 import {AreaWatchLayerService} from "../../map/layer/area-watch-layer/area-watch-layer.service";
+import {Card, CardAction, CardLabel, CardThumb} from "../../shared/card/card";
+import {MapCard} from "../../map/map-card/map-card";
+import {FeatureIdentifier} from "maplibre-gl";
 
 @Component({
   selector: 'app-area-watch-card',
   imports: [
-    NgIcon
+    NgIcon,
+    CardAction,
+    CardLabel,
+    CardThumb,
+    MapCard
   ],
   templateUrl: './area-watch-card.html',
   styleUrl: './area-watch-card.css',
   providers: [provideIcons({phosphorXCircleFill})],
   host: {
-    '[class.item-odd]': 'isOdd()',
-    '[class.selected]': 'isSelected()',
-    '[class.mapHovered]': 'isHovered()',
-    '(click)': 'select($event)',
-    '(mouseenter)': 'onMouseEnter($event)',
-    '(mouseleave)': 'onMouseLeave($event)'
   }
 })
 export class AreaWatchCard implements AfterViewInit, OnInit {
@@ -39,16 +39,20 @@ export class AreaWatchCard implements AfterViewInit, OnInit {
   notService = inject(NotificationService);
 
   isOdd = input.required<boolean>();
-  data = input.required<AreaWatch>();
+  id = input.required<string>();
+  data = computed(() => this.awService.get(this.id()));
+
+  featureId = computed<FeatureIdentifier>(() => this.areaWatchLayerService.toFeatureIdentifier(this.id()));
 
   protected readonly LocalState = LocalState;
 
   @ViewChild('thumb') thumb!: ElementRef<HTMLImageElement>;
 
   private areaWatchLayerService = inject(AreaWatchLayerService);
-  protected isSelected = computed(() => this.areaWatchLayerService.selectedAreaWatchId() === this.data().id);
-  protected isHovered = computed(() => this.areaWatchLayerService.hoveredAreaWatchIds().includes(this.data().id));
 
+  constructor() {
+
+  }
 
   ngOnInit(): void {
   }
@@ -88,17 +92,5 @@ export class AreaWatchCard implements AfterViewInit, OnInit {
         }
       });
     // no destroyref; component is destroyed when deleted
-  }
-
-  select(event: PointerEvent) {
-    this.areaWatchLayerService.select(this.data().id);
-  }
-
-  onMouseEnter($event: MouseEvent) {
-    this.areaWatchLayerService.addHover(this.data().id);
-  }
-
-  onMouseLeave($event: MouseEvent) {
-    this.areaWatchLayerService.removeHover(this.data().id);
   }
 }

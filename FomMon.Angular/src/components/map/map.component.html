@@ -8,6 +8,7 @@
          [dragRotate]="false"
          [touchZoomRotate]="false"
          [attributionControl]="{compact: true}"
+         (mapClick)="onEmptyClick( $event)"
 >
   <!-- OSM Base Layer -->
   <mgl-raster-source

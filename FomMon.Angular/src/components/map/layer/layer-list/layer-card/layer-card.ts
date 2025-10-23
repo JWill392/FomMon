@@ -16,10 +16,6 @@ import {Card, CardAction, CardLabel, CardThumb} from "../../../../shared/card/ca
   templateUrl: './layer-card.html',
   styleUrl: './layer-card.css',
   providers: [provideIcons({phosphorEyeSlash, phosphorEye})],
-  host: {
-    '[class.item-odd]': "isOdd()",
-    '(click)': "toggleGroupVisibility(layerGroup().id)"
-  }
 })
 export class LayerCard {
   layerGroupId = input.required<string>();
@@ -28,7 +24,7 @@ export class LayerCard {
   isOdd = input.required<boolean>();
   layerGroup = computed(() => this.mapLayerService.getGroup(this.layerGroupId()) as LayerGroup)
 
-  protected toggleGroupVisibility(group: string): void {
-    this.mapLayerService.setVisibility(group, !this.layerGroup().visible);
+  protected toggleVisibility(): void {
+    this.mapLayerService.setVisibility(this.layerGroupId(), !this.layerGroup().visible);
   }
 }

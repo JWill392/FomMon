@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   effect,
   inject,
   input,
@@ -15,7 +14,7 @@ import {
   RasterSourceComponent,
   ScaleControlDirective,
 } from '@maplibre/ngx-maplibre-gl';
-import {FeatureIdentifier, Map as MapLibreMap, MapGeoJSONFeature, MapMouseEvent} from 'maplibre-gl';
+import {Map as MapLibreMap, MapMouseEvent} from 'maplibre-gl';
 import {MaplibreTerradrawControl} from '@watergis/maplibre-gl-terradraw';
 import {TerraDraw} from 'terra-draw';
 import {UserService} from '../user/user.service';
@@ -34,6 +33,7 @@ import {UserMenu} from "../user/user-menu/user-menu";
 import {MapSelection, MapStateService} from "./map-state.service";
 import {ErrorService} from "../shared/error.service";
 import {MapLayerGroupComponent} from "./layer/map-layer-group/map-layer-group.component";
+import {fidEquals} from "./map-util";
 
 
 @Component({
@@ -95,19 +95,13 @@ export class MapComponent {
   private handleSelectionChange(previousSelection: MapSelection) {
     const selected = this.mapStateService.selected();
     if (!this.map()) return previousSelection;
+    if (fidEquals(previousSelection?.featureId, selected?.featureId)) return previousSelection;
 
-    if (selected !== null) {
+    if (selected !== null)
       this.map().setFeatureState(selected.featureId, {selected: true});
-    }
 
-    if (previousSelection) {
-      // toggle
-      if (this.identifierEquals(previousSelection?.featureId, selected?.featureId)) {
-        this.mapStateService.clearSelection();
-      } else {
-        this.map().setFeatureState(previousSelection.featureId, {selected: false});
-      }
-    }
+    if (previousSelection)
+      this.map().setFeatureState(previousSelection.featureId, {selected: false});
 
     return selected;
   }
@@ -180,7 +174,6 @@ export class MapComponent {
     // map.showTileBoundaries = true;
 
     this.registerDrawing(map);
-    this.registerInteractivity(map);
     this.map.set(map);
     this.mapStateService.initializeMap(map);
     this.mapStateService.startSelectMode();
@@ -269,28 +262,20 @@ export class MapComponent {
   }
 
 
-  // TODO migrate to angular
-  private registerInteractivity(map: MapLibreMap) {
 
-    // Deselect on empty click
-    map.on('click', async (e) => {
-      if (this.mapStateService.mode() !== 'select') return;
-      if (e.defaultPrevented) return;
-      this.mapStateService.clearSelection();
-    });
+  onEmptyClick(e: MapMouseEvent) {
+    if (this.mapStateService.mode() !== 'select') return;
+    if (e.defaultPrevented) return;
 
+    const features = this.map().queryRenderedFeatures(e.point);
+    if (features && features.length > 0) {
+      const hasInteractiveFeature = features.some(feature => {
+        const group = this.mapLayerService.getGroupBySource(feature.source, feature.sourceLayer);
+         return group?.interactivity?.select === true;
+      });
+      if (hasInteractiveFeature) return;
+    }
+    this.mapStateService.clearSelection();
   }
 
-  private getIdentifier(f: MapGeoJSONFeature): FeatureIdentifier {
-    return {
-      source: f.source,
-      sourceLayer: f.sourceLayer,
-      id: f.id,
-    };
-  }
-
-  private identifierEquals(a: FeatureIdentifier | null, b: FeatureIdentifier | null) {
-    if (!a || !b) return false;
-    return a.source === b.source && a.sourceLayer === b.sourceLayer && a.id === b.id;
-  }
 }

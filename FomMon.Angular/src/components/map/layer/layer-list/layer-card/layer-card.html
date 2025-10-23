@@ -1,19 +1,9 @@
-<app-card [isOdd]="isOdd()">
-  <app-card-thumb>
-    <img class="layer-thumb" [src]="layerGroup().thumbnailImg" [alt]="layerGroup.name" />
-  </app-card-thumb>
+<app-card [isOdd]="isOdd()" (click)="toggleVisibility()" [class.layer-invisible]="layerGroup().visible === false">
+  <app-card-thumb [src]="layerGroup().thumbnailImg" [alt]="layerGroup.name" />
 
-  <app-card-label>
-    <p>{{ layerGroup().name }}</p>
-  </app-card-label>
+  <app-card-label [title]="layerGroup().name"/>
 
   <app-card-action>
-    <div class="layer-toggle">
-      @if (layerGroup().visible) {
-        <ng-icon class="layer-visible" name="phosphorEye" />
-      } @else {
-        <ng-icon class="layer-invisible" name="phosphorEyeSlash" />
-      }
-    </div>
+    <ng-icon [name]="layerGroup().visible? 'phosphorEye' : 'phosphorEyeSlash'" />
   </app-card-action>
 </app-card>
