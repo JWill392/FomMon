@@ -37,6 +37,7 @@
     "@maplibre/ngx-maplibre-gl": "^20.0.0",
     "@ng-icons/core": "^32.2.0",
     "@ng-icons/phosphor-icons": "^32.2.0",
+    "@turf/bbox": "^7.2.0",
     "@watergis/maplibre-gl-terradraw": "^1.9.2",
     "html-to-image": "^1.11.13",
     "keycloak-angular": "^20.0.0",

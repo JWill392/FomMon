@@ -1,4 +1,4 @@
-<app-map-card [isOdd]="isOdd()" [featureId]="featureId()">
+<app-map-card [isOdd]="isOdd()" [featureId]="featureId()" [geometry]="data().geometry">
   <app-card-thumb [src]="'assets/areawatch-thumb-dummy.png'" alt="{{ data().name }}" />
 
   <app-card-label [title]="data().name">

@@ -1,4 +1,4 @@
-import {computed, inject, Injectable, signal} from "@angular/core";
+import {inject, Injectable, signal} from "@angular/core";
 import {MapLayerService} from "./layer/map-layer.service";
 import {ErrorService} from "../shared/error.service";
 import {Observable, Subject} from "rxjs";
@@ -13,6 +13,11 @@ export interface MapSelection {
 }
 
 export type MapMode = 'select' | 'draw' | 'none'; // TODO map mode
+
+export interface FlyToCommand {
+  featureId: FeatureIdentifier;
+  geometry: Geometry
+}
 
 /**
  * Service to manage the current map selection and mode.
@@ -34,8 +39,16 @@ export class MapStateService {
   private _map = signal<MapLibreMap | undefined>(undefined);
   readonly map = this._map.asReadonly();
 
+  padding = signal<{padding: {top: number, bottom: number, left: number, right: number}, durationMs: number}>
+    ({padding: {top: 0, bottom: 0, left: 0, right: 0}, durationMs: 0});
+
   private _drawResult$ : Subject<Geometry> | undefined;
   get drawResult$() : Subject<Geometry> | undefined {return this._drawResult$};
+
+  private _flyToCommand$ = new Subject<FlyToCommand>();
+  readonly flyToCommand$ = this._flyToCommand$.asObservable();
+
+  private _currentFlyTo$: Subject<void> | undefined;
 
   initializeMap(map: MapLibreMap) {
     if (this._map()) {
@@ -63,6 +76,30 @@ export class MapStateService {
   endDrawMode() {
     if (this._mode() !== 'draw') return;
     this.setMode('select');
+  }
+
+  flyTo(feature: FeatureIdentifier, geometry: Geometry): Observable<void> {
+    // cancel in-progress flight
+    if (this._currentFlyTo$) {
+      this._currentFlyTo$.complete();
+    }
+
+    this._currentFlyTo$ = new Subject<void>();
+    this._flyToCommand$.next({featureId: feature, geometry: geometry});
+
+    return this._currentFlyTo$.asObservable().pipe(
+      tap({
+        finalize: () => this._currentFlyTo$ = undefined,
+      })
+    );
+  }
+  flyToComplete() {
+    if (!this._currentFlyTo$) return;
+    this._currentFlyTo$.next();
+    this._currentFlyTo$.complete();
+  }
+  flyToError(error: any): void {
+    this._currentFlyTo$?.error(error);
   }
 
   startSelectMode() {

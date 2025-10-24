@@ -1,0 +1,7 @@
+:host.hovered {
+  background: #e0eadc;
+}
+
+:host.selected {
+  background: #99b88c;
+}

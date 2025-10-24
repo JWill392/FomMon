@@ -1,6 +1,9 @@
 :host {
-  /*width: 250px;*/
   font-family: "Open Sans", sans-serif;
+  /*set in component*/
+  --nav-width: 0;
+  --content-width: 0;
+  --animation-duration: 0;
 }
 
 .sidebar {
@@ -20,17 +23,10 @@ nav {
   justify-content: space-between;
   border-right: 1px solid #dee2e6;
 
-  transition: width 0.1s ease-in-out;
+  width: var(--nav-width);
+  transition: width var(--animation-duration);
   overflow: hidden;
 }
-
-nav.collapsed {
-  width: 41px; /*  to accomodate border-right 1px */
-}
-nav:not(.collapsed) {
-  width: 110px;
-}
-
 
 .top-container {
   display: flex;
@@ -61,7 +57,7 @@ nav:not(.collapsed) {
   padding: 0 5px;
   font-family: 'Montserrat', sans-serif;
   overflow: hidden;
-  transition: height 0.1s ease-in-out, color 0.1s ease-in-out;
+  transition: height var(--animation-duration), color var(--animation-duration);
   cursor: pointer;
 }
 
@@ -94,13 +90,12 @@ hr {
   padding: 10px;
   font-size: 24px;
   cursor: pointer;
+  transition: transform var(--animation-duration);
 }
 .nav-collapse-button.collapsed ng-icon {
-  transition: transform 0.1s ease-in-out;
   transform: rotate(180deg);
 }
 .nav-collapse-button:not(.collapsed) ng-icon {
-  transition: transform 0.1s ease-in-out;
   transform: rotate(0deg);
 }
 
@@ -108,13 +103,8 @@ hr {
   flex: 1 1 auto;
   min-width: 0;
 
-  transition: width 0.1s ease-in-out;
+  transition: width var(--animation-duration);
   overflow: auto;
   scrollbar-width: thin;
-}
-.content:not(.closed) {
-  width: 250px;
-}
-.content.closed {
-  width: 0;
+  width: var(--content-width);
 }

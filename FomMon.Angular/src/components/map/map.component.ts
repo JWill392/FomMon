@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   effect,
   inject,
   input,
@@ -27,13 +28,15 @@ import {MapLayerDirective} from "./layer/base-layer-switcher/map-layer.directive
 import {BaseLayerSwitcher} from "./layer/base-layer-switcher/base-layer-switcher";
 import {MapLayerService} from "./layer/map-layer.service";
 import {LayerKind} from "../layer-type/layer-type.model";
-import Sidebar from "./sidebar/sidebar";
 import {RouterOutlet} from "@angular/router";
 import {UserMenu} from "../user/user-menu/user-menu";
-import {MapSelection, MapStateService} from "./map-state.service";
+import {FlyToCommand, MapSelection, MapStateService} from "./map-state.service";
 import {ErrorService} from "../shared/error.service";
 import {MapLayerGroupComponent} from "./layer/map-layer-group/map-layer-group.component";
 import {fidEquals} from "./map-util";
+import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
+import {bbox} from '@turf/bbox';
+import {Sidebar} from "./sidebar/sidebar";
 
 
 @Component({
@@ -67,10 +70,11 @@ export class MapComponent {
   private errorService = inject(ErrorService);
   protected mapLayerService = inject(MapLayerService);
   protected mapStateService = inject(MapStateService);
+  private destroyRef = inject(DestroyRef)
 
   defaultCenter = input<[number, number]>([-120.5, 50.6]);
   defaultZoom = input<[number]>([7]);
-
+  
   readonly map = signal<MapLibreMap | undefined>(undefined);
   protected isDrawMode = signal(false);
 
@@ -89,6 +93,15 @@ export class MapComponent {
 
     let alertedFeatures = new Map<LayerKind, Set<number>>();
     effect(() => alertedFeatures = this.handleLayerAlertChange(alertedFeatures));
+
+    // optional: update map vanishing point on sidebar open/close.  maybe a bit much
+    // effect(() => {
+    //   const paddingChange = this.mapStateService.paddingChange();
+    //   const map = this.map();
+    //
+    //   if (!map) return;
+    //   map.easeTo({...paddingChange, })
+    // })
   }
 
 
@@ -177,6 +190,10 @@ export class MapComponent {
     this.map.set(map);
     this.mapStateService.initializeMap(map);
     this.mapStateService.startSelectMode();
+
+    this.mapStateService.flyToCommand$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(command => this.executeFlyTo(command))
   }
 
 
@@ -278,4 +295,29 @@ export class MapComponent {
     this.mapStateService.clearSelection();
   }
 
+
+  private executeFlyTo(command: FlyToCommand): void {
+    if (!this.map()) return;
+    this.map().once('moveend', () => {
+      this.mapStateService.flyToComplete();
+    })
+
+    const mapContainer = this.map().getContainer();
+    const cameraPadding = {height: mapContainer.offsetHeight / 10, width: mapContainer.offsetWidth / 10};
+    const bounds = bbox(command.geometry) as [number, number, number, number];
+
+    const camera = this.map().cameraForBounds(bounds, {
+      padding: {top: cameraPadding.height, bottom: cameraPadding.height, left: cameraPadding.width, right: cameraPadding.width},
+    })
+
+    this.map().flyTo({
+      ...camera,
+      speed: 3,
+      curve: 1,
+      padding: this.mapStateService.padding().padding
+      // easing(t) {
+      //   return t;
+      // }
+    })
+  }
 }
