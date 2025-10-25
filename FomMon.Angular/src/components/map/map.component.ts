@@ -224,7 +224,7 @@ export class MapComponent implements OnDestroy {
   private draw : TerraDraw | undefined;
   private registerDrawing(map: MapLibreMap) {
     this.drawControl = new MaplibreTerradrawControl({
-      modes: ['polygon', 'select', 'delete-selection'],
+      modes: ['polygon', 'select', 'delete-selection', 'render'],
       open: true
     });
     map.addControl(this.drawControl, 'top-right');
@@ -263,7 +263,7 @@ export class MapComponent implements OnDestroy {
     this.draw.clear();
 
 
-    this.draw.setMode('select');
+    this.draw.setMode('render');
     this.isDrawMode.set(false);
   }
 
