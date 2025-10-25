@@ -1,9 +1,16 @@
 <app-map-card [isOdd]="isOdd()" [featureId]="featureId()" [geometry]="data().geometry">
-  <app-card-thumb [src]="'assets/areawatch-thumb-dummy.png'" alt="{{ data().name }}" />
+  <app-card-thumb>
+    <app-thumbnail-map class="thumb-map"
+                       [src]="data().thumbnailImageUrl"
+                       alt="watch thumbnail"
+                       [geometry]="data().geometry"
+                       fillColor="#3bb2d0"
+                       (mapSaved)="onThumbMapSaved($event)" />
+  </app-card-thumb>
 
   <app-card-label [title]="data().name">
-    <div class="layers">
 
+    <div class="layers">
       @if (layerService.state.isReady()) {
         @for (l of data()?.layers; track l) {
           <li class="badge"><p>{{ layerService.byKind()[l].name }}</p></li>

@@ -1,12 +1,12 @@
 
 <!-- Area Watches GeoJSON Source -->
 <mgl-geojson-source
-        id="area-watches"
-        [data]="areaWatchFeatures()"
+        [id]=sourceId
+        [data]="features()"
 
 >
   <app-map-layer-group
-      [groupId]="layerGroupId"
+      [groupId]="groupId"
       category="feature"
       name="Watches"
       thumbnailImg="assets/layer-preview-areawatch.png"
@@ -14,10 +14,9 @@
       [interactivity]="{select: true, hover: true}"
     />
 
-  @let idFill = 'area-watch';
   <mgl-layer
-          source="area-watches"
-          [id]="idFill"
+          [source]=sourceId
+          [id]="layerIdFill"
           type="fill"
           [paint]="{
         'fill-color': [
@@ -32,15 +31,14 @@
         ]
       }"
 
-          [layout]="mapLayerService.getLayout(idFill)"
+          [layout]="mapLayerService.getLayout(layerIdFill)"
           appMapLayer
-          [groupId]="layerGroupId"
+          [groupId]="groupId"
   ></mgl-layer>
 
-  @let idOutline = 'area-watch-outline';
   <mgl-layer
-          source="area-watches"
-          [id]="idOutline"
+          [source]=sourceId
+          [id]="layerIdOutline"
           type="line"
           [paint]="{
 
@@ -56,16 +54,15 @@
           1
         ]
       }"
-          [layout]="mapLayerService.getLayout(idOutline)"
+          [layout]="mapLayerService.getLayout(layerIdOutline)"
           appMapLayer
-          [groupId]="layerGroupId"
+          [groupId]="groupId"
           [overrideInteractivity]="{select: false, hover: false}"
   ></mgl-layer>
 
-  @let idName = 'area-watch-name';
   <mgl-layer
-          source="area-watches"
-          [id]="idName"
+          [source]=sourceId
+          [id]="layerIdLabel"
           type="symbol"
           [minzoom]="8"
 
@@ -74,9 +71,9 @@
         'text-halo-color': '#ffffff',
         'text-halo-width': 2
       }"
-          [layout]="mapLayerService.getLayout(idName)"
+          [layout]="mapLayerService.getLayout(layerIdLabel)"
           appMapLayer
-          [groupId]="layerGroupId"
+          [groupId]="groupId"
           [overrideInteractivity]="{select: false, hover: false}"
           [additionalLayout]="{
         'text-field': ['get', 'name'],

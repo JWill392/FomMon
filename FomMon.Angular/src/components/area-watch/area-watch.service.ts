@@ -56,6 +56,7 @@ export class AreaWatchService implements ServiceWithState {
       );
   }
 
+
   createId(aw : AreaWatchAdd) {
     const id = uuidv4();
 
@@ -83,7 +84,10 @@ export class AreaWatchService implements ServiceWithState {
 
   add$(addDto : AreaWatchDto) {
     this._state.assertReady();
-    const addAw = {...addDto, localState: LocalState.pending_add};
+    const addAw = {...addDto,
+      thumbnailImageObjectName: '',
+      thumbnailImageUrl: '',
+      localState: LocalState.pending_add};
     if (this.get(addDto.id)) {
       // already exists
       return EMPTY;
@@ -99,8 +103,21 @@ export class AreaWatchService implements ServiceWithState {
         })),
         map(result => ({...result, localState: LocalState.added})),
         tap(added => {
-          this.updateLocal(added);
+          this.patchLocal(added);
         })
+      )
+  }
+
+  uploadThumbnail$(id: string, image: Blob, name: string) {
+    const formData = new FormData();
+    formData.append('file', image, name)
+    return this.http.post<{thumbnailImageObjectName: string, thumbnailImageUrl: string}>
+    (`api/areawatch/${id}/thumbnail`, formData)
+      .pipe(
+        catchError((error) => throwError(() => {
+          return error;
+        })),
+        tap(aw => this.patchLocal({...aw, id}))
       )
   }
 
@@ -135,18 +152,18 @@ export class AreaWatchService implements ServiceWithState {
     }
 
     pat.localState = LocalState.pending_edit;
-    this.updateLocal(pat);
+    this.patchLocal(pat);
 
     return this.http.patch(`api/areawatch/${pat.id}`, pat)
       .pipe(
         catchError((error) => throwError(() => {
           pat.localState = LocalState.added;
-          this.updateLocal(original) // revert edit
+          this.patchLocal(original) // revert edit
 
           return error;
         })),
         map(result => ({...result, localState: LocalState.added})),
-        tap(result => this.updateLocal(result))
+        tap(result => this.patchLocal(result))
       )
   }
 
@@ -163,7 +180,9 @@ export class AreaWatchService implements ServiceWithState {
   private addLocal(aw : AreaWatch) {
     this._data.update(arr => arr.concat([aw]));
   }
-  private updateLocal(aw : Partial<AreaWatch>) {
+  private patchLocal(aw : Partial<AreaWatch>) {
+    if (!(aw?.id)) throw new Error("argument aw must have id element");
+
     this._data.update(arr => arr.map(a => a.id === aw.id ? {...a, ...aw} : a));
   }
 

@@ -1,4 +1,5 @@
-﻿using FomMon.ApiService.Contracts;
+﻿using FluentResults;
+using FomMon.ApiService.Contracts;
 using FomMon.ApiService.Services;
 using FomMon.Data.Contexts;
 using FomMon.Data.Models;
@@ -10,23 +11,26 @@ namespace FomMon.ApiService;
 
 public interface IAreaWatchService
 {
-    Task<AreaWatch> CreateAsync(CreateAreaWatchRequest dto, Guid userId, CancellationToken c = default);
+    Task<Result<AreaWatch>> CreateAsync(CreateAreaWatchRequest dto, Guid userId, CancellationToken c = default);
     
-    Task<AreaWatch?> GetByIdAsync(Guid id, Guid userId, CancellationToken c = default);
-    Task<AreaWatch?> UpdateAsync(Guid id,  UpdateAreaWatchRequest dto, Guid userId, CancellationToken c);
-    Task<IReadOnlyList<AreaWatch>> ListAsync(Guid userId, CancellationToken c = default);
+    Task<Result<AreaWatch>> GetByIdAsync(Guid id, Guid userId, CancellationToken c = default);
+    Task<Result<AreaWatch>> UpdateAsync(Guid id,  UpdateAreaWatchRequest dto, Guid userId, CancellationToken c);
+    Task<Result<ICollection<AreaWatch>>> ListAsync(Guid userId, CancellationToken c = default);
     
-    Task<bool> DeleteAsync(Guid id, Guid userId, CancellationToken c = default);
+    Task<Result> DeleteAsync(Guid id, Guid userId, CancellationToken c = default);
+    
+    public Task<Result<string>> UploadThumbnailImage(Guid id, Guid userId, Stream image, long length, CancellationToken c = default);
 }
 
 public sealed class AreaWatchService(
     AppDbContext db, 
     IClockService clock, 
     IMapper mapper,
-    IFeatureService featureService) : IAreaWatchService
+    IObjectStorageService objectStorageService,
+    IEntityObjectStorageService entityObjectStorageService) : IAreaWatchService
 {
 
-    public async Task<AreaWatch> CreateAsync(CreateAreaWatchRequest dto, Guid userId, CancellationToken c = default)
+    public async Task<Result<AreaWatch>> CreateAsync(CreateAreaWatchRequest dto, Guid userId, CancellationToken c = default)
     {
         if (userId == Guid.Empty) throw new ArgumentException("UserId is required");
         ArgumentNullException.ThrowIfNull(dto.Geometry);
@@ -41,50 +45,58 @@ public sealed class AreaWatchService(
         await db.AddAsync(areaWatch, c);
         await db.SaveChangesAsync(c);
         
-        return areaWatch;
+        return Result.Ok(areaWatch);
     }
 
-    public async Task<AreaWatch?> GetByIdAsync(Guid id, Guid userId, CancellationToken c = default)
+    public async Task<Result<AreaWatch>> GetByIdAsync(Guid id, Guid userId, CancellationToken c = default)
     {
         if (userId == Guid.Empty) throw new ArgumentException("UserId is required");
-        return await db.AreaWatches
-            .AsNoTracking()
-            .SingleOrDefaultAsync(a => a.Id == id && a.UserId == userId, c);
+        var aw = await db.AreaWatches.FindAsync([id], c);
+        if (aw?.UserId != userId) return Result.Fail(new NotFoundError());
+        return aw;
     }
 
-    public async Task<AreaWatch?> UpdateAsync(Guid id, UpdateAreaWatchRequest dto, Guid userId, CancellationToken c)
+    public async Task<Result<AreaWatch>> UpdateAsync(Guid id, UpdateAreaWatchRequest dto, Guid userId, CancellationToken c)
     {
-        var aw = await db.AreaWatches
-            .SingleOrDefaultAsync(a => a.Id == id && a.UserId == userId, c);
-        
-        if (aw is null) return null; // not found
+        var (aw, errors) = await GetByIdAsync(id, userId, c);
+        if (errors is not null) return Result.Fail(errors);
 
         mapper.From(dto).AdaptTo(aw); // see mapping config in dto
 
         await db.SaveChangesAsync(c);
-        return aw;
+        return Result.Ok(aw);
     }
 
-    public async Task<IReadOnlyList<AreaWatch>> ListAsync(Guid userId, CancellationToken c = default)
+    public async Task<Result<ICollection<AreaWatch>>> ListAsync(Guid userId, CancellationToken c = default)
     {
         var areaWatches = await db.AreaWatches
             .Where(aw => aw.UserId == userId)
             .ToListAsync(c);
         
-        return areaWatches;
+        return Result.Ok<ICollection<AreaWatch>>(areaWatches);
     }
 
-    public async Task<bool> DeleteAsync(Guid id, Guid userId, CancellationToken c = default)
+    public async Task<Result> DeleteAsync(Guid id, Guid userId, CancellationToken c = default)
     {
-        var areaWatch = await db.AreaWatches
-            .SingleOrDefaultAsync(a => a.Id == id && a.UserId == userId, c);
-
-        if (areaWatch is null)
-            return false;
+        var (aw, errors) = await GetByIdAsync(id, userId, c);
+        if (errors is not null) return Result.Fail(errors);
         
-        db.AreaWatches.Remove(areaWatch);
+        await objectStorageService.DeleteImageAsync(aw.ThumbnailImageObjectName, c);
+        
+        db.AreaWatches.Remove(aw);
         
         await db.SaveChangesAsync(c);
-        return true;
+        return Result.Ok();
+    }
+
+    public async Task<Result<string>> UploadThumbnailImage(Guid id, Guid userId, Stream image, long length, CancellationToken c = default)
+    {
+        var (aw, errors) = await GetByIdAsync(id, userId, c);
+        if (errors is not null) return Result.Fail(errors);
+            
+        return await entityObjectStorageService.UploadImageAsync(aw, 
+            a => a.ThumbnailImageObjectName, 
+            a => $"area-watch-thumb-{a.Id}.png", 
+            image, length, c);
     }
 }

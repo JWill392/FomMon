@@ -8,7 +8,7 @@
          [dragRotate]="false"
          [touchZoomRotate]="false"
          [attributionControl]="{compact: true}"
-         (mapClick)="onEmptyClick( $event)"
+         (mapClick)="onEmptyClick($event)"
 >
   <!-- OSM Base Layer -->
   <mgl-raster-source
@@ -70,7 +70,7 @@
   }
 
   @if (isAuthenticated()) {
-    <app-area-watch-layer/>
+    <app-area-watch-layer [data]="areaWatches()"/>
   }
 
 
@@ -92,9 +92,7 @@
 
 
   <mgl-control position="top-left" >
-    <app-sidebar>
-      <router-outlet></router-outlet>
-    </app-sidebar>
+    <app-sidebar/>
   </mgl-control>
 
 </mgl-map>

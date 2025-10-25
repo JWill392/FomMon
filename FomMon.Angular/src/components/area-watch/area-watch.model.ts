@@ -8,8 +8,10 @@ export interface AreaWatch extends LocalStateItem {
   id: string;
   name: string;
   layers: LayerKind[];
+  thumbnailImageObjectName: string;
+  thumbnailImageUrl: string;
   featureId: number; // maplibre requires int ids
 }
 
-export type AreaWatchDto = Omit<AreaWatch, 'localState'>;
+export type AreaWatchDto = Omit<AreaWatch, 'localState' | 'thumbnailImageObjectName' | 'thumbnailImageUrl'>;
 export type AreaWatchAdd = Omit<AreaWatchDto, 'id' | 'featureId'>;

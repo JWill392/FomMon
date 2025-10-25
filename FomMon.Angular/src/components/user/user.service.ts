@@ -85,11 +85,11 @@ export class UserService implements ServiceWithState {
   }
 
   private loadImageUrl$() {
-    return this.http.get<{url: string}>('api/user/profileimage')
+    return this.http.get<{url: string}>('api/user/profile-image')
       .pipe(
         catchError(error => throwError(() => {
           const e = new Error("Failed to load profile image", {cause: error});
-          this.errorService.handleError(e); // TODO warning not error
+          this.errorService.handleError(e);
           return e;
         })),
         map(body => body?.url ?? undefined),

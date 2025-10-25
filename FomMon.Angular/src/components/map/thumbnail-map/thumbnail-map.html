@@ -1,0 +1,52 @@
+@if (state() === 'idle' || state() === 'map-loading') {
+  <p>Loading...</p>
+<!--  TODO throbber -->
+} @else if (state() === 'image-input' || state() === 'map-saved-image') {
+  <img [id]="imageId()"
+       class="thumb-image"
+       [src]="this.imgSrcInput() ? this.imgSrcInput() : this.mapImgDataUrl()"
+       [alt]="alt()"
+  />
+}
+
+@if (state() === 'map-loading' || state() === 'map-ready') {
+  <mgl-map class="thumb-map"
+           [class.visible]="state() === 'map-ready'"
+           [attributionControl]="false"
+           [style]="'https://demotiles.maplibre.org/style.json'"
+           [interactive]="false"
+           [fitBounds]="bbox()"
+           [fitBoundsOptions]="{
+            padding: 10,
+            duration: 0
+          }"
+           (mapLoad)="onMapLoad($event)">
+    <mgl-raster-source
+        [id]="layerIdBase()"
+        [tiles]="['https://tile.openstreetmap.org/{z}/{x}/{y}.png']"
+        [tileSize]="256"
+        attribution="© OpenStreetMap contributors"
+    />
+    <mgl-layer
+        [source]="layerIdBase()"
+        [id]="layerIdBase()"
+        type="raster"
+        [minzoom]="0"
+        [maxzoom]="19"
+    />
+
+    <mgl-geojson-source
+      [id]="sourceId()"
+      [data]="geometry()"/>
+
+    <mgl-layer
+        [source]=sourceId()
+        [id]="layerIdFill()"
+        type="fill"
+        [paint]="{
+          'fill-color': fillColor(),
+          'fill-opacity': 0.5
+        }"
+    ></mgl-layer>
+  </mgl-map>
+}

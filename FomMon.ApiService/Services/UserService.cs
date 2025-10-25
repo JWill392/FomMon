@@ -28,14 +28,9 @@ public interface IUserService
     Task<Result<User>> GetAsync(Guid id, CancellationToken c = default);
     Task<Result<User>> UpsertAsync(CreateUserRequest dto, CancellationToken c = default);
     
-    Task<Result<User>> UpdateAsync(CreateUserRequest dto, CancellationToken c = default);
+    Task<Result<User>> UpdateAsync(Guid id, CreateUserRequest dto, CancellationToken c = default);
     
-    Task<Result> SetProfileImageObjectAsync(Guid userId, string objectName, CancellationToken c = default);
-    
-    
-    public Task<Result<string>> UploadProfileImage(Guid id, IFormFile file, CancellationToken c = default);
-    public Task<Result<string>> UploadProfileImage(Guid id, Stream image, long length, string contentType, CancellationToken c = default);
-    public Task<Result> DeleteProfileImage(Guid id, CancellationToken c = default);
+    public Task<Result<string>> UploadProfileImage(Guid id, Stream image, long length, CancellationToken c = default);
     public Task<Result<Image<Rgba32>>> GenerateIdenticonAsync(Guid id, CancellationToken c = default);
     
 }
@@ -43,10 +38,9 @@ public interface IUserService
 public sealed class UserService(AppDbContext db, 
     IMapper mapper, 
     ILogger<UserService> logger,
-    IObjectStorageService objectStorageService) : IUserService
+    IEntityObjectStorageService entityObjectStorageService) : IUserService
 {
     
-    // TODO either user FluentResults everywhere, or remove this.  Just playing with it.
     public async Task<Result<User>> CreateAsync(CreateUserRequest dto, CancellationToken c = default)
     {
         if (string.IsNullOrWhiteSpace(dto.Email))
@@ -80,6 +74,7 @@ public sealed class UserService(AppDbContext db,
         }
         
         // generate identicon in a background job if no profile image
+        // TODO move to user-add event
         BackgroundJob.Enqueue(() => SetProfileImageIdenticonAsync(user.Id, c));
         
         return Result.Ok(user);
@@ -89,8 +84,7 @@ public sealed class UserService(AppDbContext db,
     public async Task<Result<User>> GetAsync(Guid id, CancellationToken c = default)
     {
         var user = await db.Users.FindAsync([id], c);
-        if (user is null)
-            return Result.Fail(new NotFoundError());
+        if (user is null) return Result.Fail(new NotFoundError());
         
         return Result.Ok(user);
     }
@@ -119,24 +113,22 @@ public sealed class UserService(AppDbContext db,
         return user switch
         {
             null => await CreateAsync(dto, c),
-            _ => await UpdateAsync(dto, c),
+            _ => await UpdateAsync(user.Id, dto, c),
         };
     }
 
-    public async Task<Result<User>> UpdateAsync(CreateUserRequest dto, CancellationToken c = default)
+    public async Task<Result<User>> UpdateAsync(Guid id, CreateUserRequest dto, CancellationToken c = default)
     {
         ArgumentNullException.ThrowIfNull(dto);
         ArgumentException.ThrowIfNullOrWhiteSpace(dto.Issuer);
         ArgumentException.ThrowIfNullOrWhiteSpace(dto.Subject);
         
-        dto = dto with { Email = dto.Email?.ToLowerInvariant().Trim() };
         
-        var user = await db.Users
-            .FirstOrDefaultAsync(u => u.Issuer == dto.Issuer && u.Subject == dto.Subject, c);
-        
+        var user = await db.Users.FindAsync([id], c);
         if (user is null) return Result.Fail(new NotFoundError());
-        
-        mapper.Map(dto, user); // patch fields
+
+        user.DisplayName = dto.DisplayName;
+        if(dto.Email is not null) user.Email = dto.Email.ToLowerInvariant().Trim();
         
         if (db.Entry(user).State != EntityState.Unchanged)
         {
@@ -160,72 +152,30 @@ public sealed class UserService(AppDbContext db,
         return Result.Ok(user);
     }
 
-    public async Task<Result> SetProfileImageObjectAsync(Guid userId, string objectName, CancellationToken c = default)
-    {
-        var (user, errors) = await GetAsync(userId, c);
-        if (errors is not null) return Result.Fail(errors);
-        
-        user.ProfileImageObjectName = objectName;
-        
-        await db.SaveChangesAsync(c);
-
-        return Result.Ok();
-    }
-
+    
     public async Task<Result<string>> UploadProfileImage(Guid id, IFormFile file, CancellationToken c = default)
     {
         await using var imageStream = file.OpenReadStream();
-        return await UploadProfileImage(id, imageStream, file.Length, file.ContentType, c);   
+        return await UploadProfileImage(id, imageStream, file.Length, c);   
     }
-    public async Task<Result<string>> UploadProfileImage(Guid id, Stream imageStream, long length, string contentType, CancellationToken c = default)
+    public async Task<Result<string>> UploadProfileImage(Guid id, Stream imageStream, long length, CancellationToken c = default)
     {
-        var (user, errors) = await GetAsync(id, c);
-        if (errors is not null) return Result.Fail(errors);
+        var user = await db.Users.FindAsync([id], c);
+        if (user is null) return Result.Fail(new NotFoundError());
             
-        // version existing image; see minio policy for deletion schedule
-        bool imageExists = !String.IsNullOrEmpty(user.ProfileImageObjectName);
-        string objectName = imageExists ? user.ProfileImageObjectName : 
-            $"{id}.{Guid.NewGuid().ToString()}.png";
-            
-        var uploadResult = await objectStorageService.UploadImageAsync(objectName, imageStream, length, contentType, c);
-        if (uploadResult.IsFailed) return Result.Fail(uploadResult.Errors);
-
-        if (!imageExists)
-        {
-            var result = await SetProfileImageObjectAsync(id, objectName, c);
-            if (result.IsFailed)
-            {
-                // clean up failed upload
-                await objectStorageService.DeleteImageAsync(objectName, c);
-                return Result.Fail(result.Errors);
-            }
-        }
-
-        return Result.Ok(objectName);
+        return await entityObjectStorageService.UploadImageAsync(user, 
+            u => u.ProfileImageObjectName, 
+            u => $"{u.Id}.{DateTime.UtcNow.Ticks}", 
+            imageStream, length, c);
     }
 
-    public async Task<Result> DeleteProfileImage(Guid id, CancellationToken c = default)
-    {
-        var (user, errors) = await GetAsync(id, c);
-        if (errors is not null) return Result.Fail(errors);
-        
-        if (String.IsNullOrEmpty(user.ProfileImageObjectName))
-            return Result.Fail(new NotFoundError());
-            
-        await objectStorageService.DeleteImageAsync(user.ProfileImageObjectName, c);
-            
-        var userResult = await SetProfileImageObjectAsync(id, String.Empty, c);
-        if (userResult.IsFailed)
-        {
-            // TODO undelete
-            throw new Exception("Failed to delete profile image");
-        }
-            
-        return Result.Ok();
-    }
 
+    // ReSharper disable once MemberCanBePrivate.Global
     public async Task<Result<string>> SetProfileImageIdenticonAsync(Guid id, CancellationToken c = default)
     {
+        var user = await db.Users.FindAsync([id], c);
+        if (user is null) return Result.Fail(new NotFoundError());
+        
         var (identicon, genError) = await GenerateIdenticonAsync(id, c);
         if (genError is not null) return Result.Fail(genError);
         
@@ -233,10 +183,12 @@ public sealed class UserService(AppDbContext db,
         await identicon.SaveAsWebpAsync(imageStream, c);
         imageStream.Position = 0;
         
-        var (objectName, uploadError) = await UploadProfileImage(id, imageStream, imageStream.Length, "image/webp", c);
+        var (objectName, uploadError) = await UploadProfileImage(id, imageStream, imageStream.Length, c);
         if (uploadError is not null) return Result.Fail(uploadError);
 
-        return await SetProfileImageObjectAsync(id, objectName, c);
+        user.ProfileImageObjectName = objectName;
+        await db.SaveChangesAsync(c);
+        return Result.Ok(objectName);
     }
     
     private const int ProfileWidth = 400;
@@ -247,8 +199,8 @@ public sealed class UserService(AppDbContext db,
     /// </summary>
     public async Task<Result<Image<Rgba32>>> GenerateIdenticonAsync(Guid id, CancellationToken c = default)
     {
-        var (user, errors) = await GetAsync(id, c);
-        if (errors is not null) return Result.Fail(errors);
+        var user = await db.Users.FindAsync([id], c);
+        if (user is null) return Result.Fail(new NotFoundError());
         
         string[] colors = [
             "#084b83", "#42bfdd", "#bbe6e4", "#f0f6f6", "#ff66b3",

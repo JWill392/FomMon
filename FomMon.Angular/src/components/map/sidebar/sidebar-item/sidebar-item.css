@@ -16,25 +16,18 @@
 }
 .action-item-title {
   font-size: 14px;
-  color: #333;
-  font-family: "Open Sans", sans-serif;
+  /*font-family: "Open Sans", sans-serif;*/
   display: block;
-  cursor: pointer;
-
-  transition: color 0.2s ease-in-out, display 0.2s linear;
+  cursor: inherit;
 }
 
-.action-item-title:not(.collapsed) {
-  color: #333;
-}
-.action-item-title.collapsed {
-  color: transparent;
-}
 
 .action-item {
   color: #333;
   text-decoration: none;
+  cursor: pointer;
   /*padding: 5px;*/
+
 }
 .action-item:hover {
   color: #5a6c52;

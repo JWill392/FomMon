@@ -26,6 +26,9 @@ public sealed class AreaWatch : IVersioned
     public required Instant AddedDate { get; set; }
 
     public Instant EvaluatedDate { get; set;}
+    
+    [MaxLength(255)]
+    public string ThumbnailImageObjectName { get; set; } = string.Empty;
     public User User { get; set; } = null!; // navigation property
     
     /// <summary>

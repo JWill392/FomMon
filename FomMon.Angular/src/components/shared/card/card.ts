@@ -1,5 +1,4 @@
-import {Component, input, signal} from '@angular/core';
-import {NgIcon} from "@ng-icons/core";
+import {Component, input} from '@angular/core';
 
 @Component({
   selector: 'app-card-label',
@@ -41,7 +40,11 @@ export class CardLabel {
 
 @Component({
   selector: 'app-card-thumb',
-  template: `<img [src]="src()" [alt]="alt()"/>`,
+  template: `@if(src()) {
+    <img [src]="src()" [alt]="alt()"/>
+  } @else {
+    <ng-content>card-thumb</ng-content>
+  }`,
   styles: `:host {
     flex: 0 0 auto;
     width: 64px;
@@ -62,8 +65,8 @@ export class CardLabel {
   }
 })
 export class CardThumb {
-  alt = input.required<string>();
-  src = input.required<string>();
+  alt = input<string|undefined>(undefined);
+  src = input<string|undefined>(undefined);
 }
 
 @Component({

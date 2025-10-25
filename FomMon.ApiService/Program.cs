@@ -58,6 +58,7 @@ builder.Services.AddMinio(c =>
     if (builder.Environment.IsDevelopment()) c.WithSSL(false);
 });
 builder.Services.AddMinioObjectStorageService();
+builder.Services.AddScoped<IEntityObjectStorageService, VersionedEntityObjectStorageService>();
 
 // Outgoing API
 builder.Services.AddHttpClient<FomApiClient>(c => c.BaseAddress = new Uri("https://fom.nrs.gov.bc.ca/")); // TODO put in config

@@ -1,7 +1,6 @@
-import {computed, effect, inject, Injectable, signal} from "@angular/core";
+import {computed, effect, inject, Injectable} from "@angular/core";
 import {MapLayerService} from "../map-layer.service";
 import {ErrorService} from "../../../shared/error.service";
-import {AreaWatchLayer} from "./area-watch-layer";
 import {AreaWatchService} from "../../../area-watch/area-watch.service";
 import {MapSelection, MapStateService} from "../../map-state.service";
 import {FeatureIdentifier} from "maplibre-gl";
@@ -14,9 +13,11 @@ export class AreaWatchLayerService {
   private areaWatchService = inject(AreaWatchService);
   private mapStateService = inject(MapStateService);
 
+  readonly groupId = 'area-watches';
+
   readonly selectedAreaWatchId = computed(() => this.getAreaWatch(this.mapStateService.selected()));
 
-  private _layerGroup = computed(() => this.mapLayerService.featureGroups().find(g => g.id === AreaWatchLayer.layerGroupId));
+  private _layerGroup = computed(() => this.mapLayerService.featureGroups().find(g => g.id === this.groupId));
 
   constructor() {
 
@@ -58,7 +59,7 @@ export class AreaWatchLayerService {
   }
   private getAreaWatch(selection: MapSelection) {
     if (!selection) return null;
-    if (selection.layerGroupId !== AreaWatchLayer.layerGroupId) return null;
+    if (selection.layerGroupId !== this.groupId) return null;
 
     const fid = selection?.featureId.id as number;
 

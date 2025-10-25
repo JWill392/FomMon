@@ -11,7 +11,7 @@ namespace FomMon.ApiService.Services;
 public interface IObjectStorageService
 {
 
-    Task<Result> UploadImageAsync(string objectName, Stream imageStream, long length, string contentType,
+    Task<Result> UploadImageAsync(string objectName, Stream imageStream, long length,
         CancellationToken c = default);
     Task<Stream> GetImageAsync(string objectName, CancellationToken c = default);
     Task<string> GetImageUrlAsync(string objectName, int expiresInSeconds = 3600, CancellationToken c = default);
@@ -45,12 +45,11 @@ public class MinioObjectStorageService(
     public const string ActivitySourceName = "FomMon.ProfileImageService";
     private static readonly ActivitySource ActivitySource = new(ActivitySourceName);
 
-    public async Task<Result> UploadImageAsync(string objectName, Stream imageStream, long length, string contentType, CancellationToken c = default)
+    public async Task<Result> UploadImageAsync(string objectName, Stream imageStream, long length, CancellationToken c = default)
     {
         using var activity = ActivitySource.StartActivity();
         activity?.SetTag("object.name", objectName);
         activity?.SetTag("object.size", length);
-        activity?.SetTag("object.type", contentType);
 
         ArgumentException.ThrowIfNullOrWhiteSpace(objectName);
 

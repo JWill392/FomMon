@@ -1,5 +1,5 @@
 :host {
-  font-family: "Open Sans", sans-serif;
+  /*font-family: "Open Sans", sans-serif;*/
   /*set in component*/
   --nav-width: 0;
   --content-width: 0;

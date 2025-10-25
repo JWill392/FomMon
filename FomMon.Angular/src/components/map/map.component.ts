@@ -4,7 +4,7 @@ import {
   DestroyRef,
   effect,
   inject,
-  input,
+  input, OnDestroy,
   signal,
 } from '@angular/core';
 import {
@@ -28,16 +28,14 @@ import {MapLayerDirective} from "./layer/base-layer-switcher/map-layer.directive
 import {BaseLayerSwitcher} from "./layer/base-layer-switcher/base-layer-switcher";
 import {MapLayerService} from "./layer/map-layer.service";
 import {LayerKind} from "../layer-type/layer-type.model";
-import {RouterOutlet} from "@angular/router";
 import {UserMenu} from "../user/user-menu/user-menu";
 import {FlyToCommand, MapSelection, MapStateService} from "./map-state.service";
 import {ErrorService} from "../shared/error.service";
 import {MapLayerGroupComponent} from "./layer/map-layer-group/map-layer-group.component";
-import {fidEquals} from "./map-util";
+import {boundingBox, fidEquals} from "./map-util";
 import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
-import {bbox} from '@turf/bbox';
 import {Sidebar} from "./sidebar/sidebar";
-
+import {AreaWatchService} from "../area-watch/area-watch.service";
 
 @Component({
   selector: 'app-ngx-map',
@@ -55,7 +53,6 @@ import {Sidebar} from "./sidebar/sidebar";
     BaseLayerSwitcher,
     MapLayerDirective,
     Sidebar,
-    RouterOutlet,
     UserMenu,
     MapLayerGroupComponent,
   ],
@@ -63,14 +60,16 @@ import {Sidebar} from "./sidebar/sidebar";
   styleUrl: './map.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MapComponent {
+export class MapComponent implements OnDestroy {
   private layerConfigService = inject(LayerConfigService);
   private userService = inject(UserService);
-  private alertService = inject(AreaAlertService);
+  private areaWatchService = inject(AreaWatchService);
+  private areaAlertService = inject(AreaAlertService);
   private errorService = inject(ErrorService);
+  private destroyRef = inject(DestroyRef)
+
   protected mapLayerService = inject(MapLayerService);
   protected mapStateService = inject(MapStateService);
-  private destroyRef = inject(DestroyRef)
 
   defaultCenter = input<[number, number]>([-120.5, 50.6]);
   defaultZoom = input<[number]>([7]);
@@ -79,6 +78,7 @@ export class MapComponent {
   protected isDrawMode = signal(false);
 
   protected domainLayers = this.layerConfigService.data;
+  protected areaWatches = this.areaWatchService.data;
   readonly isAuthenticated = this.userService.state.isReady;
 
 
@@ -104,6 +104,10 @@ export class MapComponent {
     // })
   }
 
+  ngOnDestroy(): void {
+
+  }
+
 
   private handleSelectionChange(previousSelection: MapSelection) {
     const selected = this.mapStateService.selected();
@@ -125,12 +129,15 @@ export class MapComponent {
     if (!map) return previousHover;
 
 
-    previousHover.difference(newHover).forEach((s) => map.setFeatureState(s.featureId, {hover: false}))
-    newHover.difference(previousHover).forEach((s) => map.setFeatureState(s.featureId, {hover: true}))
+    let removed = previousHover.difference(newHover);
+    removed.forEach((s) => map.setFeatureState(s.featureId, {hover: false}))
 
-    if (newHover.size > 0 && previousHover.size === 0) {
+    let added = newHover.difference(previousHover);
+    added.forEach((s) => map.setFeatureState(s.featureId, {hover: true}))
+
+    if (newHover.size > 0) {
       this.mapStateService.map().getCanvas().style.cursor = 'pointer';
-    } else if (newHover.size === 0 && previousHover.size > 0) {
+    } else if (newHover.size === 0) {
       this.mapStateService.map().getCanvas().style.cursor = '';
     }
 
@@ -138,7 +145,7 @@ export class MapComponent {
   }
   private handleLayerAlertChange(alertedFeatures: Map<LayerKind, Set<number>>) {
     const layerList = this.layerConfigService.data();
-    const layerAlertMap = this.alertService.byLayer();
+    const layerAlertMap = this.areaAlertService.byLayer();
     const map = this.map();
 
     if (!map || !layerList || !layerAlertMap) return alertedFeatures;
@@ -188,6 +195,7 @@ export class MapComponent {
 
     this.registerDrawing(map);
     this.map.set(map);
+    this.destroyRef.onDestroy(() => this.map()?.remove());
     this.mapStateService.initializeMap(map);
     this.mapStateService.startSelectMode();
 
@@ -304,20 +312,27 @@ export class MapComponent {
 
     const mapContainer = this.map().getContainer();
     const cameraPadding = {height: mapContainer.offsetHeight / 10, width: mapContainer.offsetWidth / 10};
-    const bounds = bbox(command.geometry) as [number, number, number, number];
+    const bounds = boundingBox(command.geometry);
 
     const camera = this.map().cameraForBounds(bounds, {
       padding: {top: cameraPadding.height, bottom: cameraPadding.height, left: cameraPadding.width, right: cameraPadding.width},
     })
 
+
+
+    const easeParametric = (t: number) => {
+      const sqr = t * t;
+      return sqr / (2 * (sqr - t) + 1);
+    }
+
     this.map().flyTo({
       ...camera,
       speed: 3,
-      curve: 1,
-      padding: this.mapStateService.padding().padding
-      // easing(t) {
-      //   return t;
-      // }
+      maxDuration: 1500,
+
+      curve: 1.42,
+      padding: this.mapStateService.padding().padding,
+      easing: easeParametric
     })
   }
 }
