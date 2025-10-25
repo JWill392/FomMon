@@ -60,7 +60,7 @@ import {AreaWatchService} from "../area-watch/area-watch.service";
   styleUrl: './map.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MapComponent implements OnDestroy {
+export class MapComponent {
   private layerConfigService = inject(LayerConfigService);
   private userService = inject(UserService);
   private areaWatchService = inject(AreaWatchService);
@@ -104,8 +104,20 @@ export class MapComponent implements OnDestroy {
     // })
   }
 
-  ngOnDestroy(): void {
 
+  onMapLoad(map: MapLibreMap) {
+    // DEBUG tiles
+    // map.showCollisionBoxes = true;
+    // map.showTileBoundaries = true;
+
+    this.registerDrawing(map);
+    this.map.set(map);
+    this.destroyRef.onDestroy(() => this.map()?.remove());
+    this.mapStateService.startSelectMode();
+
+    this.mapStateService.flyToCommand$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(command => this.executeFlyTo(command))
   }
 
 
@@ -136,9 +148,9 @@ export class MapComponent implements OnDestroy {
     added.forEach((s) => map.setFeatureState(s.featureId, {hover: true}))
 
     if (newHover.size > 0) {
-      this.mapStateService.map().getCanvas().style.cursor = 'pointer';
+      map.getCanvas().style.cursor = 'pointer';
     } else if (newHover.size === 0) {
-      this.mapStateService.map().getCanvas().style.cursor = '';
+      map.getCanvas().style.cursor = '';
     }
 
     return newHover;
@@ -187,22 +199,6 @@ export class MapComponent implements OnDestroy {
     }
   }
 
-
-  onMapLoad(map: MapLibreMap) {
-    // DEBUG tiles
-    // map.showCollisionBoxes = true;
-    // map.showTileBoundaries = true;
-
-    this.registerDrawing(map);
-    this.map.set(map);
-    this.destroyRef.onDestroy(() => this.map()?.remove());
-    this.mapStateService.initializeMap(map);
-    this.mapStateService.startSelectMode();
-
-    this.mapStateService.flyToCommand$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(command => this.executeFlyTo(command))
-  }
 
 
   // Problem: MapLibre disallows relative URLs, but they are required for proxy (angular in dev, docker-nginx in prod)
@@ -306,9 +302,6 @@ export class MapComponent implements OnDestroy {
 
   private executeFlyTo(command: FlyToCommand): void {
     if (!this.map()) return;
-    this.map().once('moveend', () => {
-      this.mapStateService.flyToComplete();
-    })
 
     const mapContainer = this.map().getContainer();
     const cameraPadding = {height: mapContainer.offsetHeight / 10, width: mapContainer.offsetWidth / 10};
@@ -317,8 +310,6 @@ export class MapComponent implements OnDestroy {
     const camera = this.map().cameraForBounds(bounds, {
       padding: {top: cameraPadding.height, bottom: cameraPadding.height, left: cameraPadding.width, right: cameraPadding.width},
     })
-
-
 
     const easeParametric = (t: number) => {
       const sqr = t * t;

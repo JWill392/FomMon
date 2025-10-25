@@ -38,7 +38,7 @@ export class App {
 
     // user service initialized on login
 
-    // Initialize area watches only when authenticated
+    // authenticated services
     effect(() => {
       const auth = this.userService.state.isReady();
       if (!auth) return;

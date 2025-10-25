@@ -15,6 +15,7 @@ import {v4 as uuidv4} from 'uuid';
 
 /**
  * Generates a map thumbnail image of provided geometry.
+ * (just for fun; would probably be better to generate on backend without basemap)
  * Loads MapLibre instance, saves with html-to-image, then swaps map with image element.
  * Optionally cache image externally & pass as src to skip expensive generation on next use.
  * */

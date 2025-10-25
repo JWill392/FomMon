@@ -66,8 +66,8 @@ export class MapCard extends Card {
     this.mapStateService.removeHover(this.featureId());
   }
   flyToSelf(): void {
-    this.mapStateService.flyTo(this.featureId(), this.geometry())
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe();
+    this.mapStateService.flyTo({
+      geometry: this.geometry()
+    })
   }
 }
