@@ -17,10 +17,9 @@ import {MapLayerService} from "../../map/layer/map-layer.service";
 export class AreaWatchList implements OnInit, OnDestroy {
   awService = inject(AreaWatchService);
   private mapLayerService = inject(MapLayerService);
-
   destroyRef = inject(DestroyRef);
 
-  private oldLayerVisibility : boolean;
+  private oldLayerVisibility: boolean;
 
   // TODO should ensure areawatch layer is visible when open
   ngOnInit(): void {
@@ -28,18 +27,20 @@ export class AreaWatchList implements OnInit, OnDestroy {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
 
-    this.ensureLayerVisible();
+    this.setLayerVisible();
   }
+
   ngOnDestroy(): void {
     this.restoreLayerVisibility();
   }
 
 
-  private ensureLayerVisible() {
+  private setLayerVisible() {
     const awLayerGroup = this.mapLayerService.getGroup('area-watches');
     this.oldLayerVisibility = awLayerGroup?.visible ?? true;
     this.mapLayerService.setVisibility('area-watches', true);
   }
+
   private restoreLayerVisibility() {
     this.mapLayerService.setVisibility('area-watches', this.oldLayerVisibility);
   }

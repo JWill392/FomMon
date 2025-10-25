@@ -1,10 +1,15 @@
-import {Component, computed, DestroyRef, effect, inject, input, signal} from '@angular/core';
+import {Component, computed, effect, inject, input, output, signal} from '@angular/core';
 import {Card} from "../../shared/card/card";
 import {MapStateService} from "../map-state.service";
 import {FeatureIdentifier} from "maplibre-gl";
 import {fidEquals} from "../map-util";
-import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
 import {Geometry} from "geojson";
+
+export type MapCardEventSource = 'map' | 'card';
+export interface MapCardEvent {
+  value: boolean,
+  source: MapCardEventSource,
+}
 
 /**
  * Card for map features with bidirectional selection and hover
@@ -18,52 +23,72 @@ import {Geometry} from "geojson";
     '(click)': 'select($event)',
     '(mouseenter)': 'onMouseEnter($event)',
     '(mouseleave)': 'onMouseLeave($event)',
-    '[class.selected]': 'selected()',
-    '[class.hovered]': 'hovered()',
+    '[class.selected]': 'isSelected()',
+    '[class.hovered]': 'isHovered()',
   }
 })
 export class MapCard extends Card {
   private mapStateService = inject(MapStateService);
-  private destroyRef = inject(DestroyRef);
 
-  featureId = input.required<FeatureIdentifier>();
-  geometry = input.required<Geometry>();
+  readonly featureId = input.required<FeatureIdentifier>();
+  readonly geometry = input.required<Geometry>();
 
-  selected = signal<boolean>(false);
-  hovered = signal<boolean>(false);
+  readonly isSelected = signal<boolean>(false);
+  readonly isHovered = signal<boolean>(false);
 
   private isMapSelected = computed(() => fidEquals(this.mapStateService.selected()?.featureId, this.featureId()));
   private isMapHovered = computed(() => this.mapStateService.hovered()?.some(f => fidEquals(f.featureId, this.featureId())));
+
+  selected = output<(MapCardEvent)>();
+  hovered = output<MapCardEvent>();
 
   constructor() {
     super();
 
     // set from map state
-    effect(() => this.selected.set(this.isMapSelected()));
-    effect(() => this.hovered.set(this.isMapHovered()));
+    effect(() => {
+      let selectCard = this.isSelected();
+      let selectMap = this.isMapSelected();
+      if (selectCard === selectMap) return;
+
+      this.isSelected.set(selectMap);
+      this.selected.emit({value: selectMap, source: 'map'});
+    });
+    effect(() => {
+      let hoverCard = this.isHovered();
+      let hoverMap = this.isMapHovered();
+      if (hoverCard === hoverMap) return;
+
+      this.isHovered.set(hoverMap);
+      this.hovered.emit({value: hoverMap, source: 'map'});
+    });
   }
 
   select(_: PointerEvent) {
     // set from card
-    this.selected.update(s => !s);
-    if (this.selected()) {
+    this.isSelected.update(s => !s);
+    let selected = this.isSelected();
+    if (selected) {
       this.mapStateService.select(this.featureId());
       this.flyToSelf();
-    }
-
-    else {
+    } else {
       this.mapStateService.unselect(this.featureId());
     }
+    this.selected.emit({value: selected, source: 'card'});
   }
 
   onMouseEnter(_: MouseEvent) {
-    this.hovered.set(true);
+    if (this.isHovered()) return;
+    this.isHovered.set(true);
     this.mapStateService.addHover(this.featureId());
+    this.hovered.emit({value: true, source: 'card'});
   }
 
   onMouseLeave(_: MouseEvent) {
-    this.hovered.set(false);
+    if (!this.isHovered()) return;
+    this.isHovered.set(false);
     this.mapStateService.removeHover(this.featureId());
+    this.hovered.emit({value: false, source: 'card'});
   }
   flyToSelf(): void {
     this.mapStateService.flyTo({

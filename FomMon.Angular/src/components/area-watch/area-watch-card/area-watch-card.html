@@ -1,4 +1,11 @@
-<app-map-card [isOdd]="isOdd()" [featureId]="featureId()" [geometry]="data().geometry">
+<app-map-card
+    [isOdd]="isOdd()"
+    [featureId]="featureId()"
+    [geometry]="data().geometry"
+    (selected)="onSelected($event)"
+    appInViewport
+    (inViewport)="isInViewport = $event"
+>
   <app-card-thumb>
     <app-thumbnail-map class="thumb-map"
                        [src]="data().thumbnailImageUrl"
