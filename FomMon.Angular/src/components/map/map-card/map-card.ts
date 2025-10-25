@@ -70,7 +70,6 @@ export class MapCard extends Card {
     let selected = this.isSelected();
     if (selected) {
       this.mapStateService.select(this.featureId());
-      this.flyToSelf();
     } else {
       this.mapStateService.unselect(this.featureId());
     }
@@ -89,10 +88,5 @@ export class MapCard extends Card {
     this.isHovered.set(false);
     this.mapStateService.removeHover(this.featureId());
     this.hovered.emit({value: false, source: 'card'});
-  }
-  flyToSelf(): void {
-    this.mapStateService.flyTo({
-      geometry: this.geometry()
-    })
   }
 }

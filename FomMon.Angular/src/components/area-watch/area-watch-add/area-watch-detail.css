@@ -1,0 +1,132 @@
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.add-mode {
+
+}
+
+.edit-mode {
+
+}
+
+.view-mode {
+/*TODO hide form inputs?*/
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 10px;
+  background: #99b88c;
+  border-bottom: 2px solid #7c9571;
+  height: 50px;
+  width: 100%;
+  overflow: hidden;
+}
+.title-container {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  gap: 3px;
+}
+.title-icon {
+  flex: 0 0 auto;
+  display: block;
+  font-size: 26px;
+  color: #fff;
+}
+header h2 {
+  display: block;
+  color: #fff;
+  text-overflow: ellipsis;
+  text-wrap: nowrap;
+  overflow: hidden;
+}
+
+.action-item-container {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 5px;
+}
+
+.action-item-icon {
+  display: block;
+  font-size: 26px;
+  cursor: pointer;
+  color: #333
+}
+.action-item-icon:hover {
+  color: #000;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+}
+
+label {
+  font-size: 1em;
+  font-weight: bold;
+  color: #333;
+}
+
+input {
+  padding: 5px 10px;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+select {
+  padding: 5px 10px;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 10px;
+}
+
+button {
+  display: block;
+  cursor: pointer;
+  padding: 10px;
+  font-size: 1em;
+  font-weight: bold;
+  text-transform: uppercase;
+
+  border: none;
+  border-radius: 4px;
+}
+
+button:active {
+  background: #111;
+  color: #fff;
+}
+
+button:hover {
+  background: #333;
+  color: #111;
+}
+
+button.button-primary {
+  background: #5a6c52;
+  color: #fff;
+}
+
+
+button.button-secondary {
+  background: #99b88c;
+  color: #333;
+}

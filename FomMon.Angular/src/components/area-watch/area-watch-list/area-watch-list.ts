@@ -4,6 +4,7 @@ import {AreaWatchCard} from '../area-watch-card/area-watch-card';
 import {RouterLink} from '@angular/router';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {MapLayerService} from "../../map/layer/map-layer.service";
+import {RoutePaths} from "../../../app/app.routes";
 
 @Component({
   selector: 'app-area-watch-list',
@@ -44,4 +45,6 @@ export class AreaWatchList implements OnInit, OnDestroy {
   private restoreLayerVisibility() {
     this.mapLayerService.setVisibility('area-watches', this.oldLayerVisibility);
   }
+
+  protected readonly RoutePaths = RoutePaths;
 }

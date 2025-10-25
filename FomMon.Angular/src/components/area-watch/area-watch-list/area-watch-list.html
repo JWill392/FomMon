@@ -1,7 +1,7 @@
-<div class="header">
+<header>
   <h2>Watches</h2>
-  <a routerLink="/map/area-watch-add" class="action-item">Add</a>
-</div>
+  <a class="action-item" [routerLink]="RoutePaths.areaWatchAdd">Add</a>
+</header>
 <div>
   @if (awService.state.isLoading() || awService.state.isIdle()) {
     <p>Loading...</p>

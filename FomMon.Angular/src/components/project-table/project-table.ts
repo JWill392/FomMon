@@ -1,5 +1,4 @@
 import { Component, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
-import { environment } from '../../environments/environment';
 import {ProjectService} from "../project/project.service";
 
 /// UNUSED currently
@@ -13,7 +12,6 @@ export class ProjectTable {
   private projectService = inject(ProjectService);
   projects = this.projectService.data;
 
-  environment = environment;
   page = signal(1);
   pageSize = signal(20);
 

@@ -4,8 +4,7 @@ import {
   DestroyRef,
   effect,
   inject,
-  input, OnDestroy,
-  signal,
+  input, signal,
 } from '@angular/core';
 import {
   ControlComponent,
@@ -78,7 +77,6 @@ export class MapComponent {
   protected isDrawMode = signal(false);
 
   protected domainLayers = this.layerConfigService.data;
-  protected areaWatches = this.areaWatchService.data;
   readonly isAuthenticated = this.userService.state.isReady;
 
 
@@ -113,11 +111,14 @@ export class MapComponent {
     this.registerDrawing(map);
     this.map.set(map);
     this.destroyRef.onDestroy(() => this.map()?.remove());
-    this.mapStateService.startSelectMode();
 
     this.mapStateService.flyToCommand$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(command => this.executeFlyTo(command))
+      .subscribe(command => {
+        // wait for sidebar to open for padding calculation
+        const timer = setTimeout(() => this.executeFlyTo(command));
+        this.destroyRef.onDestroy(() => clearTimeout(timer));
+      });
   }
 
 
@@ -246,6 +247,7 @@ export class MapComponent {
 
       if (feature?.geometry) {
         this.mapStateService.drawResult$.next(feature.geometry);
+        this.draw.setMode('select');
       }
     });
 
@@ -302,6 +304,7 @@ export class MapComponent {
 
   private executeFlyTo(command: FlyToCommand): void {
     if (!this.map()) return;
+    if (!command.geometry) return;
 
     const mapContainer = this.map().getContainer();
     const cameraPadding = {height: mapContainer.offsetHeight / 10, width: mapContainer.offsetWidth / 10};

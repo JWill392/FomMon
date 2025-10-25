@@ -65,7 +65,7 @@ export class LocalStorageService {
     }
   }
 
-  private mapReplacer<K, V>(key: string, value: Map<K, V>): any {
+  private mapReplacer<K, V>(_: string, value: Map<K, V>): any {
     if (value instanceof Map) {
       return {
         __type: 'Map',
@@ -77,11 +77,11 @@ export class LocalStorageService {
 
   private reviver(key: string, value: any): Serializable {
     if (typeof value === 'object' && value !== null && value.__type === 'Map') {
-      return this.mapReviver(key, value);
+      return this.mapReviver(value);
     }
     return value;
   }
-  private mapReviver<K, V>(key: string, value: any): Map<K, V> {
+  private mapReviver<K, V>(value: any): Map<K, V> {
     return new Map(value.value);
   }
 }

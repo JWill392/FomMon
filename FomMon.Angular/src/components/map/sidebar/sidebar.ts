@@ -12,6 +12,7 @@ import {
 import {phosphorTreeEvergreenFill} from "@ng-icons/phosphor-icons/fill";
 import {LocalStorageService} from "../../shared/local-storage.service";
 import {MapStateService} from "../map-state.service";
+import {RoutePaths} from "../../../app/app.routes";
 
 @Component({
   selector: 'app-sidebar',
@@ -90,5 +91,6 @@ export class Sidebar implements OnInit {
   }
 
 
+  protected readonly RoutePaths = RoutePaths;
 }
 

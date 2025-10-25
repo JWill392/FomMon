@@ -18,7 +18,7 @@ export class AreaWatchService implements ServiceWithState {
   private _state = new ServiceLoadState();
   readonly state = this._state.asReadonly();
 
-  private _data = signal<AreaWatch[]>(undefined);
+  private _data = signal<AreaWatch[]>([]);
   readonly data = this._data.asReadonly();
 
   private featureToId = new Map<number, string>();
@@ -32,7 +32,7 @@ export class AreaWatchService implements ServiceWithState {
 
       if (isLoggedOut && hasData) {
         this._state.reset();
-        this._data.set(undefined);
+        this._data.set([]);
       }
     })
   }
@@ -167,7 +167,7 @@ export class AreaWatchService implements ServiceWithState {
       )
   }
 
-  public getByFeatureId(fid : number) {
+  public getByFeatureId(fid : number | string) {
     return this._data().find(a => a.featureId === fid);
   }
 

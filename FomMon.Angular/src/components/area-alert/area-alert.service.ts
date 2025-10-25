@@ -7,7 +7,6 @@ import {ServiceLoadState} from "../shared/service/service-load-state";
 import {tap} from "rxjs/operators";
 import {LocalState} from "../shared/service/local-state";
 import {UserService} from "../user/user.service";
-import {LayerConfigService} from "../layer-type/layer-config.service";
 
 
 @Injectable({providedIn: 'root'})
@@ -18,22 +17,17 @@ export class AreaAlertService implements ServiceWithState {
   private _state = new ServiceLoadState();
   readonly state = this._state.asReadonly();
 
-  private _data = signal<AreaAlert[] | undefined>(undefined);
+  private _data = signal<AreaAlert[]>([]);
   readonly data = this._data.asReadonly();
 
-  readonly byLayer = computed(() => {
-    const alerts = this.data();
-    if (alerts === undefined) return undefined;
-    return Map.groupBy(this.data(),
-      (a) => a.featureReference.layerKind)
-  });
+  readonly byLayer = computed(() => Map.groupBy(this.data(), (a) => a.featureReference.layerKind));
 
   constructor() {
     effect(() => {
       const isLoggedOut = !this.userService.state.isReady();
       if (isLoggedOut) {
         this._state.reset();
-        this._data.set(undefined);
+        this._data.set([]);
       }
     });
   }

@@ -32,7 +32,7 @@ export class NotificationService {
       .pipe(map((payload) : PushAction => ({ type: ActionType.push, payload })));
 
     const pop$ = this.popSource.asObservable()
-      .pipe(map((payload) : PopAction => ({ type: ActionType.pop })));
+      .pipe(map((_) : PopAction => ({ type: ActionType.pop })));
 
     this.messages$ = merge(push$, pop$)
       .pipe(

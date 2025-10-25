@@ -1,7 +1,6 @@
 import {Component, inject} from '@angular/core';
 import {MapLayerService} from "../map-layer.service";
 
-import {RouterLink} from "@angular/router";
 import {LayerCard} from "./layer-card/layer-card";
 
 @Component({

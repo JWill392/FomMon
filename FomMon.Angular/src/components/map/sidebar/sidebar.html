@@ -2,10 +2,7 @@
   <nav [class.collapsed]="navCollapsed()">
     <div class="top-container">
       <div class="header-logo" routerLink="/map"  [preserveFragment]="true">
-        <div class="header-logo-icons">
-          <ng-icon name="phosphorTreeEvergreenFill" size="40px" />
-<!--          <ng-icon name="phosphorMagnifyingGlass" size="40px" />-->
-        </div>
+        <ng-icon class="header-logo-icon" name="phosphorTreeEvergreenFill" />
         <label class="header-logo-text" [class.collapsed]="navCollapsed()">FOM Monitor</label>
       </div>
       <hr/>
@@ -13,16 +10,16 @@
         <app-sidebar-item
             title="Layers"
             icon="phosphorStack"
-            link="layers"
-            closeLink="/map"
+            [link]="RoutePaths.layers"
+            [closeLink]="RoutePaths.map"
             [collapsed]="navCollapsed()" />
 
         @if (isAuthenticated()) {
           <app-sidebar-item
               title="Watches"
               icon="phosphorBinoculars"
-              link="area-watch-list"
-              closeLink="/map"
+              [link]="RoutePaths.areaWatchList"
+              [closeLink]="RoutePaths.map"
               [collapsed]="navCollapsed()" />
         }
       </div>

@@ -161,9 +161,6 @@ export class MapLayerService {
 
     return this._layers().filter(l => groupIds.includes(l.groupId));
   }
-  getLayerIds(groupId: string | string[] | LayerGroup | LayerGroup[] = []) {
-    return this.getLayers(groupId).map(l => l.id);
-  }
   getLayer(id: string) {
     return this._layers().find(l => l.id === id);
   }

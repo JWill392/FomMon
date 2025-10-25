@@ -1,0 +1,65 @@
+<header>
+  <div class="title-container">
+  <ng-icon class="title-icon" name="phosphorBinoculars" />
+  @if (mode() === 'view') {
+    <h2>{{this.data()?.name}}</h2>
+  } @else if (mode() === 'edit') {
+    <h2>Edit Watch</h2>
+  } @else if (mode() === 'add') {
+    <h2>Add Watch</h2>
+  }
+  </div>
+
+  <div class="action-item-container">
+    @if ((mode() === 'view') && localState() === LocalState.added) {
+      <ng-icon class="action-item-icon" name="phosphorPencil" (click)="onEdit($event)" />
+    }
+    @if ((mode() === 'view' || mode() === 'edit') && localState() === LocalState.added) {
+      <ng-icon class="action-item-icon" name="phosphorTrash" (click)="onDelete($event)" />
+    }
+  </div>
+</header>
+
+<form [formGroup]="form"
+      (ngSubmit)="onSubmit()">
+  <div class="input-group">
+    <label for="watch-name">Name:</label>
+    <input type="text" id="watch-name" name="watch-name" formControlName="name" autocomplete="off" data-lpignore="true" data-form-type="other" >
+  </div>
+
+  <div class="input-group">
+    <label for="layers">Layers:</label>
+<!--    TODO multiselect that isn't garbage -->
+    <select name="layers" id="layers" formControlName="layers" multiple>
+      @for (layer of layers(); track layer.kind) {
+        <option id="layer-{{ layer.kind" [value]="layer.kind">{{layer.name}}</option>
+      }
+    </select>
+  </div>
+  <div class="error-container">
+    @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+      <p class="error">Name is required</p>
+    }
+    @if (form.controls.layers.touched && form.controls.layers.hasError('required')) {
+      <p class="error">At least one layer is required</p>
+    }
+    @if (form.controls.layers.touched && form.controls.geometry.hasError('required')) {
+      <p class="error">Draw an area to monitor on the map</p>
+    }
+    @if (form.controls.geometry.hasError('area')) {
+      @let error = form.controls.geometry.getError('area');
+
+      <p class="error">Area is too large. You selected {{error['actualAreaHa'] | number:'1.0-0' }} hectares. Max is {{error['maxAreaHa'] | number:'1.0-0' }} hectares</p>
+    }
+  </div>
+  <div class="button-container">
+    @if (this.mode() === 'edit') {
+      <button class="button-secondary" type="button" (click)="onCancel()">Cancel</button>
+      <button class="button-primary" type="submit">Save</button>
+    }
+    @if (this.mode() === 'add') {
+      <button class="button-secondary" type="button" (click)="onCancel()">Cancel</button>
+      <button class="button-primary" type="submit">Add</button>
+    }
+  </div>
+</form>

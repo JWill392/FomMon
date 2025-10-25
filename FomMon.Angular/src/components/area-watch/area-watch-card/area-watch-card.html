@@ -2,7 +2,8 @@
     [isOdd]="isOdd()"
     [featureId]="featureId()"
     [geometry]="data().geometry"
-    (selected)="onSelected($event)"
+    (hovered)="onHover($event)"
+    [routerLink]="[RoutePaths.areaWatchView(id())]"
     appInViewport
     (inViewport)="isInViewport = $event"
 >
@@ -25,11 +26,4 @@
       }
     </div>
   </app-card-label>
-
-  @if (data().localState === LocalState.added) {
-  <app-card-action>
-    <ng-icon name="phosphorXCircleFill" (click)="delete($event)" />
-<!--    TODO icon, throbber while deleting-->
-  </app-card-action>
-  }
 </app-map-card>

@@ -18,7 +18,6 @@ export interface PublicNotice {
   operationEndYear: number;
 }
 
-export type Projects = Project[];
 
 
 export enum ProjectState {

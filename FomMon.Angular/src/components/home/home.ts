@@ -1,13 +1,12 @@
 import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BehaviorSubject, timer } from 'rxjs';
-import {MenuComponent} from "../menu/menu";
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.html',
   styleUrls: ['./home.css'],
-  imports: [CommonModule, MenuComponent]
+  imports: [CommonModule]
 })
 export class HomeComponent implements OnDestroy {
   private copyMessageSubject = new BehaviorSubject<string | null>(null);

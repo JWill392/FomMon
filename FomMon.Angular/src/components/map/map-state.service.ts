@@ -11,7 +11,7 @@ export interface MapSelection {
   featureId: FeatureIdentifier; // TODO refactor so groupid === source + sourceLayer? equality is annoying though.
 }
 
-export type MapMode = 'select' | 'draw' | 'none'; // TODO map mode
+export type MapMode = 'select' | 'draw'; // TODO map mode
 
 export interface FlyToCommand {
   geometry: Geometry
@@ -32,7 +32,7 @@ export class MapStateService {
   private _hovered = signal<MapSelection[]>([]);
   readonly hovered = this._hovered.asReadonly();
 
-  private _mode = signal<MapMode>('none');
+  private _mode = signal<MapMode>('select');
   readonly mode = this._mode.asReadonly();
 
   padding = signal<{padding: {top: number, bottom: number, left: number, right: number}, durationMs: number}>

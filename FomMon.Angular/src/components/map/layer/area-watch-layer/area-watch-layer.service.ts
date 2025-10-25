@@ -57,7 +57,7 @@ export class AreaWatchLayerService {
       id: areaWatch.featureId
     };
   }
-  private getAreaWatch(selection: MapSelection) {
+  public getAreaWatch(selection: MapSelection) {
     if (!selection) return null;
     if (selection.layerGroupId !== this.groupId) return null;
 

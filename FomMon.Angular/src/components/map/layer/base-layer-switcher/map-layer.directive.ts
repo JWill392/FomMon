@@ -1,7 +1,7 @@
-import {Directive, OnInit, OnDestroy, inject, signal, input, InputSignal, computed, Signal} from '@angular/core';
+import {Directive, OnInit, OnDestroy, inject, input, InputSignal, computed, Signal} from '@angular/core';
 import {EventData, LayerComponent} from '@maplibre/ngx-maplibre-gl';
 import {FeatureIdentifier, LayerSpecification, MapGeoJSONFeature, MapMouseEvent} from "maplibre-gl";
-import {LayerCategory, LayerGroup, LayerInteractivity, MapLayerService} from "../map-layer.service";
+import {LayerGroup, LayerInteractivity, MapLayerService} from "../map-layer.service";
 import {ErrorService} from "../../../shared/error.service";
 import {MapStateService} from "../../map-state.service";
 
@@ -78,7 +78,7 @@ export class MapLayerDirective implements OnInit, OnDestroy {
   }
 
 
-  onMouseLeave(e: MapMouseEvent & {features?: MapGeoJSONFeature[]} & EventData) {
+  onMouseLeave(_: MapMouseEvent & {features?: MapGeoJSONFeature[]} & EventData) {
     if (this.mapStateService.mode() !== 'select') return;
 
     if (this.interactivity().hover) {
