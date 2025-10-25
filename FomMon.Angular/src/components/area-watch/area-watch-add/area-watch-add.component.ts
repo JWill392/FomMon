@@ -18,7 +18,7 @@ import {AreaWatchLayerService} from "../../map/layer/area-watch-layer/area-watch
   templateUrl: './area-watch-add.component.html',
   styleUrl: './area-watch-add.component.css'
 })
-export class AreaWatchAddComponent implements OnInit, OnDestroy {
+export class AreaWatchAddComponent implements OnInit {
   private layerService = inject(LayerConfigService);
   protected layers = this.layerService.data;
 
@@ -44,10 +44,9 @@ export class AreaWatchAddComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.startDrawMode();
   }
-  ngOnDestroy(): void {
-      this.mapStateService.endDrawMode();
-  }
+
   private startDrawMode(): void {
+    // draw mode ended by disposing subscription on component destroy
     this.mapStateService.startDrawMode()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

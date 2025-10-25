@@ -1,10 +1,9 @@
 import {inject, Injectable, signal} from "@angular/core";
 import {MapLayerService} from "./layer/map-layer.service";
 import {ErrorService} from "../shared/error.service";
-import {Observable, Subject} from "rxjs";
+import {finalize, Observable, Subject} from "rxjs";
 import {Geometry} from "geojson";
-import {tap} from "rxjs/operators";
-import {FeatureIdentifier, Map as MapLibreMap} from 'maplibre-gl';
+import {FeatureIdentifier} from 'maplibre-gl';
 import {fidEquals} from "./map-util";
 
 export interface MapSelection {
@@ -51,16 +50,12 @@ export class MapStateService {
     this.setMode('draw');
 
     this._drawResult$ = new Subject<Geometry>();
-    this._drawResult$.pipe(
-      tap({finalize: () => this.endDrawMode()})
+
+    return this._drawResult$.pipe(
+      finalize(() => {
+        this.setMode('select');
+      })
     );
-
-    return this._drawResult$.asObservable();
-  }
-
-  endDrawMode() {
-    if (this._mode() !== 'draw') return;
-    this.setMode('select');
   }
 
   flyTo(command: FlyToCommand) {
