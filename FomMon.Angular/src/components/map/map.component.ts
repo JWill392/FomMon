@@ -34,7 +34,7 @@ import {MapLayerGroupComponent} from "./layer/map-layer-group/map-layer-group.co
 import {boundingBox, fidEquals} from "./map-util";
 import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
 import {Sidebar} from "./sidebar/sidebar";
-import {AreaWatchService} from "../area-watch/area-watch.service";
+import {AppConfigService} from "../../config/app-config.service";
 
 @Component({
   selector: 'app-ngx-map',
@@ -62,16 +62,13 @@ import {AreaWatchService} from "../area-watch/area-watch.service";
 export class MapComponent {
   private layerConfigService = inject(LayerConfigService);
   private userService = inject(UserService);
-  private areaWatchService = inject(AreaWatchService);
   private areaAlertService = inject(AreaAlertService);
   private errorService = inject(ErrorService);
-  private destroyRef = inject(DestroyRef)
+  private destroyRef = inject(DestroyRef);
 
+  protected appConfig = inject(AppConfigService);
   protected mapLayerService = inject(MapLayerService);
   protected mapStateService = inject(MapStateService);
-
-  defaultCenter = input<[number, number]>([-120.5, 50.6]);
-  defaultZoom = input<[number]>([7]);
   
   readonly map = signal<MapLibreMap | undefined>(undefined);
   protected isDrawMode = signal(false);

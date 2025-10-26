@@ -25,7 +25,7 @@
     @for (p of pagedProjects(); track p.id) {
         <tr>
 <!--          TODO probably removing this anyways, but obviously don't hardcode link-->
-        <td [title]="p.id"><a [attr.href]="'https://fom.nrs.gov.bc.ca/public' + '/projects?id=' + p.id + '#details'"
+        <td [title]="p.id"><a [attr.href]="fomApiUrl + '/projects?id=' + p.id + '#details'"
             target="_blank">{{p.id}}</a></td>
         <td [title]="p.name">{{p.name}}</td>
         <td [title]="p.stateDescription">{{p.stateDescription}}</td>

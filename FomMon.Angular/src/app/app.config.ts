@@ -11,8 +11,8 @@ import {
 
 import { routes } from './app.routes';
 import {ErrorService} from '../components/shared/error.service';
-
-
+import {provideAppInitializer, inject} from '@angular/core';
+import {AppConfigService} from "../config/app-config.service";
 
 
 const urlCondition = createInterceptorCondition<IncludeBearerTokenCondition>({
@@ -44,6 +44,10 @@ export const appConfig: ApplicationConfig = {
       provide: INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG,
       useValue: [urlCondition]
     },
+    provideAppInitializer(() => {
+      const configService = inject(AppConfigService);
+      return configService.loadConfig();
+    }),
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),

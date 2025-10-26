@@ -1,0 +1,9 @@
+{
+  "map": {
+    "defaultCenter": [-120.5, 50.6],
+    "defaultZoom": [7]
+  },
+  "fom": {
+    "apiUrl": "https://fom.nrs.gov.bc.ca/api"
+  }
+}

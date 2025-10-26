@@ -16,6 +16,7 @@ import {NgIcon, provideIcons} from "@ng-icons/core";
 import {phosphorBinoculars, phosphorPencil, phosphorTrash} from "@ng-icons/phosphor-icons/regular";
 import {LocalState} from "../../shared/service/local-state";
 import {RoutePaths} from "../../../app/app.routes";
+import {Location} from "@angular/common";
 
 type Mode = 'none' | 'add' | 'view' | 'edit';
 @Component({
@@ -42,6 +43,7 @@ export class AreaWatchDetail implements OnInit {
   private notService = inject(NotificationService);
   private errorService = inject(ErrorService);
   private router = inject(Router);
+  private location = inject(Location);
   private destroyRef = inject(DestroyRef);
 
   mode = input.required<Mode>();
@@ -191,12 +193,10 @@ export class AreaWatchDetail implements OnInit {
 
   protected onEdit(event: PointerEvent) {
     event.stopPropagation();
-    this.setModeEdit();
-  }
 
-  private setModeEdit() {
     this.router.navigate([RoutePaths.areaWatchEdit(this.id()!)]);
   }
+
 
   protected onDelete(event: PointerEvent) {
     event.stopPropagation();
@@ -219,9 +219,10 @@ export class AreaWatchDetail implements OnInit {
     this.router.navigate([RoutePaths.areaWatchList]);
   }
 
-  protected onCancel() {
+  protected onCancelEdit() {
     if (this.mode() === 'add') {
-      this.router.navigate([RoutePaths.areaWatchList]);
+      // TODO generic router back?
+      this.location.back();
     } else if (this.mode() === 'edit') {
       this.router.navigate([RoutePaths.areaWatchView(this.id()!)]);
     }

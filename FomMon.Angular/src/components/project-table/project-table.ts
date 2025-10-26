@@ -1,5 +1,6 @@
 import { Component, signal, computed, ChangeDetectionStrategy, inject } from '@angular/core';
 import {ProjectService} from "../project/project.service";
+import {AppConfigService} from "../../config/app-config.service";
 
 /// UNUSED currently
 @Component({
@@ -10,6 +11,7 @@ import {ProjectService} from "../project/project.service";
 })
 export class ProjectTable {
   private projectService = inject(ProjectService);
+  private appConfig = inject(AppConfigService);
   projects = this.projectService.data;
 
   page = signal(1);
@@ -23,6 +25,8 @@ export class ProjectTable {
   totalPages = computed(() => {return Math.ceil(this.projects().length / this.pageSize());});
   canGoNext = computed(() => this.page() * this.pageSize() < this.projects().length);
   canGoPrev = computed(() => this.page() > 1);
+
+  protected fomApiUrl = this.appConfig.get().fom.apiUrl;
 
   nextPage() { 
     if (this.canGoNext()) {

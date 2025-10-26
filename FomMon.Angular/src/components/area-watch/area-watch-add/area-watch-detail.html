@@ -54,11 +54,11 @@
   </div>
   <div class="button-container">
     @if (this.mode() === 'edit') {
-      <button class="button-secondary" type="button" (click)="onCancel()">Cancel</button>
+      <button class="button-secondary" type="button" (click)="onCancelEdit()">Cancel</button>
       <button class="button-primary" type="submit">Save</button>
     }
     @if (this.mode() === 'add') {
-      <button class="button-secondary" type="button" (click)="onCancel()">Cancel</button>
+      <button class="button-secondary" type="button" (click)="onCancelEdit()">Cancel</button>
       <button class="button-primary" type="submit">Add</button>
     }
   </div>
