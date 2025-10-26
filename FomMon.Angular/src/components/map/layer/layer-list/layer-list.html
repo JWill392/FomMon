@@ -1,6 +1,3 @@
-<div class="header">
-  <h2>Layers</h2>
-</div>
 <div class="layer-list">
 @for (layerGroup of featureGroups(); track layerGroup.id) {
   <app-layer-card [layerGroupId]="layerGroup.id" [isOdd]="$odd" />

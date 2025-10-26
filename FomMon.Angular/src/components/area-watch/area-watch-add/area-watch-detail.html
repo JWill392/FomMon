@@ -1,25 +1,3 @@
-<header>
-  <div class="title-container">
-  <ng-icon class="title-icon" name="phosphorBinoculars" />
-  @if (mode() === 'view') {
-    <h2>{{this.data()?.name}}</h2>
-  } @else if (mode() === 'edit') {
-    <h2>Edit Watch</h2>
-  } @else if (mode() === 'add') {
-    <h2>Add Watch</h2>
-  }
-  </div>
-
-  <div class="action-item-container">
-    @if ((mode() === 'view') && localState() === LocalState.added) {
-      <ng-icon class="action-item-icon" name="phosphorPencil" (click)="onEdit($event)" />
-    }
-    @if ((mode() === 'view' || mode() === 'edit') && localState() === LocalState.added) {
-      <ng-icon class="action-item-icon" name="phosphorTrash" (click)="onDelete($event)" />
-    }
-  </div>
-</header>
-
 <form [formGroup]="form"
       (ngSubmit)="onSubmit()">
   <div class="input-group">
@@ -63,3 +41,13 @@
     }
   </div>
 </form>
+
+
+<div class="action-item-container">
+  @if ((mode() === 'view') && localState() === LocalState.added) {
+    <ng-icon class="action-item-icon" name="phosphorPencil" (click)="onEdit($event)" />
+  }
+  @if ((mode() === 'view' || mode() === 'edit') && localState() === LocalState.added) {
+    <ng-icon class="action-item-icon" name="phosphorTrash" (click)="onDelete($event)" />
+  }
+</div>

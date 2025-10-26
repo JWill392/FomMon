@@ -2,10 +2,8 @@
     [isOdd]="isOdd()"
     [featureId]="featureId()"
     [geometry]="data().geometry"
-    (hovered)="onHover($event)"
-    [routerLink]="[RoutePaths.areaWatchView(id())]"
-    appInViewport
-    (inViewport)="isInViewport = $event"
+    [routerLink]="[RoutePaths.areaWatchView({id: id()})]"
+    [scrollIntoView]="{hover: true}"
 >
   <app-card-thumb>
     <app-thumbnail-map class="thumb-map"

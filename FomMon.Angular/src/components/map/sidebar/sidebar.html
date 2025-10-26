@@ -1,12 +1,12 @@
 <div class="sidebar" [class.collapsed]="navCollapsed()">
   <nav [class.collapsed]="navCollapsed()">
     <div class="top-container">
-      <div class="header-logo" routerLink="/map"  [preserveFragment]="true">
+      <header class="header-logo" [routerLink]="RoutePaths.map"  [preserveFragment]="true">
         <ng-icon class="header-logo-icon" name="phosphorTreeEvergreenFill" />
-        <label class="header-logo-text" [class.collapsed]="navCollapsed()">FOM Monitor</label>
-      </div>
+        <label class="header-logo-text" [class.collapsed]="navCollapsed()">{{config.get().app.title}}</label>
+      </header>
       <hr/>
-      <div class="actions">
+      <section class="actions">
         <app-sidebar-item
             title="Layers"
             icon="phosphorStack"
@@ -22,17 +22,29 @@
               [closeLink]="RoutePaths.map"
               [collapsed]="navCollapsed()" />
         }
-      </div>
+      </section>
     </div>
     <div class="bottom-container">
-      <div class="nav-collapse-button" (click)="toggleNav()" [class.collapsed]="navCollapsed()">
+      <div class="action nav-collapse-button" (click)="toggleNav()" [class.collapsed]="navCollapsed()">
         <ng-icon name="phosphorCaretLeft" aria-label="Toggle Collapse" aria-hidden="true" />
       </div>
     </div>
   </nav>
-  <div class="content" [class.closed]="contentClosed()">
-    <router-outlet />
-  </div>
+  <section class="content" [class.closed]="contentClosed()">
+    <header class="content-header">
+      <div class="action back-button" (click)="onBack($event)">
+        <ng-icon name="phosphorCaretLeft" aria-label="Back" aria-hidden="true" />
+        Back
+      </div>
+      <h2 class="action content-title">{{contentTitle()}}</h2>
+      <div class="action close-button" [routerLink]="RoutePaths.map">
+        <ng-icon name="phosphorX" aria-label="Close" aria-hidden="true" />
+      </div>
+    </header>
+    <div class="content-body">
+      <router-outlet />
+    </div>
+  </section>
 </div>
 
 

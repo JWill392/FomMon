@@ -8,7 +8,7 @@ import {AreaWatchLayerService} from "./area-watch-layer.service";
 import {MapRoutingService} from "../../map-routing.service";
 import {Router} from "@angular/router";
 import {AreaWatchService} from "../../../area-watch/area-watch.service";
-import {RoutePaths} from "../../../../app/app.routes";
+import {RoutePaths} from "../../../../routes/app.routes";
 
 @Component({
   selector: 'app-area-watch-layer',
@@ -54,7 +54,7 @@ export class AreaWatchLayer implements OnInit {
       const aw = this.areaWatchService.getByFeatureId(featureId.id);
       if (!aw) return;
 
-      this.router.navigate([RoutePaths.areaWatchView(aw.id)]);
+      this.router.navigate([RoutePaths.areaWatchView({id: aw.id})]);
     });
   }
 }

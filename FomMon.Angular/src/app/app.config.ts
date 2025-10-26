@@ -1,6 +1,6 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
 import {provideHttpClient, withInterceptors} from '@angular/common/http';
-import {provideRouter, withComponentInputBinding} from '@angular/router';
+import {provideRouter, TitleStrategy, withComponentInputBinding} from '@angular/router';
 import {
   provideKeycloak, withAutoRefreshToken, AutoRefreshTokenService, UserActivityService,
   createInterceptorCondition,
@@ -9,10 +9,11 @@ import {
   INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG
 } from 'keycloak-angular';
 
-import { routes } from './app.routes';
+import {routes} from '../routes/app.routes';
 import {ErrorService} from '../components/shared/error.service';
 import {provideAppInitializer, inject} from '@angular/core';
 import {AppConfigService} from "../config/app-config.service";
+import {TemplatePageTitleStrategy} from "../routes/TemplatePageTitleStrategy";
 
 
 const urlCondition = createInterceptorCondition<IncludeBearerTokenCondition>({
@@ -51,6 +52,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideRouter(routes, withComponentInputBinding()),
+    {provide: TitleStrategy, useClass: TemplatePageTitleStrategy},
     provideHttpClient(withInterceptors(
       [includeBearerTokenInterceptor,
       ]

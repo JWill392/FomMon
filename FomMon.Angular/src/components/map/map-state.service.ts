@@ -22,6 +22,13 @@ export interface DrawCommand {
   mode: string
 }
 
+export interface Padding {
+  top: number,
+  bottom: number,
+  left: number,
+  right: number
+}
+
 /**
  * Service to manage the current map selection and mode.
  */
@@ -42,8 +49,7 @@ export class MapStateService {
   private _mode = signal<MapMode>('select');
   readonly mode = this._mode.asReadonly();
 
-  padding = signal<{padding: {top: number, bottom: number, left: number, right: number}, durationMs: number}>
-    ({padding: {top: 0, bottom: 0, left: 0, right: 0}, durationMs: 0});
+  padding = signal<Padding>({top: 0, bottom: 0, left: 0, right: 0});
 
   private _drawCommand$ = new Subject<DrawCommand>();
   readonly drawCommand$ = this._drawCommand$.asObservable();

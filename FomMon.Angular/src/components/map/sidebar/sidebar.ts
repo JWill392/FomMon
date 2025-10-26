@@ -7,12 +7,14 @@ import {NgIconComponent, provideIcons} from "@ng-icons/core";
 import {
   phosphorBinoculars,
   phosphorCaretLeft,
-  phosphorStack
+  phosphorStack, phosphorX
 } from "@ng-icons/phosphor-icons/regular";
 import {phosphorTreeEvergreenFill} from "@ng-icons/phosphor-icons/fill";
 import {LocalStorageService} from "../../shared/local-storage.service";
 import {MapStateService} from "../map-state.service";
-import {RoutePaths} from "../../../app/app.routes";
+import {getParentRoute, RoutePaths} from "../../../routes/app.routes";
+import {Location} from "@angular/common";
+import {AppConfigService} from "../../../config/app-config.service";
 
 @Component({
   selector: 'app-sidebar',
@@ -25,7 +27,7 @@ import {RoutePaths} from "../../../app/app.routes";
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss',
   providers: [provideIcons({phosphorStack, phosphorBinoculars, phosphorCaretLeft,
-    phosphorTreeEvergreenFill})]
+    phosphorTreeEvergreenFill, phosphorX})]
 })
 export class Sidebar implements OnInit {
   private router = inject(Router);
@@ -33,7 +35,11 @@ export class Sidebar implements OnInit {
   private userService = inject(UserService);
   private localStorageService = inject(LocalStorageService);
   private mapStateService = inject(MapStateService);
+  protected config = inject(AppConfigService)
+
   protected isAuthenticated = this.userService.state.isReady;
+  protected readonly RoutePaths = RoutePaths;
+  protected readonly contentTitle = signal<string>('');
 
   private readonly localStorageKeyCollapsed = 'sidebar.collapsed';
 
@@ -64,11 +70,8 @@ export class Sidebar implements OnInit {
       const sidebarWidth = this._sidebarWidth();
 
       this.mapStateService.padding.update((v) => ({
-        padding: {
-          ...v.padding,
-          left: sidebarWidth
-        },
-        durationMs: this._animationDurationMs,
+        ...v,
+        left: sidebarWidth
       }));
     });
   }
@@ -83,14 +86,23 @@ export class Sidebar implements OnInit {
   private updateContentVisibility() {
     const hasActiveChild = this.activatedRoute.children.length > 0;
     this.contentClosed.update(_ => !hasActiveChild);
+
+    let leaf = this.activatedRoute;
+    while (leaf.firstChild) leaf = leaf.firstChild;
+
+    this.contentTitle.set(hasActiveChild ? leaf.snapshot.title : '');
   }
 
-  toggleNav() {
+  protected toggleNav() {
     this.navCollapsed.update(v => !v);
     this.localStorageService.set(this.localStorageKeyCollapsed, this.navCollapsed(), 1)
   }
 
-
-  protected readonly RoutePaths = RoutePaths;
+  protected onBack($event: PointerEvent) {
+    $event.stopPropagation();
+    const current = this.router.url;
+    const parent = getParentRoute(current);
+    this.router.navigate([parent], {preserveFragment: true});
+  }
 }
 

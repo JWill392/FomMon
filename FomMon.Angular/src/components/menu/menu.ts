@@ -2,6 +2,7 @@ import { Component, inject, Signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import {User} from "../user/user";
 import {UserService} from '../user/user.service';
+import {RoutePaths} from "../../routes/app.routes";
 
 @Component({
   selector: 'app-menu',
@@ -14,6 +15,7 @@ export class MenuComponent {
   isAuthenticated = this.userService.state.isReady;
   user : Signal<User | undefined> = this.userService.data;
 
+  protected readonly RoutePaths = RoutePaths;
 
   login() {
     this.userService.login();
@@ -22,4 +24,5 @@ export class MenuComponent {
   logout() {
     this.userService.logout();
   }
+
 }

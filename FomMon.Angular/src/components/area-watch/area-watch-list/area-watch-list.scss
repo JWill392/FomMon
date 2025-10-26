@@ -1,23 +1,33 @@
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   height: 100%;
   background: #f3f3f3;
 }
 
-header {
+section {
+  flex: 1 1 auto;
+  overflow: hidden;
   display: flex;
+  flex-direction: column;
+}
+
+.list {
+  flex: 1 1 auto;
+  overflow: scroll;
+}
+
+footer {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  align-items: center;
   padding: 5px 10px;
   background: #99b88c;
   border-bottom: 2px solid #7c9571;
-  height: 50px;
 }
 
-header h2 {
-  color: #fff;
-}
 
 .action-item {
   cursor: pointer;

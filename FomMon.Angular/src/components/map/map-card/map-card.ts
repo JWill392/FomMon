@@ -1,9 +1,10 @@
-import {Component, computed, effect, inject, input, output, signal} from '@angular/core';
+import {Component, computed, DestroyRef, effect, ElementRef, inject, input, output, signal} from '@angular/core';
 import {Card} from "../../shared/card/card";
 import {MapStateService} from "../map-state.service";
 import {FeatureIdentifier} from "maplibre-gl";
 import {fidEquals} from "../map-util";
 import {Geometry} from "geojson";
+import {InViewportDirective} from "../../shared/in-viewport.directive";
 
 export type MapCardEventSource = 'map' | 'card';
 export interface MapCardEvent {
@@ -25,10 +26,17 @@ export interface MapCardEvent {
     '(mouseleave)': 'onMouseLeave($event)',
     '[class.selected]': 'isSelected()',
     '[class.hovered]': 'isHovered()',
-  }
+    '(inViewport)': "isInViewport = $event",
+  },
+  hostDirectives: [{
+    directive: InViewportDirective,
+    outputs: ['inViewport']
+  }]
 })
 export class MapCard extends Card {
   private mapStateService = inject(MapStateService);
+  private elementRef = inject(ElementRef);
+  private destroyRef = inject(DestroyRef);
 
   readonly featureId = input.required<FeatureIdentifier>();
   readonly geometry = input.required<Geometry>();
@@ -38,9 +46,12 @@ export class MapCard extends Card {
 
   private isMapSelected = computed(() => fidEquals(this.mapStateService.selected()?.featureId, this.featureId()));
   private isMapHovered = computed(() => this.mapStateService.hovered()?.some(f => fidEquals(f.featureId, this.featureId())));
+  protected isInViewport: boolean;
 
   selected = output<(MapCardEvent)>();
   hovered = output<MapCardEvent>();
+
+  enableScrollIntoView = input({hover: false}, {alias: 'scrollIntoView'});
 
   constructor() {
     super();
@@ -53,6 +64,7 @@ export class MapCard extends Card {
 
       this.isSelected.set(selectMap);
       this.selected.emit({value: selectMap, source: 'map'});
+
     });
     effect(() => {
       let hoverCard = this.isHovered();
@@ -61,6 +73,13 @@ export class MapCard extends Card {
 
       this.isHovered.set(hoverMap);
       this.hovered.emit({value: hoverMap, source: 'map'});
+
+      if (this.enableScrollIntoView().hover)
+        this.debounce(
+          () => this.scrollIntoViewIfNeeded(),
+          () => this.isHovered(),
+          200
+        );
     });
   }
 
@@ -88,5 +107,23 @@ export class MapCard extends Card {
     this.isHovered.set(false);
     this.mapStateService.removeHover(this.featureId());
     this.hovered.emit({value: false, source: 'card'});
+  }
+
+
+  private debounce(fn: () => void, predicate: () => boolean, delay: number) {
+    if (!predicate()) return;
+    const timer = setTimeout(() => {
+      if (!predicate()) return;
+      fn();
+    }, delay)
+    this.destroyRef.onDestroy(() => {clearTimeout(timer)});
+  }
+
+  private scrollIntoViewIfNeeded() {
+    if (this.isInViewport) return;
+    this.elementRef.nativeElement.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
   }
 }

@@ -1,5 +1,4 @@
 import {effect, inject, Injectable} from "@angular/core";
-import {Router} from "@angular/router";
 import {MapSelection, MapStateService} from "./map-state.service";
 import {FeatureIdentifier} from "maplibre-gl";
 

@@ -15,7 +15,7 @@ import {DecimalPipe} from "@angular/common";
 import {NgIcon, provideIcons} from "@ng-icons/core";
 import {phosphorBinoculars, phosphorPencil, phosphorTrash} from "@ng-icons/phosphor-icons/regular";
 import {LocalState} from "../../shared/service/local-state";
-import {RoutePaths} from "../../../app/app.routes";
+import {RoutePaths} from "../../../routes/app.routes";
 import {Location} from "@angular/common";
 
 type Mode = 'none' | 'add' | 'view' | 'edit';
@@ -110,8 +110,6 @@ export class AreaWatchDetail implements OnInit {
     })
 
     this.flyToSelf();
-
-    // TODO set draw geometry
   }
 
   private onLoadedView() {
@@ -174,7 +172,7 @@ export class AreaWatchDetail implements OnInit {
       });
 
     this.areaWatchLayerService.select(addDto.id);
-    this.router.navigate([RoutePaths.areaWatchView(addDto.id)]);
+    this.router.navigate([RoutePaths.areaWatchView({id: addDto.id})]);
     return true;
   }
 
@@ -201,14 +199,14 @@ export class AreaWatchDetail implements OnInit {
         }
       });
 
-    this.router.navigate([RoutePaths.areaWatchView(patchDto.id)]);
+    this.router.navigate([RoutePaths.areaWatchView({id: patchDto.id})]);
     return true;
   }
 
   protected onEdit(event: PointerEvent) {
     event.stopPropagation();
 
-    this.router.navigate([RoutePaths.areaWatchEdit(this.id()!)]);
+    this.router.navigate([RoutePaths.areaWatchEdit({id: this.id()!})]);
   }
 
 
@@ -238,7 +236,7 @@ export class AreaWatchDetail implements OnInit {
       // TODO generic router back?
       this.location.back();
     } else if (this.mode() === 'edit') {
-      this.router.navigate([RoutePaths.areaWatchView(this.id()!)]);
+      this.router.navigate([RoutePaths.areaWatchView({id: this.id()!})]);
     }
   }
 

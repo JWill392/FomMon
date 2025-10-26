@@ -36,6 +36,7 @@ import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
 import {Sidebar} from "./sidebar/sidebar";
 import {AppConfigService} from "../../config/app-config.service";
 import {v4 as uuidv4} from 'uuid';
+import {Geometry} from "geojson";
 
 @Component({
   selector: 'app-ngx-map',
@@ -96,11 +97,11 @@ export class MapComponent {
 
     // optional: update map vanishing point on sidebar open/close.  maybe a bit much
     // effect(() => {
-    //   const paddingChange = this.mapStateService.paddingChange();
+    //   const padding = this.mapStateService.padding();
     //   const map = this.map();
     //
     //   if (!map) return;
-    //   map.easeTo({...paddingChange, })
+    //   map.easeTo({padding})
     // })
   }
 
@@ -209,9 +210,7 @@ export class MapComponent {
     this.mapStateService.flyToCommand$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(command => {
-        // wait for sidebar to open for padding calculation
-        const timer = setTimeout(() => this.executeFlyTo(command));
-        this.destroyRef.onDestroy(() => clearTimeout(timer));
+        this.executeFlyTo(command);
       });
 
     this.mapStateService.drawCommand$
@@ -348,13 +347,7 @@ export class MapComponent {
     if (!this.map()) return;
     if (!command.geometry) return;
 
-    const mapContainer = this.map().getContainer();
-    const cameraPadding = {height: mapContainer.offsetHeight / 10, width: mapContainer.offsetWidth / 10};
-    const bounds = boundingBox(command.geometry);
-
-    const camera = this.map().cameraForBounds(bounds, {
-      padding: {top: cameraPadding.height, bottom: cameraPadding.height, left: cameraPadding.width, right: cameraPadding.width},
-    })
+    const camera = this.getCameraWithPadding(command.geometry);
 
     const easeParametric = (t: number) => {
       const sqr = t * t;
@@ -365,10 +358,24 @@ export class MapComponent {
       ...camera,
       speed: 3,
       maxDuration: 1500,
-
       curve: 1.42,
-      padding: this.mapStateService.padding().padding,
       easing: easeParametric
+    })
+  }
+
+  private getCameraWithPadding(geometry: Geometry, padFraction: number = 0.1) {
+    const mapContainer = this.map().getContainer();
+    const mapPadding = this.mapStateService.padding()
+
+    const bounds = boundingBox(geometry);
+
+    return this.map().cameraForBounds(bounds, {
+      padding: {
+        top: mapPadding.top + mapContainer.offsetHeight * padFraction,
+        bottom: mapPadding.bottom + mapContainer.offsetHeight * padFraction,
+        left: mapPadding.left + mapContainer.offsetWidth * padFraction,
+        right: mapPadding.right + mapContainer.offsetWidth * padFraction,
+      },
     })
   }
 }

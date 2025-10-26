@@ -10,6 +10,9 @@ export interface AppConfig {
   },
   fom: {
     apiUrl: string;
+  },
+  app: {
+    title: string;
   }
 }
 
