@@ -7,7 +7,7 @@ import {UserService} from '../user/user.service';
   selector: 'app-menu',
   imports: [RouterModule],
   templateUrl: './menu.html',
-  styleUrls: ['./menu.css']
+  styleUrls: ['./menu.scss']
 })
 export class MenuComponent {
   userService = inject(UserService)

@@ -9,7 +9,7 @@ import {LayerCard} from "./layer-card/layer-card";
     LayerCard
   ],
   templateUrl: './layer-list.html',
-  styleUrl: './layer-list.css',
+  styleUrl: './layer-list.scss',
 })
 export class LayerList {
   private mapLayerService = inject(MapLayerService);

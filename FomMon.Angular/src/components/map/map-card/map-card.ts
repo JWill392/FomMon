@@ -18,7 +18,7 @@ export interface MapCardEvent {
   selector: 'app-map-card',
   imports: [],
   templateUrl: '../../shared/card/card.html',
-  styleUrls: ['../../shared/card/card.css', './map-card.css'],
+  styleUrls: ['../../shared/card/card.scss', './map-card.scss'],
   host: {
     '(click)': 'select($event)',
     '(mouseenter)': 'onMouseEnter($event)',

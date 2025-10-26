@@ -14,7 +14,7 @@ import {MapLayerGroupComponent} from "../map-layer-group/map-layer-group.compone
     MapLayerGroupComponent
   ],
   templateUrl: './feature-layer.html',
-  styleUrl: './feature-layer.css'
+  styleUrl: './feature-layer.scss'
 })
 export class FeatureLayer {
   mapLayerService = inject(MapLayerService);

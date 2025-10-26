@@ -7,7 +7,7 @@ import {NotificationService} from './notification.service';
   standalone: true,
   imports: [],
   templateUrl: './snackbar.html',
-  styleUrl: './snackbar.css',
+  styleUrl: './snackbar.scss',
 })
 export class Snackbar {
   private readonly notService = inject(NotificationService);

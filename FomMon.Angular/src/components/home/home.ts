@@ -5,7 +5,7 @@ import { BehaviorSubject, timer } from 'rxjs';
 @Component({
   selector: 'app-home',
   templateUrl: './home.html',
-  styleUrls: ['./home.css'],
+  styleUrls: ['./home.scss'],
   imports: [CommonModule]
 })
 export class HomeComponent implements OnDestroy {

@@ -4,7 +4,7 @@ import {MapLayerService} from "../map-layer.service";
 @Component({
   selector: 'app-base-layer-switcher',
   templateUrl: './base-layer-switcher.html',
-  styleUrl: './base-layer-switcher.css',
+  styleUrl: './base-layer-switcher.scss',
 })
 export class BaseLayerSwitcher {
   private mapLayerService = inject(MapLayerService);

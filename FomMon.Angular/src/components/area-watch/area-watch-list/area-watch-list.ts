@@ -13,7 +13,7 @@ import {RoutePaths} from "../../../app/app.routes";
     RouterLink
   ],
   templateUrl: './area-watch-list.html',
-  styleUrl: './area-watch-list.css'
+  styleUrl: './area-watch-list.scss'
 })
 export class AreaWatchList implements OnInit, OnDestroy {
   awService = inject(AreaWatchService);

@@ -5,7 +5,7 @@ import { UserService } from "../user.service";
   selector: 'app-user-menu',
   imports: [],
   templateUrl: './user-menu.html',
-  styleUrl: './user-menu.css'
+  styleUrl: './user-menu.scss'
 })
 export class UserMenu implements OnInit {
   private readonly userService = inject(UserService);

@@ -10,7 +10,7 @@ import {NgIcon} from "@ng-icons/core";
     NgIcon
   ],
   templateUrl: './sidebar-item.html',
-  styleUrl: './sidebar-item.css'
+  styleUrl: './sidebar-item.scss'
 })
 export class SidebarItem {
   icon = input.required<string>();

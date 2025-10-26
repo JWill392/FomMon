@@ -14,7 +14,7 @@ import {Card, CardAction, CardLabel, CardThumb} from "../../../../shared/card/ca
     CardAction
   ],
   templateUrl: './layer-card.html',
-  styleUrl: './layer-card.css',
+  styleUrl: './layer-card.scss',
   providers: [provideIcons({phosphorEyeSlash, phosphorEye})],
 })
 export class LayerCard {

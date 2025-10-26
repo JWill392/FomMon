@@ -19,7 +19,7 @@ import {RoutePaths} from "../../../../app/app.routes";
     MapLayerGroupComponent
   ],
   templateUrl: './area-watch-layer.html',
-  styleUrl: './area-watch-layer.css'
+  styleUrl: './area-watch-layer.scss'
 })
 export class AreaWatchLayer implements OnInit {
   protected mapLayerService = inject(MapLayerService);

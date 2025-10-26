@@ -27,7 +27,7 @@ import {RoutePaths} from "../../../app/app.routes";
     RouterLink
   ],
   templateUrl: './area-watch-card.html',
-  styleUrl: './area-watch-card.css'
+  styleUrl: './area-watch-card.scss'
 })
 export class AreaWatchCard {
   layerService = inject(LayerConfigService);

@@ -30,7 +30,7 @@ import {v4 as uuidv4} from 'uuid';
   providers: [
   ],
   templateUrl: './thumbnail-map.html',
-  styleUrl: './thumbnail-map.css'
+  styleUrl: './thumbnail-map.scss'
 })
 export class ThumbnailMap implements OnInit {
   private readonly errorService = inject(ErrorService);

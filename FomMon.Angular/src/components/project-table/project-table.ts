@@ -6,7 +6,7 @@ import {AppConfigService} from "../../config/app-config.service";
 @Component({
   selector: 'project-table',
   templateUrl: './project-table.html',
-  styleUrl: './project-table.css',
+  styleUrl: './project-table.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectTable {

@@ -27,7 +27,7 @@ type Mode = 'none' | 'add' | 'view' | 'edit';
     NgIcon
   ],
   templateUrl: './area-watch-detail.html',
-  styleUrl: './area-watch-detail.css',
+  styleUrl: './area-watch-detail.scss',
   providers: [provideIcons({phosphorPencil, phosphorTrash, phosphorBinoculars})],
   host: {
     '[class.add-mode]': "mode() === 'add'",

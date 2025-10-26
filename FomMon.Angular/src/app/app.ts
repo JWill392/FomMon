@@ -14,7 +14,7 @@ import {AreaWatchService} from "../components/area-watch/area-watch.service";
   selector: 'app-root',
   imports: [CommonModule, RouterOutlet, Snackbar],
   templateUrl: './app.html',
-  styleUrl: './app.css',
+  styleUrl: './app.scss',
 })
 export class App {
   private layerService = inject(LayerConfigService)

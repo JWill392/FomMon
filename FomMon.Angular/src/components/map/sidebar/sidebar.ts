@@ -23,7 +23,7 @@ import {RoutePaths} from "../../../app/app.routes";
     NgIconComponent
   ],
   templateUrl: './sidebar.html',
-  styleUrl: './sidebar.css',
+  styleUrl: './sidebar.scss',
   providers: [provideIcons({phosphorStack, phosphorBinoculars, phosphorCaretLeft,
     phosphorTreeEvergreenFill})]
 })

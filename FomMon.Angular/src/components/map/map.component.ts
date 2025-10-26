@@ -57,7 +57,7 @@ import {v4 as uuidv4} from 'uuid';
     MapLayerGroupComponent,
   ],
   templateUrl: './map.component.html',
-  styleUrl: './map.component.css',
+  styleUrl: './map.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MapComponent {

@@ -97,7 +97,7 @@ export class CardAction {
   selector: 'app-card',
   imports: [],
   templateUrl: './card.html',
-  styleUrl: './card.css',
+  styleUrl: './card.scss',
   host: {
     '[class.item-odd]': 'isOdd()',
   }

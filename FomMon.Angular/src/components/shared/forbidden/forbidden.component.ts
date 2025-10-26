@@ -7,7 +7,7 @@ import {RouterLink} from "@angular/router";
     RouterLink
   ],
   templateUrl: './forbidden.component.html',
-  styleUrl: './forbidden.component.css'
+  styleUrl: './forbidden.component.scss'
 })
 export class ForbiddenComponent {
 
