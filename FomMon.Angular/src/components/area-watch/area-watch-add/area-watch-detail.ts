@@ -5,8 +5,8 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {NotificationService} from '../../shared/snackbar/notification.service';
 import {LayerConfigService} from '../../layer-type/layer-config.service';
 import {LayerKind} from "../../layer-type/layer-type.model";
-import {MapStateService} from "../../map/map-state.service";
-import {Geometry} from "geojson";
+import {DrawCommand, MapStateService} from "../../map/map-state.service";
+import {Geometry, Polygon} from "geojson";
 import {Router} from "@angular/router";
 import {AreaWatchLayerService} from "../../map/layer/area-watch-layer/area-watch-layer.service";
 import {ErrorService} from "../../shared/error.service";
@@ -51,6 +51,7 @@ export class AreaWatchDetail implements OnInit {
 
   protected data = computed(() => this.id() ? this.areaWatchService.get(this.id()) : undefined);
   protected localState = computed(() => this.data()?.localState ?? 'none')
+  private featureId = computed(() => this.id() ? this.areaWatchLayerService.toFeatureIdentifier(this.id()) : undefined);
 
   protected layers = this.layerService.data;
   protected readonly LocalState = LocalState;
@@ -83,7 +84,7 @@ export class AreaWatchDetail implements OnInit {
 
   ngOnInit(): void {
     if (this.mode() === 'add') {
-      this.startDrawMode()
+      this.onLoadedAdd()
 
     } else if (this.mode() === 'view' || this.mode() === 'edit') {
       if (!this.id()) {
@@ -93,8 +94,21 @@ export class AreaWatchDetail implements OnInit {
     }
   }
 
+  private onLoadedAdd() {
+    this.startDrawMode({
+      mode: 'polygon'
+    })
+  }
+
   private onLoadedEdit() {
     this.prepop();
+
+    this.startDrawMode({
+      id: this.featureId(),
+      geometry: this.data().geometry as Polygon,
+      mode: 'polygon'
+    })
+
     this.flyToSelf();
 
     // TODO set draw geometry
@@ -103,7 +117,7 @@ export class AreaWatchDetail implements OnInit {
   private onLoadedView() {
     this.prepop();
     this.flyToSelf();
-    this.mapStateService.select(this.areaWatchLayerService.toFeatureIdentifier(this.id()))
+    this.mapStateService.select(this.featureId())
   }
 
   private prepop() {
@@ -118,9 +132,9 @@ export class AreaWatchDetail implements OnInit {
   }
 
 
-  private startDrawMode(): void {
+  private startDrawMode(command: DrawCommand): void {
     // draw mode ended by disposing subscription on component destroy
-    this.mapStateService.startDrawMode()
+    this.mapStateService.startDrawMode(command)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (geometry) => {

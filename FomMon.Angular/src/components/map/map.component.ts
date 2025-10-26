@@ -4,7 +4,7 @@ import {
   DestroyRef,
   effect,
   inject,
-  input, signal,
+  signal,
 } from '@angular/core';
 import {
   ControlComponent,
@@ -28,13 +28,14 @@ import {BaseLayerSwitcher} from "./layer/base-layer-switcher/base-layer-switcher
 import {MapLayerService} from "./layer/map-layer.service";
 import {LayerKind} from "../layer-type/layer-type.model";
 import {UserMenu} from "../user/user-menu/user-menu";
-import {FlyToCommand, MapSelection, MapStateService} from "./map-state.service";
+import {DrawCommand, FlyToCommand, MapSelection, MapStateService} from "./map-state.service";
 import {ErrorService} from "../shared/error.service";
 import {MapLayerGroupComponent} from "./layer/map-layer-group/map-layer-group.component";
 import {boundingBox, fidEquals} from "./map-util";
 import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
 import {Sidebar} from "./sidebar/sidebar";
 import {AppConfigService} from "../../config/app-config.service";
+import {v4 as uuidv4} from 'uuid';
 
 @Component({
   selector: 'app-ngx-map',
@@ -71,7 +72,7 @@ export class MapComponent {
   protected mapStateService = inject(MapStateService);
   
   readonly map = signal<MapLibreMap | undefined>(undefined);
-  protected isDrawMode = signal(false);
+  protected currentDrawCommand = signal<DrawCommand | undefined>(undefined);
 
   protected domainLayers = this.layerConfigService.data;
   readonly isAuthenticated = this.userService.state.isReady;
@@ -84,10 +85,14 @@ export class MapComponent {
     let previousHover : Set<MapSelection> = new Set();
     effect(() => previousHover = this.handleHoverChange(previousHover));
 
+    let hiddenFeatures = new Set<MapSelection>();
+    effect(() => hiddenFeatures = this.handleHiddenChange(hiddenFeatures));
+
     effect(() => this.handleModeChange())
 
     let alertedFeatures = new Map<LayerKind, Set<number>>();
     effect(() => alertedFeatures = this.handleLayerAlertChange(alertedFeatures));
+
 
     // optional: update map vanishing point on sidebar open/close.  maybe a bit much
     // effect(() => {
@@ -98,26 +103,6 @@ export class MapComponent {
     //   map.easeTo({...paddingChange, })
     // })
   }
-
-
-  onMapLoad(map: MapLibreMap) {
-    // DEBUG tiles
-    // map.showCollisionBoxes = true;
-    // map.showTileBoundaries = true;
-
-    this.registerDrawing(map);
-    this.map.set(map);
-    this.destroyRef.onDestroy(() => this.map()?.remove());
-
-    this.mapStateService.flyToCommand$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(command => {
-        // wait for sidebar to open for padding calculation
-        const timer = setTimeout(() => this.executeFlyTo(command));
-        this.destroyRef.onDestroy(() => clearTimeout(timer));
-      });
-  }
-
 
   private handleSelectionChange(previousSelection: MapSelection) {
     const selected = this.mapStateService.selected();
@@ -153,6 +138,22 @@ export class MapComponent {
 
     return newHover;
   }
+
+
+  private handleHiddenChange(previousHidden: Set<MapSelection>) {
+    const newHidden = new Set(this.mapStateService.hidden()); // reference equality is good enough
+    const map = this.map();
+    if (!map) return previousHidden;
+
+    let removed = previousHidden.difference(newHidden);
+    removed.forEach((s) => map.setFeatureState(s.featureId, {hide: false}))
+
+    let added = newHidden.difference(previousHidden);
+    added.forEach((s) => map.setFeatureState(s.featureId, {hide: true}))
+
+    return newHidden;
+  }
+  
   private handleLayerAlertChange(alertedFeatures: Map<LayerKind, Set<number>>) {
     const layerList = this.layerConfigService.data();
     const layerAlertMap = this.areaAlertService.byLayer();
@@ -189,12 +190,35 @@ export class MapComponent {
     const mode = this.mapStateService.mode();
     if (!this.map()) return;
 
-    if (mode === 'draw') {
-      this.enterDrawMode();
-
-    } else {
+    if (mode !== 'draw' && this.currentDrawCommand()) {
       this.exitDrawMode();
     }
+  }
+
+
+
+  onMapLoad(map: MapLibreMap) {
+    // DEBUG tiles
+    // map.showCollisionBoxes = true;
+    // map.showTileBoundaries = true;
+
+    this.registerDrawing(map);
+    this.map.set(map);
+    this.destroyRef.onDestroy(() => this.map()?.remove());
+
+    this.mapStateService.flyToCommand$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(command => {
+        // wait for sidebar to open for padding calculation
+        const timer = setTimeout(() => this.executeFlyTo(command));
+        this.destroyRef.onDestroy(() => clearTimeout(timer));
+      });
+
+    this.mapStateService.drawCommand$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(command => {
+        this.enterDrawMode(command)
+      })
   }
 
 
@@ -230,14 +254,33 @@ export class MapComponent {
     }
     this.hideDrawControl();
   }
-  private enterDrawMode() : void {
-    if (this.isDrawMode()) return;
+  private enterDrawMode(command: DrawCommand) : void {
+    if (this.currentDrawCommand()) return;
     if (!this.map) return;
 
-    this.isDrawMode.set(true);
+    this.currentDrawCommand.set(command);
 
     this.showDrawControl();
-    this.draw.setMode('polygon');
+
+
+    if (command.id) {
+      this.mapStateService.hide(command.id);
+    }
+
+    if (command.geometry) {
+      const drawFeatureId = uuidv4();
+      this.draw.addFeatures([{
+        id: drawFeatureId, // has to be guid or silently dies
+        type: 'Feature' as const,
+        geometry: command.geometry,
+        properties: {
+          mode: command.mode
+        }
+      }]);
+      this.draw.selectFeature(drawFeatureId);
+    } else {
+      this.draw.setMode(command.mode);
+    }
 
     this.draw.on('finish', (id: any) => {
       const feature = this.draw.getSnapshotFeature(id);
@@ -247,19 +290,21 @@ export class MapComponent {
         this.draw.setMode('select');
       }
     });
-
-    // this.drawControl.activate();
   }
   private exitDrawMode() {
-    if (!this.isDrawMode()) return;
+    if (!this.currentDrawCommand()) return;
     if (!this.map) return;
+
+    if (this.currentDrawCommand().id) {
+      this.mapStateService.unhide(this.currentDrawCommand().id);
+    }
 
     this.hideDrawControl()
     this.draw.clear();
 
 
     this.draw.setMode('render');
-    this.isDrawMode.set(false);
+    this.currentDrawCommand.set(undefined);
   }
 
 

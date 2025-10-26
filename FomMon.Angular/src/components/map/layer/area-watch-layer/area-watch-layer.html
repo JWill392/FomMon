@@ -26,6 +26,7 @@
         ],
         'fill-opacity': [
           'case',
+          ['boolean', ['feature-state', 'hide'], false], 0,
           ['boolean', ['feature-state', 'hover'], false], 0.5,
           0.3
         ]
@@ -49,6 +50,7 @@
         ],
         'line-width': [
           'case',
+          ['boolean', ['feature-state', 'hide'], false], 0,
           ['boolean', ['feature-state', 'selected'], false], 3,
           ['boolean', ['feature-state', 'hover'], false], 2,
           1
@@ -67,9 +69,13 @@
           [minzoom]="8"
 
           [paint]="{
-        'text-color': '#3bb2d0',
-        'text-halo-color': '#ffffff',
-        'text-halo-width': 2
+          'text-color': '#3bb2d0',
+          'text-halo-color': '#ffffff',
+          'text-halo-width': 2,
+          'text-opacity': ['case',
+            ['boolean', ['feature-state', 'hide'], false], 0,
+            1
+          ]
       }"
           [layout]="mapLayerService.getLayout(layerIdLabel)"
           appMapLayer

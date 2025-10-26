@@ -2,7 +2,7 @@ import {inject, Injectable, signal} from "@angular/core";
 import {MapLayerService} from "./layer/map-layer.service";
 import {ErrorService} from "../shared/error.service";
 import {finalize, Observable, Subject} from "rxjs";
-import {Geometry} from "geojson";
+import {Geometry, Point, Polygon, LineString} from "geojson";
 import {FeatureIdentifier} from 'maplibre-gl';
 import {fidEquals} from "./map-util";
 
@@ -16,7 +16,11 @@ export type MapMode = 'select' | 'draw'; // TODO map mode
 export interface FlyToCommand {
   geometry: Geometry
 }
-
+export interface DrawCommand {
+  id?: FeatureIdentifier
+  geometry?: Polygon | Point | LineString
+  mode: string
+}
 
 /**
  * Service to manage the current map selection and mode.
@@ -32,22 +36,28 @@ export class MapStateService {
   private _hovered = signal<MapSelection[]>([]);
   readonly hovered = this._hovered.asReadonly();
 
+  private _hidden = signal<MapSelection[]>([]);
+  readonly hidden = this._hidden.asReadonly();
+
   private _mode = signal<MapMode>('select');
   readonly mode = this._mode.asReadonly();
 
   padding = signal<{padding: {top: number, bottom: number, left: number, right: number}, durationMs: number}>
     ({padding: {top: 0, bottom: 0, left: 0, right: 0}, durationMs: 0});
 
+  private _drawCommand$ = new Subject<DrawCommand>();
+  readonly drawCommand$ = this._drawCommand$.asObservable();
   private _drawResult$ : Subject<Geometry> | undefined;
   get drawResult$() : Subject<Geometry> | undefined {return this._drawResult$};
 
   private _flyToCommand$ = new Subject<FlyToCommand>();
   readonly flyToCommand$ = this._flyToCommand$.asObservable();
 
-  startDrawMode(): Observable<Geometry> {
+  startDrawMode(drawCommand: DrawCommand): Observable<Geometry> {
     if (this._mode() === 'draw') return this._drawResult$.asObservable();
 
     this.setMode('draw');
+    this._drawCommand$.next(drawCommand);
 
     this._drawResult$ = new Subject<Geometry>();
 
@@ -106,7 +116,7 @@ export class MapStateService {
 
   addHover(id: FeatureIdentifier): void {
     if (id === null) return;
-    if (this.isHovered(id)) return;
+    if (this.isHovered(id) || this.isHidden(id)) return;
 
     this._hovered.update(s => [...s, this.toMapSelection(id)]);
   }
@@ -140,5 +150,23 @@ export class MapStateService {
   }
 
 
+  hide(id: FeatureIdentifier) {
+    if (id === null) return;
+    if (this.isHidden(id)) return;
+
+    if (this.isHovered(id)) this.removeHover(id);
+    this._hidden.update(s => [...s, this.toMapSelection(id)]);
+  }
+  unhide(id: FeatureIdentifier) {
+    if (id === null) return;
+    if (!this.isHidden(id)) return;
+
+    this._hidden.update(s => s.filter(s => !fidEquals(s.featureId,id)));
+  }
+
+  private isHidden(id: FeatureIdentifier | null) : boolean {
+    if (id === null) return false;
+    return this._hidden().some(s => fidEquals(s.featureId, id));
+  }
 
 }
