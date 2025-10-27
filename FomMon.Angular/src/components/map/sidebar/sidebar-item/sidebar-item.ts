@@ -26,6 +26,7 @@ export class SidebarItem {
     if (isActive) {
       event.stopPropagation();
 
+      // TODO only close if not in a sub-route
       this.router.navigate([this.closeLink()], {preserveFragment: true})
     }
   }

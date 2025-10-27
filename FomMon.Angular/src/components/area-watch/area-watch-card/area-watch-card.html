@@ -6,12 +6,7 @@
     [scrollIntoView]="{hover: true}"
 >
   <app-card-thumb>
-    <app-thumbnail-map class="thumb-map"
-                       [src]="data().thumbnailImageUrl"
-                       alt="watch thumbnail"
-                       [geometry]="data().geometry"
-                       fillColor="#3bb2d0"
-                       (mapSaved)="onThumbMapSaved($event)" />
+    <app-area-watch-thumb [id]="id()" />
   </app-card-thumb>
 
   <app-card-label [title]="data().name">

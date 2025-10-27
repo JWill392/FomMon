@@ -1,8 +1,14 @@
 <form [formGroup]="form"
       (ngSubmit)="onSubmit()">
-  <div class="input-group">
-    <label for="watch-name">Name:</label>
-    <input type="text" id="watch-name" name="watch-name" formControlName="name" autocomplete="off" data-lpignore="true" data-form-type="other" >
+  <div class="name-container">
+    @if (this.mode() === 'edit' || this.mode() === 'view') {
+      <app-area-watch-thumb [id]="id()" [overrideGeometry]="this.mode() === 'edit'? formGeometry() : undefined" />
+    }
+    <div class="input-group">
+      <label for="watch-name">Name</label>
+      <input type="text" id="watch-name" name="watch-name" formControlName="name" autocomplete="off" data-lpignore="true" data-form-type="other" >
+    </div>
+
   </div>
 
   <div class="input-group">
@@ -45,9 +51,15 @@
 
 <div class="action-item-container">
   @if ((mode() === 'view') && localState() === LocalState.added) {
-    <ng-icon class="action-item-icon" name="phosphorPencil" (click)="onEdit($event)" />
+    <div class="action-item" (click)="onEdit($event)">
+      <ng-icon class="action-item-icon" name="phosphorPencil" />
+      <p>Edit</p>
+    </div>
   }
   @if ((mode() === 'view' || mode() === 'edit') && localState() === LocalState.added) {
-    <ng-icon class="action-item-icon" name="phosphorTrash" (click)="onDelete($event)" />
+    <div class="action-item" (click)="onDelete($event)">
+      <ng-icon class="action-item-icon" name="phosphorTrash" />
+      <p>Delete</p>
+    </div>
   }
 </div>

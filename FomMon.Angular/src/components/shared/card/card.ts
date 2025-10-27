@@ -49,7 +49,7 @@ export class CardLabel {
     flex: 0 0 auto;
     width: 64px;
     height: 64px;
-    border-radius: 6px;
+    border-radius: 4px;
     overflow: hidden;
     display: block;
   }

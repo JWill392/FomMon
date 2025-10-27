@@ -16,17 +16,33 @@ form {
 /*TODO hide form inputs?*/
 }
 
+.name-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px;
+}
+
+
 
 .action-item-container {
   flex: 0 0 auto;
+  flex-direction: column;
   display: flex;
   gap: 5px;
+}
+
+.action-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px;
+  cursor: pointer;
 }
 
 .action-item-icon {
   display: block;
   font-size: 26px;
-  cursor: pointer;
   color: #333
 }
 .action-item-icon:hover {
@@ -35,9 +51,8 @@ form {
 
 .input-group {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
+  flex-direction: column;
+  gap: 2px;
 }
 
 label {

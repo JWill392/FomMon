@@ -1,6 +1,6 @@
 import {
   Component,
-  computed,
+  computed, effect,
   inject,
   input, OnInit, output,
   signal
@@ -12,6 +12,9 @@ import {boundingBox} from "../map-util";
 import {toPng} from 'html-to-image';
 import {ErrorService} from "../../shared/error.service";
 import {v4 as uuidv4} from 'uuid';
+import {booleanEqual as turfBooleanEqual} from '@turf/boolean-equal'
+
+type State = 'idle' | 'image-input' | 'map-loading' | 'map-ready' | 'map-saved-image';
 
 /**
  * Generates a map thumbnail image of provided geometry.
@@ -32,7 +35,7 @@ import {v4 as uuidv4} from 'uuid';
   templateUrl: './thumbnail-map.html',
   styleUrl: './thumbnail-map.scss'
 })
-export class ThumbnailMap implements OnInit {
+export class ThumbnailMap {
   private readonly errorService = inject(ErrorService);
 
   geometry = input.required<Geometry>();
@@ -41,10 +44,11 @@ export class ThumbnailMap implements OnInit {
 
   /** Optional image source if already saved; otherwise map will generate */
   imgSrcInput = input<string | undefined>(undefined, {alias: "src"});
+  dynamic = input<boolean>(false);
 
-  mapSaved = output<Blob>();
+  mapSaved = output<string>();
 
-  protected readonly state = signal<'idle' | 'image-input' | 'map-loading' | 'map-ready' | 'map-saved-image'>('idle');
+  protected readonly state = signal<State>('idle');
 
   protected readonly bbox = computed(() => this.geometry() ? boundingBox(this.geometry()) : undefined)
 
@@ -55,40 +59,107 @@ export class ThumbnailMap implements OnInit {
 
   private readonly map = signal<MapLibreMap | undefined>(undefined);
   protected readonly mapImgDataUrl = signal<string | undefined>(undefined);
+  protected readonly mapImgGeometry = signal<Geometry | undefined>(undefined);
+
+  protected readonly lastImgSrc = signal<string | undefined>(undefined);
 
   protected readonly instanceId = uuidv4();
 
   constructor() {
+    // on input set/changed
+    effect(() => {
+      const imgSrc = this.imgSrcInput();
+      const geometry = this.geometry();
+      const imgGeometry = this.mapImgGeometry();
+      const dynamic = this.dynamic();
+
+      if (imgSrc) this.lastImgSrc.set(imgSrc);
+
+      if (imgSrc && !dynamic) {
+        this.setState('image-input');
+
+      } else if (geometry) {
+        if (this.state() === 'idle' || this.state() === 'image-input') {
+          this.setState('map-loading');
+
+        } else if (this.state() === 'map-ready') {
+          this.setState('map-ready'); // on change regenerate image
+
+        } else if (this.state() === 'map-saved-image') {
+          const hasGeometryChanged = geometry && imgGeometry
+            && !turfBooleanEqual(geometry, imgGeometry);
+          if (hasGeometryChanged) {
+            this.setState('map-loading');
+          }
+        }
+      } else {
+        this.setState('idle'); // params unset
+      }
+    });
+
+
   }
-  ngOnInit() {
-    if (this.imgSrcInput()) {
-      this.state.set('image-input');
-    } else {
-      this.state.set('map-loading')
+  private setState(state: State) : boolean {
+    const old = this.state();
+    console.log(`thumbnail-map: ${old} -> ${state}`);
+    if (old === state) return false;
+
+    switch (state) {
+      case 'idle':
+        break;
+
+      case 'image-input':
+        this.clearMap();
+        break;
+
+      case 'map-loading':
+        this.mapImgDataUrl.set(undefined);
+        // pass; adds map in template
+        break;
+
+      case 'map-ready':
+        if (!this.dynamic())
+          this.saveMapToImage();
+        break;
+
+      case 'map-saved-image':
+        this.mapImgGeometry.set(this.geometry());
+        this.mapSaved.emit(this.mapImgDataUrl());
+        break;
+
+      default:
+        throw new Error(`Unknown state: ${state}`);
+    }
+
+    this.state.set(state);
+    return true;
+  }
+
+  private clearMap() {
+    this.map.set(undefined);
+    if (this.mapImgDataUrl()) {
+      this.lastImgSrc.set(this.mapImgDataUrl());
+      this.mapImgDataUrl.set(undefined);
     }
   }
 
   onMapLoad(map: MapLibreMap) {
     this.map.set(map);
     map._canvasContextAttributes.preserveDrawingBuffer = true;
-
-    map.once('idle', () => {
-      this.state.set('map-ready');
-      this.saveMapToImage();
-    });
-
+    map.once('idle', () => this.setState('map-ready'));
   }
+
 
   private saveMapToImage() {
     this.map().redraw();
-    toPng(this.map().getContainer())
-      .then(async (dataUrl) => {
-        this.state.set('map-saved-image');
-        this.mapImgDataUrl.set(dataUrl);
 
-        const blob = await (await fetch(dataUrl)).blob();
-        this.mapSaved.emit(blob);
-      }).catch(error => {
+    toPng(this.map().getContainer(),
+      {skipFonts: true})
+      .then(async (dataUrl) => {
+          this.mapImgDataUrl.set(dataUrl);
+          this.setState('map-saved-image');
+        }
+      ).catch(error => {
         this.errorService.handleError(new Error('Failed to generate map thumbnail:', {cause: error}));
       });
 

@@ -1,5 +1,13 @@
 @if (state() === 'idle' || state() === 'map-loading') {
-  <p>Loading...</p>
+  @if (lastImgSrc()) {
+    <img [id]="imageId()"
+         class="thumb-image"
+         [src]="this.lastImgSrc()"
+         [alt]="alt()"
+    />
+  } @else {
+    <p>Loading...</p>
+  }
 <!--  TODO throbber, defer (should be very low priority, and low concurrency (expensive) -->
 } @else if (state() === 'image-input' || state() === 'map-saved-image') {
   <img [id]="imageId()"

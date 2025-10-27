@@ -1,7 +1,7 @@
 import {Component, computed, DestroyRef, effect, inject, input, OnInit,} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators} from '@angular/forms';
 import {AreaWatchService} from '../area-watch.service';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {NotificationService} from '../../shared/snackbar/notification.service';
 import {LayerConfigService} from '../../layer-type/layer-config.service';
 import {LayerKind} from "../../layer-type/layer-type.model";
@@ -17,6 +17,7 @@ import {phosphorBinoculars, phosphorPencil, phosphorTrash} from "@ng-icons/phosp
 import {LocalState} from "../../shared/service/local-state";
 import {RoutePaths} from "../../../routes/app.routes";
 import {Location} from "@angular/common";
+import {AreaWatchThumb} from "../area-watch-thumb/area-watch-thumb";
 
 type Mode = 'none' | 'add' | 'view' | 'edit';
 @Component({
@@ -24,7 +25,8 @@ type Mode = 'none' | 'add' | 'view' | 'edit';
   imports: [
     ReactiveFormsModule,
     DecimalPipe,
-    NgIcon
+    NgIcon,
+    AreaWatchThumb
   ],
   templateUrl: './area-watch-detail.html',
   styleUrl: './area-watch-detail.scss',
@@ -53,6 +55,7 @@ export class AreaWatchDetail implements OnInit {
   protected localState = computed(() => this.data()?.localState ?? 'none')
   private featureId = computed(() => this.id() ? this.areaWatchLayerService.toFeatureIdentifier(this.id()) : undefined);
 
+
   protected layers = this.layerService.data;
   protected readonly LocalState = LocalState;
 
@@ -69,6 +72,8 @@ export class AreaWatchDetail implements OnInit {
     }),
   })
 
+  protected formGeometry = toSignal(this.form.controls.geometry.valueChanges);
+
   constructor() {
     effect(() => {
       const data = this.data();
@@ -80,6 +85,7 @@ export class AreaWatchDetail implements OnInit {
         this.onLoadedView();
       }
     })
+
   }
 
   ngOnInit(): void {

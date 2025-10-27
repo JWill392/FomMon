@@ -182,7 +182,6 @@ export class AreaWatchService implements ServiceWithState {
   }
   private patchLocal(aw : Partial<AreaWatch>) {
     if (!(aw?.id)) throw new Error("argument aw must have id element");
-
     this._data.update(arr => arr.map(a => a.id === aw.id ? {...a, ...aw} : a));
   }
 
