@@ -1,6 +1,6 @@
 import {Routes} from '@angular/router';
 import {HomeComponent} from "../components/home/home";
-import {MapComponent} from '../components/map/map.component';
+import {AppMapComponent} from '../components/map/map.component';
 import {AreaWatchList} from '../components/area-watch/area-watch-list/area-watch-list';
 import {AreaWatchDetail} from '../components/area-watch/area-watch-add/area-watch-detail';
 import {ForbiddenComponent} from "../components/shared/forbidden/forbidden.component";
@@ -36,7 +36,7 @@ export function getParentRoute(path: string) : string {
 let map = RoutePaths.map;
 export const routes: Routes = [
   { path: asDummy(RoutePaths.map),
-    component: MapComponent,
+    component: AppMapComponent,
     title: "Map",
     children: [
       {

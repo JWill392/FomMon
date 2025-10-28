@@ -1,4 +1,4 @@
-import {computed, effect, inject, Injectable, signal} from "@angular/core";
+import {effect, inject, Injectable, signal} from "@angular/core";
 import {AreaAlert} from "./area-alert.model";
 import {Observable} from "rxjs";
 import {ServiceWithState} from "../shared/service/service-state";
@@ -21,8 +21,6 @@ export class AreaAlertService implements ServiceWithState {
 
   private _data = signal<AreaAlert[]>([]);
   readonly data = this._data.asReadonly();
-
-  readonly byLayer = computed(() => Map.groupBy(this.data(), (a) => a.featureReference.layerKind));
 
   constructor() {
     effect(() => {

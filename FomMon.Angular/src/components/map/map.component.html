@@ -8,7 +8,7 @@
          [dragRotate]="false"
          [touchZoomRotate]="false"
          [attributionControl]="{compact: true}"
-         (mapClick)="onEmptyClick($event)"
+         (mapClick)="mapInteraction()?.handleMapClick($event)"
 >
   <!-- OSM Base Layer -->
   <mgl-raster-source
@@ -96,6 +96,11 @@
   <mgl-control position="top-left" >
     <app-sidebar/>
   </mgl-control>
+
+  <app-map-drawing />
+  @if (this.map()) {
+    <app-map-interaction [map]="map()" />
+  }
 
 </mgl-map>
 
