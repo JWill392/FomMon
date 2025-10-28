@@ -14,6 +14,7 @@ export class MapLayerGroupComponent implements OnInit, OnDestroy {
 
   category = input.required<LayerCategory>();
   name = input.required<string>();
+  order = input.required<number>();
   thumbnailImg = input.required<string>();
   initiallyVisible = input<boolean>(false);
 
@@ -26,6 +27,7 @@ export class MapLayerGroupComponent implements OnInit, OnDestroy {
     this.mapLayerService.addGroup({
       id: this.groupId(),
       name: this.name(),
+      order: this.order(),
       thumbnailImg: this.thumbnailImg(),
       visible: this.initiallyVisible(),
       category: this.category(),
@@ -34,6 +36,6 @@ export class MapLayerGroupComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.mapLayerService.unregisterLayer(this.groupId());
+    this.mapLayerService.removeLayer(this.groupId());
   }
 }

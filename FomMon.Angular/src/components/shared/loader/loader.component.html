@@ -1,0 +1,16 @@
+@if (isLoadingOrIdle()) {
+  @if (hasPlaceholder()) {
+    <ng-content select="app-loader-placeholder" />
+  } @else {
+    <div class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+  }
+} @else if (error()) {
+  <div class="error-container">
+    <p class="error">Error: {{ error() }}</p>
+  </div>
+} @else {
+
+  <ng-content />
+}

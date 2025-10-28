@@ -26,12 +26,11 @@ import {FeatureLayer} from "./layer/feature-layer/feature-layer";
 import {MapLayerDirective} from "./layer/base-layer-switcher/map-layer.directive";
 import {BaseLayerSwitcher} from "./layer/base-layer-switcher/base-layer-switcher";
 import {MapLayerService} from "./layer/map-layer.service";
-import {LayerKind} from "../layer-type/layer-type.model";
 import {UserMenu} from "../user/user-menu/user-menu";
-import {DrawCommand, FlyToCommand, MapSelection, MapStateService} from "./map-state.service";
+import {DrawCommand, FlyToCommand, MapStateService} from "./map-state.service";
 import {ErrorService} from "../shared/error.service";
 import {MapLayerGroupComponent} from "./layer/map-layer-group/map-layer-group.component";
-import {boundingBox, fidEquals} from "./map-util";
+import {boundingBox} from "./map-util";
 import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
 import {Sidebar} from "./sidebar/sidebar";
 import {AppConfigService} from "../../config/app-config.service";
@@ -80,19 +79,74 @@ export class MapComponent {
 
 
   constructor() {
-    let previousSelection : MapSelection | null = null;
-    effect(() => previousSelection = this.handleSelectionChange(previousSelection));
+    // select
+    effect((onCleanup) => {
+      const selected = this.mapStateService.selected();
+      const map = this.map();
+      if (!map) return;
 
-    let previousHover : Set<MapSelection> = new Set();
-    effect(() => previousHover = this.handleHoverChange(previousHover));
+      if (selected !== null) {
+        map.setFeatureState(selected.featureId, {selected: true});
+      }
 
-    let hiddenFeatures = new Set<MapSelection>();
-    effect(() => hiddenFeatures = this.handleHiddenChange(hiddenFeatures));
+      onCleanup(() => {
+        if (selected !== null) {
+          map.setFeatureState(selected.featureId, {selected: false});
+        }
+      });
+    });
+
+    // hover
+    effect((onCleanup) => {
+      const hovered = this.mapStateService.hovered();
+      const map = this.map();
+      if (!map) return;
+
+
+      if (hovered.length > 0) {
+        map.getCanvas().style.cursor = 'pointer';
+      } else {
+        map.getCanvas().style.cursor = '';
+      }
+
+      hovered.forEach((s) => map.setFeatureState(s.featureId, {hover: true}));
+      onCleanup(() => {
+        hovered.forEach((s) => map.setFeatureState(s.featureId, {hover: false}));
+      });
+    });
+
+    // hide
+    effect((onCleanup) => {
+      const hidden = this.mapStateService.hidden();
+      const map = this.map();
+      if (!map) return;
+
+      hidden.forEach((s) => map.setFeatureState(s.featureId, {hide: true}));
+      onCleanup(() => {
+        hidden.forEach((s) => map.setFeatureState(s.featureId, {hide: false}));
+      });
+    });
 
     effect(() => this.handleModeChange())
 
-    let alertedFeatures = new Map<LayerKind, Set<number>>();
-    effect(() => alertedFeatures = this.handleLayerAlertChange(alertedFeatures));
+    effect((onCleanup) => {
+      const alertList = this.areaAlertService.data();
+      const map = this.map();
+
+      if (!map || !alertList) return;
+
+      const alertFids = alertList.map((a) => this.areaAlertService.getFeatureId(a));
+
+      for (const fid of alertFids) {
+        map.setFeatureState(fid, {alert: true});
+      }
+
+      onCleanup(() => {
+        for (const fid of alertFids) {
+          map.setFeatureState(fid, {alert: false});
+        }
+      })
+    });
 
 
     // optional: update map vanishing point on sidebar open/close.  maybe a bit much
@@ -103,89 +157,17 @@ export class MapComponent {
     //   if (!map) return;
     //   map.easeTo({padding})
     // })
-  }
 
-  private handleSelectionChange(previousSelection: MapSelection) {
-    const selected = this.mapStateService.selected();
-    if (!this.map()) return previousSelection;
-    if (fidEquals(previousSelection?.featureId, selected?.featureId)) return previousSelection;
+    // handle layer order change
+    effect(() => {
+      this.mapLayerService.layerOrderSignature();
+      if (!this.map()) return;
 
-    if (selected !== null)
-      this.map().setFeatureState(selected.featureId, {selected: true});
-
-    if (previousSelection)
-      this.map().setFeatureState(previousSelection.featureId, {selected: false});
-
-    return selected;
-  }
-
-  private handleHoverChange(previousHover: Set<MapSelection>) {
-    const newHover = new Set(this.mapStateService.hovered()); // reference equality is good enough
-    const map = this.map();
-    if (!map) return previousHover;
-
-
-    let removed = previousHover.difference(newHover);
-    removed.forEach((s) => map.setFeatureState(s.featureId, {hover: false}))
-
-    let added = newHover.difference(previousHover);
-    added.forEach((s) => map.setFeatureState(s.featureId, {hover: true}))
-
-    if (newHover.size > 0) {
-      map.getCanvas().style.cursor = 'pointer';
-    } else if (newHover.size === 0) {
-      map.getCanvas().style.cursor = '';
-    }
-
-    return newHover;
-  }
-
-
-  private handleHiddenChange(previousHidden: Set<MapSelection>) {
-    const newHidden = new Set(this.mapStateService.hidden()); // reference equality is good enough
-    const map = this.map();
-    if (!map) return previousHidden;
-
-    let removed = previousHidden.difference(newHidden);
-    removed.forEach((s) => map.setFeatureState(s.featureId, {hide: false}))
-
-    let added = newHidden.difference(previousHidden);
-    added.forEach((s) => map.setFeatureState(s.featureId, {hide: true}))
-
-    return newHidden;
-  }
-  
-  private handleLayerAlertChange(alertedFeatures: Map<LayerKind, Set<number>>) {
-    const layerList = this.layerConfigService.data();
-    const layerAlertMap = this.areaAlertService.byLayer();
-    const map = this.map();
-
-    if (!map || !layerList || !layerAlertMap) return alertedFeatures;
-
-    for (const layer of layerList) {
-      const kind = layer.kind;
-
-      if (!alertedFeatures.has(kind)) {
-        alertedFeatures.set(kind, new Set())
+      for (const layer of this.mapLayerService.layers()) {
+        this.map().moveLayer(layer.id);
       }
-      const oldAlerts = alertedFeatures.get(kind)!;
-
-      const newAlerts = new Set((layerAlertMap.get(kind) ?? []).map((a) => a.featureReference.sourceFeatureId) ?? []);
-
-      const getId = (id: number) => ({
-        source: kind,
-        sourceLayer: layer.tileSource,
-        id: id,
-      });
-
-      oldAlerts.difference(newAlerts).forEach((id) => map.setFeatureState(getId(id), {alert: false}))
-      newAlerts.difference(oldAlerts).forEach((id) => map.setFeatureState(getId(id), {alert: true}))
-      alertedFeatures.set(kind, newAlerts);
-    }
-
-    return alertedFeatures;
+    })
   }
-
 
   private handleModeChange() {
     const mode = this.mapStateService.mode();
@@ -203,7 +185,6 @@ export class MapComponent {
     // map.showCollisionBoxes = true;
     // map.showTileBoundaries = true;
 
-    this.registerDrawing(map);
     this.map.set(map);
     this.destroyRef.onDestroy(() => this.map()?.remove());
 
@@ -213,11 +194,13 @@ export class MapComponent {
         this.executeFlyTo(command);
       });
 
-    this.mapStateService.drawCommand$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(command => {
-        this.enterDrawMode(command)
-      })
+    this.registerDrawing(map)?.on('ready', () => {
+      this.mapStateService.drawCommand$
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(command => {
+          this.enterDrawMode(command)
+        })
+    })
   }
 
 
@@ -249,9 +232,35 @@ export class MapComponent {
     this.draw = this.drawControl.getTerraDrawInstance();
     if (!this.draw) {
       this.errorService.handleError(new Error('Failed to get terra draw instance'));
-      return;
+      return undefined;
     }
     this.hideDrawControl();
+
+    // register layers for ordering
+    this.draw.on('ready', () => {
+      const layers = this.drawControl.cleanStyle(this.map().getStyle(), {onlyTerraDrawLayers: true}).layers.map(l => l.id);
+      const groupId = "terradraw" as const;
+      this.mapLayerService.addGroup({
+        id: groupId,
+        name: "TerraDraw",
+        order: 100,
+        visible: true,
+        interactivity: {select: false, hover: false},
+        category: "internal",
+        thumbnailImg: "",
+      });
+      for (const lid of layers) {
+        this.mapLayerService.addLayer({
+          id: lid,
+          groupId: groupId,
+          layout: null,
+          source: "",
+          sourceLayer: "",
+        });
+      }
+    })
+
+    return this.draw;
   }
   private enterDrawMode(command: DrawCommand) : void {
     if (this.currentDrawCommand()) return;

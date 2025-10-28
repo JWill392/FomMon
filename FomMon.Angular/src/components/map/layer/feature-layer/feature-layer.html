@@ -9,6 +9,7 @@
       [groupId]="groupId"
       category="feature"
       [name]="layer().name"
+      [order]="5"
       [thumbnailImg]="'assets/layer-preview-osm-base.png'"
       [initiallyVisible]="true"
       [interactivity]="{select: true, hover: true}"
@@ -38,6 +39,7 @@
             [layout]="mapLayerService.getLayout(idFill)"
             appMapLayer
             [groupId]="groupId"
+
     ></mgl-layer>
 
     <!-- Polygon outline layer -->

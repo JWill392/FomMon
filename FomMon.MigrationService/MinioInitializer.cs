@@ -71,7 +71,7 @@ public class MinioInitializer(IMinioClient minioClient, ILogger<MinioInitializer
                         Expiration = new Expiration
                         {
                             Days = 7,
-                            ExpiredObjectDeleteMarker = false
+                            ExpiredObjectDeleteMarker = true
                         }
                     }
                 ]));

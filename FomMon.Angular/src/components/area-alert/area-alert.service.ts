@@ -7,12 +7,14 @@ import {ServiceLoadState} from "../shared/service/service-load-state";
 import {tap} from "rxjs/operators";
 import {LocalState} from "../shared/service/local-state";
 import {UserService} from "../user/user.service";
+import {LayerConfigService} from "../layer-type/layer-config.service";
 
 
 @Injectable({providedIn: 'root'})
 export class AreaAlertService implements ServiceWithState {
   private http = inject(HttpClient);
   private userService = inject(UserService);
+  private layerConfigService = inject(LayerConfigService);
 
   private _state = new ServiceLoadState();
   readonly state = this._state.asReadonly();
@@ -48,5 +50,15 @@ export class AreaAlertService implements ServiceWithState {
         this._state.loadState,
       )
 
+  }
+
+  getFeatureId(alert: AreaAlert) {
+    const kind = alert.featureReference.layerKind;
+    const layer = this.layerConfigService.byKind()[kind];
+    return {
+      source: kind,
+      sourceLayer: layer.tileSource,
+      id: alert.featureReference.sourceFeatureId
+    };
   }
 }

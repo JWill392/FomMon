@@ -1,7 +1,6 @@
 <app-thumbnail-map class="thumb-map"
                    [src]="src()"
                    alt="watch thumbnail"
-                   [geometry]="overrideGeometry() ?? geometry()"
-                   [dynamic]="overrideGeometry() !== undefined"
+                   [geometry]="geometry()"
                    fillColor="#3bb2d0"
                    (mapSaved)="onThumbMapSaved($event)" />

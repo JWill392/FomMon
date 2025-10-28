@@ -1,7 +1,7 @@
-import {Component, computed, DestroyRef, effect, inject, input, OnInit,} from '@angular/core';
+import {Component, computed, DestroyRef, effect, inject, input, OnInit, } from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators} from '@angular/forms';
 import {AreaWatchService} from '../area-watch.service';
-import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {NotificationService} from '../../shared/snackbar/notification.service';
 import {LayerConfigService} from '../../layer-type/layer-config.service';
 import {LayerKind} from "../../layer-type/layer-type.model";
@@ -17,7 +17,12 @@ import {phosphorBinoculars, phosphorPencil, phosphorTrash} from "@ng-icons/phosp
 import {LocalState} from "../../shared/service/local-state";
 import {RoutePaths} from "../../../routes/app.routes";
 import {Location} from "@angular/common";
-import {AreaWatchThumb} from "../area-watch-thumb/area-watch-thumb";
+import {MatError, MatFormField, MatLabel} from "@angular/material/select";
+import {MatInput} from "@angular/material/input";
+import {MatChip, MatChipListbox, MatChipOption, MatChipSet} from "@angular/material/chips";
+import {MatButton, MatIconButton} from "@angular/material/button";
+import {MatActionList, MatListItem} from "@angular/material/list";
+import {LoaderComponent} from "../../shared/loader/loader.component";
 
 type Mode = 'none' | 'add' | 'view' | 'edit';
 @Component({
@@ -26,21 +31,30 @@ type Mode = 'none' | 'add' | 'view' | 'edit';
     ReactiveFormsModule,
     DecimalPipe,
     NgIcon,
-    AreaWatchThumb
+    MatInput,
+    MatFormField,
+    MatChipListbox,
+    MatChipOption,
+    MatLabel,
+    MatChipSet,
+    MatChip,
+    MatButton,
+    MatIconButton,
+    MatActionList,
+    MatListItem,
+    MatError,
+    LoaderComponent
   ],
   templateUrl: './area-watch-detail.html',
   styleUrl: './area-watch-detail.scss',
   providers: [provideIcons({phosphorPencil, phosphorTrash, phosphorBinoculars})],
   host: {
-    '[class.add-mode]': "mode() === 'add'",
-    '[class.edit-mode]': "mode() === 'edit'",
-    '[class.view-mode]': "mode() === 'view'",
   }
 })
 export class AreaWatchDetail implements OnInit {
-  private layerService = inject(LayerConfigService);
+  protected layerService = inject(LayerConfigService);
+  protected areaWatchService = inject(AreaWatchService);
   private mapStateService = inject(MapStateService);
-  private areaWatchService = inject(AreaWatchService);
   private areaWatchLayerService = inject(AreaWatchLayerService);
   private notService = inject(NotificationService);
   private errorService = inject(ErrorService);
@@ -56,9 +70,6 @@ export class AreaWatchDetail implements OnInit {
   private featureId = computed(() => this.id() ? this.areaWatchLayerService.toFeatureIdentifier(this.id()) : undefined);
 
 
-  protected layers = this.layerService.data;
-  protected readonly LocalState = LocalState;
-
   form = new FormGroup({
     name: new FormControl<string>('', {
       validators: [Validators.required],
@@ -71,9 +82,6 @@ export class AreaWatchDetail implements OnInit {
       // TODO geometry size
     }),
   })
-
-  protected formGeometry = toSignal(this.form.controls.geometry.valueChanges);
-
   constructor() {
     effect(() => {
       const data = this.data();
@@ -107,7 +115,7 @@ export class AreaWatchDetail implements OnInit {
   }
 
   private onLoadedEdit() {
-    this.prepop();
+    this.prepopForm();
 
     this.startDrawMode({
       id: this.featureId(),
@@ -119,12 +127,11 @@ export class AreaWatchDetail implements OnInit {
   }
 
   private onLoadedView() {
-    this.prepop();
     this.flyToSelf();
     this.mapStateService.select(this.featureId())
   }
 
-  private prepop() {
+  private prepopForm() {
     const data = this.data();
     if (!data) return;
 
@@ -209,20 +216,25 @@ export class AreaWatchDetail implements OnInit {
     return true;
   }
 
-  protected onEdit(event: PointerEvent) {
+
+  protected navigateEdit(event: PointerEvent) {
     event.stopPropagation();
 
+    if (this.localState() !== LocalState.added) return;
     this.router.navigate([RoutePaths.areaWatchEdit({id: this.id()!})]);
   }
 
 
-  protected onDelete(event: PointerEvent) {
+  protected navigateDelete(event: PointerEvent) {
     event.stopPropagation();
+
     this.delete();
   }
 
   private delete() {
     const data = this.data()
+    if (this.localState() !== LocalState.added) return;
+
     this.areaWatchService.delete$(data)
       // no takeUntilDestroyed; we navigate away immediately but need sub to resolve
       .subscribe({

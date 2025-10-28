@@ -58,13 +58,28 @@ public sealed class AreaWatchService(
 
     public async Task<Result<AreaWatch>> UpdateAsync(Guid id, UpdateAreaWatchRequest dto, Guid userId, CancellationToken c)
     {
-        var (aw, errors) = await GetByIdAsync(id, userId, c);
+        var (original, errors) = await GetByIdAsync(id, userId, c);
         if (errors is not null) return Result.Fail(errors);
 
-        mapper.From(dto).AdaptTo(aw); // see mapping config in dto
+        var geometryChanged = dto.Geometry is not null && !dto.Geometry.EqualsTopologically(original.Geometry);
+        
+
+        var changed = mapper.From(dto).AdaptTo(original); // see mapping config in dto
+
+        if (geometryChanged)
+        {
+            {
+                // TODO recalc watches
+                if (string.IsNullOrEmpty(changed.ThumbnailImageObjectName) && !string.IsNullOrEmpty(original.ThumbnailImageObjectName))
+                {
+                    await objectStorageService.DeleteImageAsync(original.ThumbnailImageObjectName, c);
+                    original.ThumbnailImageObjectName = string.Empty;
+                }
+            }
+        }
 
         await db.SaveChangesAsync(c);
-        return Result.Ok(aw);
+        return Result.Ok(original);
     }
 
     public async Task<Result<ICollection<AreaWatch>>> ListAsync(Guid userId, CancellationToken c = default)

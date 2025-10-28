@@ -2,7 +2,7 @@ import {computed, inject, Injectable, signal} from '@angular/core';
 import {LayerSpecification} from "maplibre-gl";
 import {LocalStorageService} from "../../shared/local-storage.service";
 
-export type LayerCategory = "base"|"feature";
+export type LayerCategory = "base"|"feature"|"internal";
 
 export interface LayerInteractivity {
   select: boolean;
@@ -14,6 +14,7 @@ export interface LayerGroup {
   thumbnailImg: string;
   visible: boolean;
   category: LayerCategory;
+  order: number;
 
   source: string;
   sourceLayer?: string;
@@ -21,14 +22,19 @@ export interface LayerGroup {
   interactivity: LayerInteractivity
 }
 export type LayerGroupAdd = Omit<LayerGroup, 'source' | 'sourceLayer'>;
+
 export interface LayerInfo {
   id: string;
   groupId: string;
   layout: LayerSpecification['layout'];
 
+  order: number;
+  subOrder: number;
+
   source: string;
   sourceLayer: string | undefined;
 }
+export type LayerInfoAdd = Omit<LayerInfo, 'order' | 'subOrder'>;
 
 
 /**
@@ -49,14 +55,21 @@ export class MapLayerService {
   public readonly featureGroups = computed(() => this._groupsByCategory().get('feature') ?? []);
 
   private _layers = signal<LayerInfo[]>([]);
+  public readonly layers = this._layers.asReadonly();
 
   private localStorageService = inject(LocalStorageService);
   private static readonly layerVisibilityKey = 'layerVisibility';
   private readonly layerVisibilityDefault : Map<string, boolean>;
 
+  /** detect layer order changes only */
+  public readonly layerOrderSignature = computed(() =>
+    this._layers()?.map(l => `${l.order}:${l.subOrder}:${l.id}`).join(',')
+  );
+
   constructor() {
     this.layerVisibilityDefault = this.localStorageService
       .get(MapLayerService.layerVisibilityKey, 1) ?? new Map<string, boolean>();
+
   }
 
   addGroup(group: LayerGroupAdd): boolean {
@@ -78,36 +91,41 @@ export class MapLayerService {
     this._groups.update(groups => groups.filter(g => g.id !== id));
   }
 
-  // TODO change to list of groups w/ layer children
-  registerLayer(layerAdd: LayerInfo) {
-    if (!layerAdd) throw new Error('Layer is required');
-    if (this.getLayer(layerAdd.id)) throw new Error(`Layer ${layerAdd.id} already registered`);
 
-    const group = this.getGroup(layerAdd.groupId);
-    if (!group) throw new Error(`Group ${layerAdd.groupId} not found`);
+  addLayer(add: LayerInfoAdd) {
+    if (!add) throw new Error('Layer is required');
+    if (this.getLayer(add.id)) throw new Error(`Layer ${add.id} already registered`);
+
+    const group = this.getGroup(add.groupId);
+    if (!group) throw new Error(`Group ${add.groupId} not found`);
 
     if (!group.source) {
-      group.source = layerAdd.source;
-      group.sourceLayer = layerAdd.sourceLayer;
-    } else if (group.source !== layerAdd.source ||
-        group.sourceLayer !== layerAdd.sourceLayer) {
+      group.source = add.source;
+      group.sourceLayer = add.sourceLayer;
+    } else if (group.source !== add.source ||
+        group.sourceLayer !== add.sourceLayer) {
 
-      throw new Error(`Layer ${layerAdd.id} already registered with different source`);
+      throw new Error(`Layer ${add.id} already registered with different source`);
     }
 
-    const addWithVisibility = {
-      ...layerAdd
-      , layout: this.layoutWithVisibility(layerAdd.layout, group.visible)
+    // order layers within groups based on add order
+    const subOrder = this.getLayers(add.groupId).length;
+    const added = {
+      ...add
+      , layout: this.layoutWithVisibility(add.layout, group.visible)
+      , order: group.order
+      , subOrder
     };
 
-    this._layers.update(layers => [
-      ...layers,
-      addWithVisibility
-      ]
-    );
+    this._layers.update(layers =>
+      MapLayerService.withInserted(layers, added, (a, b) =>
+        a.order - b.order ||
+        a.source.localeCompare(b.source) ||
+        a.sourceLayer?.localeCompare(b.sourceLayer) ||
+        a.subOrder - b.subOrder))
   }
 
-  unregisterLayer(id: string): void {
+  removeLayer(id: string): void {
     const group = this.getLayer(id)?.groupId;
     this._layers.update(layers => layers.filter(l => l.id !== id));
     if (!this._layers().some(l => l.groupId === group)) {
@@ -115,14 +133,11 @@ export class MapLayerService {
     }
   }
 
+
   selectBaseLayer(groupId: string): void {
     this._groups().filter(g => g.category === 'base')
       .forEach(g => this.setVisibility(g.id, g.id === groupId));
   }
-
-  // setVisibility(groupId: string, visible: boolean): void {
-  //   this.setVisibility(groupId, visible);
-  // }
 
   setVisibility(groupId: string, value : boolean): void {
     let group = this.getGroup(groupId);
@@ -177,4 +192,17 @@ export class MapLayerService {
   }
 
 
+  /** Non-mutable sorted insert */
+  private static withInserted<T>(list: T[], item: T, compare: (a: T, b: T) => number) : T[] {
+    const index = list.findIndex(l => compare(l, item) > 0);
+    if (index === -1) {
+      return [...list, item];
+    } else {
+      return [
+        ...list.slice(0, index),
+        item,
+        ...list.slice(index)
+      ]
+    }
+  }
 }

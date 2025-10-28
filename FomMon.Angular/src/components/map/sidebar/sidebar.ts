@@ -13,8 +13,8 @@ import {phosphorTreeEvergreenFill} from "@ng-icons/phosphor-icons/fill";
 import {LocalStorageService} from "../../shared/local-storage.service";
 import {MapStateService} from "../map-state.service";
 import {getParentRoute, RoutePaths} from "../../../routes/app.routes";
-import {Location} from "@angular/common";
 import {AppConfigService} from "../../../config/app-config.service";
+import {MatIconButton} from "@angular/material/button";
 
 @Component({
   selector: 'app-sidebar',
@@ -22,7 +22,8 @@ import {AppConfigService} from "../../../config/app-config.service";
     RouterOutlet,
     RouterLink,
     SidebarItem,
-    NgIconComponent
+    NgIconComponent,
+    MatIconButton
   ],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss',

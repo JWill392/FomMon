@@ -2,7 +2,7 @@ import {
   Component,
   computed, effect,
   inject,
-  input, OnInit, output,
+  input, output,
   signal
 } from '@angular/core';
 import {GeoJSONSourceComponent, LayerComponent, MapComponent, RasterSourceComponent} from "@maplibre/ngx-maplibre-gl";
@@ -13,8 +13,9 @@ import {toPng} from 'html-to-image';
 import {ErrorService} from "../../shared/error.service";
 import {v4 as uuidv4} from 'uuid';
 import {booleanEqual as turfBooleanEqual} from '@turf/boolean-equal'
+import {LoaderComponent, LoaderPlaceholderComponent} from "../../shared/loader/loader.component";
 
-type State = 'idle' | 'image-input' | 'map-loading' | 'map-ready' | 'map-saved-image';
+type State = 'idle' | 'image-input' | 'map-loading' | 'map-ready' | 'map-saved-image' | 'error';
 
 /**
  * Generates a map thumbnail image of provided geometry.
@@ -29,6 +30,8 @@ type State = 'idle' | 'image-input' | 'map-loading' | 'map-ready' | 'map-saved-i
     GeoJSONSourceComponent,
     LayerComponent,
     RasterSourceComponent,
+    LoaderComponent,
+    LoaderPlaceholderComponent,
   ],
   providers: [
   ],
@@ -44,11 +47,11 @@ export class ThumbnailMap {
 
   /** Optional image source if already saved; otherwise map will generate */
   imgSrcInput = input<string | undefined>(undefined, {alias: "src"});
-  dynamic = input<boolean>(false);
 
   mapSaved = output<string>();
 
   protected readonly state = signal<State>('idle');
+  protected readonly error = signal<Error | undefined>(undefined);
 
   protected readonly bbox = computed(() => this.geometry() ? boundingBox(this.geometry()) : undefined)
 
@@ -71,11 +74,10 @@ export class ThumbnailMap {
       const imgSrc = this.imgSrcInput();
       const geometry = this.geometry();
       const imgGeometry = this.mapImgGeometry();
-      const dynamic = this.dynamic();
 
       if (imgSrc) this.lastImgSrc.set(imgSrc);
 
-      if (imgSrc && !dynamic) {
+      if (imgSrc) {
         this.setState('image-input');
 
       } else if (geometry) {
@@ -101,11 +103,14 @@ export class ThumbnailMap {
   }
   private setState(state: State) : boolean {
     const old = this.state();
-    console.log(`thumbnail-map: ${old} -> ${state}`);
     if (old === state) return false;
 
     switch (state) {
       case 'idle':
+        break;
+
+      case 'error':
+        this.clearMap();
         break;
 
       case 'image-input':
@@ -118,8 +123,7 @@ export class ThumbnailMap {
         break;
 
       case 'map-ready':
-        if (!this.dynamic())
-          this.saveMapToImage();
+        this.saveMapToImage();
         break;
 
       case 'map-saved-image':
@@ -156,11 +160,16 @@ export class ThumbnailMap {
     toPng(this.map().getContainer(),
       {skipFonts: true})
       .then(async (dataUrl) => {
+          if (!dataUrl || !dataUrl.startsWith('data:image/')) {
+            throw new Error('Invalid image data URL generated: ' + dataUrl);
+          }
           this.mapImgDataUrl.set(dataUrl);
           this.setState('map-saved-image');
         }
       ).catch(error => {
         this.errorService.handleError(new Error('Failed to generate map thumbnail:', {cause: error}));
+        this.setState('error');
+        this.error.set(error);
       });
 
   }

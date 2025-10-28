@@ -32,10 +32,9 @@
   </nav>
   <section class="content" [class.closed]="contentClosed()">
     <header class="content-header">
-      <div class="action back-button" (click)="onBack($event)">
+      <button matIconButton class="action back-button" (click)="onBack($event)">
         <ng-icon name="phosphorCaretLeft" aria-label="Back" aria-hidden="true" />
-        Back
-      </div>
+      </button>
       <h2 class="action content-title">{{contentTitle()}}</h2>
       <div class="action close-button" [routerLink]="RoutePaths.map">
         <ng-icon name="phosphorX" aria-label="Close" aria-hidden="true" />

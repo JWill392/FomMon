@@ -5,12 +5,14 @@ import {RouterLink} from '@angular/router';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {MapLayerService} from "../../map/layer/map-layer.service";
 import {RoutePaths} from "../../../routes/app.routes";
+import {LoaderComponent} from "../../shared/loader/loader.component";
 
 @Component({
   selector: 'app-area-watch-list',
   imports: [
     AreaWatchCard,
-    RouterLink
+    RouterLink,
+    LoaderComponent
   ],
   templateUrl: './area-watch-list.html',
   styleUrl: './area-watch-list.scss'

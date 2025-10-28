@@ -1,7 +1,7 @@
 import {inject, Injectable, signal} from "@angular/core";
 import {MapLayerService} from "./layer/map-layer.service";
 import {ErrorService} from "../shared/error.service";
-import {finalize, Observable, Subject} from "rxjs";
+import {finalize, Observable, ReplaySubject, Subject} from "rxjs";
 import {Geometry, Point, Polygon, LineString} from "geojson";
 import {FeatureIdentifier} from 'maplibre-gl';
 import {fidEquals} from "./map-util";
@@ -51,12 +51,12 @@ export class MapStateService {
 
   padding = signal<Padding>({top: 0, bottom: 0, left: 0, right: 0});
 
-  private _drawCommand$ = new Subject<DrawCommand>();
+  private _drawCommand$ = new ReplaySubject<DrawCommand>();
   readonly drawCommand$ = this._drawCommand$.asObservable();
   private _drawResult$ : Subject<Geometry> | undefined;
   get drawResult$() : Subject<Geometry> | undefined {return this._drawResult$};
 
-  private _flyToCommand$ = new Subject<FlyToCommand>();
+  private _flyToCommand$ = new ReplaySubject<FlyToCommand>();
   readonly flyToCommand$ = this._flyToCommand$.asObservable();
 
   startDrawMode(drawCommand: DrawCommand): Observable<Geometry> {

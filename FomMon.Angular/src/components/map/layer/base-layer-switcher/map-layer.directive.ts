@@ -46,19 +46,19 @@ export class MapLayerDirective implements OnInit, OnDestroy {
       return;
     }
 
-    this.mapLayerService.registerLayer({
+    this.mapLayerService.addLayer({
       id: this.layerId(),
       groupId: this.groupId(),
       layout: this.additionalLayout(),
       source: this.layerComponent.source(),
-      sourceLayer: this.layerComponent.sourceLayer()
+      sourceLayer: this.layerComponent.sourceLayer(),
     });
 
   }
 
   ngOnDestroy(): void {
     if (this.layerId) {
-      this.mapLayerService.unregisterLayer(this.layerId());
+      this.mapLayerService.removeLayer(this.layerId());
     }
   }
 

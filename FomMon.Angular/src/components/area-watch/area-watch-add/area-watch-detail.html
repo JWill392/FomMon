@@ -1,65 +1,89 @@
+<app-loader [dependentStates]="[this.layerService.state, this.areaWatchService.state]">
+@if (mode() === 'view') {
+
+  <div class="name-container">
+    <h3>{{ data()?.name }}</h3>
+    <button matIconButton class="action-item" [disabled]="this.localState() !== 'added'" (click)="navigateEdit($event)">
+      <ng-icon class="action-item-icon" name="phosphorPencil" />
+    </button>
+  </div>
+
+  <div class="layers-container">
+    <mat-label>Layers</mat-label>
+    <mat-chip-set id="layers">
+      @for (layerKind of data()?.layers; track ""+layerKind) {
+        @let layer = layerService.byKind()[layerKind];
+        <mat-chip [value]="layerKind">
+          <!--          TODO layer thumbnail; currently only on LayerGroup <img matChipAvatar [src]="layer.thumbnailImg" [alt]="layer.name" />-->
+          {{layer.name}}
+        </mat-chip>
+      }
+    </mat-chip-set>
+  </div>
+
+  <mat-action-list role="list" aria-label="Actions">
+    <button mat-list-item class="action-item" [disabled]="this.localState() !== 'added'"  (click)="navigateDelete($event)">
+      <ng-icon matListItemIcon class="action-item-icon" name="phosphorTrash" />
+      <p>Delete</p>
+    </button>
+  </mat-action-list>
+
+
+
+} @else if (mode() === 'edit' || mode() === 'add') {
 <form [formGroup]="form"
       (ngSubmit)="onSubmit()">
-  <div class="name-container">
-    @if (this.mode() === 'edit' || this.mode() === 'view') {
-      <app-area-watch-thumb [id]="id()" [overrideGeometry]="this.mode() === 'edit'? formGeometry() : undefined" />
+  <mat-form-field>
+    <input matInput type="text" formControlName="name"
+            autocomplete="off" data-lpignore="true" data-form-type="other"
+           placeholder="Name"
+    >
+    @if (form.controls.name.hasError('required')) {
+      <mat-error>Name is required</mat-error>
     }
-    <div class="input-group">
-      <label for="watch-name">Name</label>
-      <input type="text" id="watch-name" name="watch-name" formControlName="name" autocomplete="off" data-lpignore="true" data-form-type="other" >
-    </div>
+  </mat-form-field>
 
-  </div>
 
-  <div class="input-group">
-    <label for="layers">Layers:</label>
-<!--    TODO multiselect that isn't garbage -->
-    <select name="layers" id="layers" formControlName="layers" multiple>
-      @for (layer of layers(); track layer.kind) {
-        <option id="layer-{{ layer.kind" [value]="layer.kind">{{layer.name}}</option>
+  <div class="chip-form-field">
+    <label class="chip-form-field-label">Layers</label>
+    <mat-chip-listbox class="mat-mdc-chip-set-stacked" id="layers" formControlName="layers"
+                      multiple aria-label="Select Layers"
+                      [class.chip-form-field-invalid]="form.controls.layers.invalid && form.controls.layers.touched">
+      @for (layer of layerService.data(); track layer.kind) {
+        <mat-chip-option [value]="layer.kind">
+          {{layer.name}}
+        </mat-chip-option>
       }
-    </select>
+    </mat-chip-listbox>
+    @if (form.controls.layers.invalid && form.controls.layers.touched) {
+      <div class="chip-form-field-error">
+        @if (form.controls.layers.hasError('required')) {
+          At least one layer is required
+        }
+      </div>
+    }
   </div>
   <div class="error-container">
-    @if (form.controls.name.touched && form.controls.name.hasError('required')) {
-      <p class="error">Name is required</p>
-    }
-    @if (form.controls.layers.touched && form.controls.layers.hasError('required')) {
-      <p class="error">At least one layer is required</p>
-    }
-    @if (form.controls.layers.touched && form.controls.geometry.hasError('required')) {
-      <p class="error">Draw an area to monitor on the map</p>
+    @if (form.controls.geometry.hasError('required')) {
+      <mat-error>Draw an area to monitor on the map</mat-error>
     }
     @if (form.controls.geometry.hasError('area')) {
       @let error = form.controls.geometry.getError('area');
 
-      <p class="error">Area is too large. You selected {{error['actualAreaHa'] | number:'1.0-0' }} hectares. Max is {{error['maxAreaHa'] | number:'1.0-0' }} hectares</p>
+      <mat-error>Selected area {{error['actualAreaHa'] | number:'1.0-0' }} hectares is larger than maximum of {{error['maxAreaHa'] | number:'1.0-0' }} hectares</mat-error>
     }
   </div>
   <div class="button-container">
     @if (this.mode() === 'edit') {
-      <button class="button-secondary" type="button" (click)="onCancelEdit()">Cancel</button>
-      <button class="button-primary" type="submit">Save</button>
+      <button matButton type="button" (click)="onCancelEdit()">Cancel</button>
+      <button matButton="filled" type="submit">Save</button>
     }
     @if (this.mode() === 'add') {
-      <button class="button-secondary" type="button" (click)="onCancelEdit()">Cancel</button>
-      <button class="button-primary" type="submit">Add</button>
+      <button matButton type="button" (click)="onCancelEdit()">Cancel</button>
+      <button matButton="filled" type="submit">Add</button>
     }
   </div>
 </form>
 
-
-<div class="action-item-container">
-  @if ((mode() === 'view') && localState() === LocalState.added) {
-    <div class="action-item" (click)="onEdit($event)">
-      <ng-icon class="action-item-icon" name="phosphorPencil" />
-      <p>Edit</p>
-    </div>
-  }
-  @if ((mode() === 'view' || mode() === 'edit') && localState() === LocalState.added) {
-    <div class="action-item" (click)="onDelete($event)">
-      <ng-icon class="action-item-icon" name="phosphorTrash" />
-      <p>Delete</p>
-    </div>
-  }
-</div>
+}
+</app-loader>

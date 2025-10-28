@@ -1,24 +1,18 @@
-<header>
-<!--  TODO item count, filter -->
+<app-loader [dependentStates]="[this.awService.state]">
+  <header>
+  <!--  TODO item count, filter -->
 
-</header>
-<section class="list-container">
-  <div class="list">
-    @if (awService.state.isLoading() || awService.state.isIdle()) {
-      <p>Loading...</p>
-
-    } @else if (awService.state.isError()) {
-      <p>Error: {{ awService.state.error().message }}</p>
-
-    } @else if (awService.state.isReady()) {
+  </header>
+  <section class="list-container">
+    <div class="list">
       @for (aw of awService.data(); track aw.id) {
         <app-area-watch-card [id]="aw.id" [isOdd]="$odd" />
       } @empty {
         <p class="empty">Add a watch to monitor an area</p>
       }
-    }
-  </div>
-</section>
-<footer>
-  <a class="action-item" [routerLink]="RoutePaths.areaWatchAdd">Add</a>
-</footer>
+    </div>
+  </section>
+  <footer>
+    <a class="action-item" [routerLink]="RoutePaths.areaWatchAdd">Add</a>
+  </footer>
+</app-loader>

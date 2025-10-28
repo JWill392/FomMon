@@ -1,21 +1,26 @@
-@if (state() === 'idle' || state() === 'map-loading') {
+<app-loader
+    [loading]="state() === 'idle' || state() === 'map-loading'"
+    [error]="error()">
   @if (lastImgSrc()) {
-    <img [id]="imageId()"
-         class="thumb-image"
-         [src]="this.lastImgSrc()"
-         [alt]="alt()"
-    />
-  } @else {
-    <p>Loading...</p>
+    <app-loader-placeholder>
+      <img [id]="imageId()"
+           class="thumb-image"
+           [src]="this.lastImgSrc()"
+           [alt]="alt()"
+      />
+    </app-loader-placeholder>
   }
-<!--  TODO throbber, defer (should be very low priority, and low concurrency (expensive) -->
-} @else if (state() === 'image-input' || state() === 'map-saved-image') {
+
+
+@if (state() === 'image-input' || state() === 'map-saved-image') {
   <img [id]="imageId()"
        class="thumb-image"
        [src]="this.imgSrcInput() ? this.imgSrcInput() : this.mapImgDataUrl()"
        [alt]="alt()"
   />
 }
+</app-loader>
+
 <!-- include while loading, but css invisible -->
 @if (state() === 'map-loading' || state() === 'map-ready') {
   <mgl-map class="thumb-map"

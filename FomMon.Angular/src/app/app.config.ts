@@ -14,6 +14,7 @@ import {ErrorService} from '../components/shared/error.service';
 import {provideAppInitializer, inject} from '@angular/core';
 import {AppConfigService} from "../config/app-config.service";
 import {TemplatePageTitleStrategy} from "../routes/TemplatePageTitleStrategy";
+import {MAT_FORM_FIELD_DEFAULT_OPTIONS} from "@angular/material/form-field";
 
 
 const urlCondition = createInterceptorCondition<IncludeBearerTokenCondition>({
@@ -23,6 +24,7 @@ const urlCondition = createInterceptorCondition<IncludeBearerTokenCondition>({
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // auth
     provideKeycloak({
       config: {
         url: '/keycloak',
@@ -36,7 +38,7 @@ export const appConfig: ApplicationConfig = {
       features: [
         withAutoRefreshToken({
           onInactivityTimeout: 'logout',
-          sessionTimeout: 3_600_000 // 1 hour
+          sessionTimeout: 24 * 3_600_000 * 7 // 1 week
         })
       ],
       providers: [AutoRefreshTokenService, UserActivityService, ErrorService],
@@ -45,17 +47,25 @@ export const appConfig: ApplicationConfig = {
       provide: INCLUDE_BEARER_TOKEN_INTERCEPTOR_CONFIG,
       useValue: [urlCondition]
     },
+    provideHttpClient(withInterceptors(
+      [includeBearerTokenInterceptor,
+      ]
+    )),
+
+    // config
     provideAppInitializer(() => {
       const configService = inject(AppConfigService);
       return configService.loadConfig();
     }),
-    provideBrowserGlobalErrorListeners(),
-    provideZonelessChangeDetection(),
+
+    // routing
     provideRouter(routes, withComponentInputBinding()),
     {provide: TitleStrategy, useClass: TemplatePageTitleStrategy},
-    provideHttpClient(withInterceptors(
-      [includeBearerTokenInterceptor,
-      ]
-    ))
+
+    // material theme
+    {provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: {appearance: 'outline'}},
+
+    provideBrowserGlobalErrorListeners(),
+    provideZonelessChangeDetection(),
   ]
 };

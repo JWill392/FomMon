@@ -17,7 +17,7 @@ export class AreaWatchLayerService {
 
   readonly selectedAreaWatchId = computed(() => this.getAreaWatch(this.mapStateService.selected()));
 
-  private _layerGroup = computed(() => this.mapLayerService.featureGroups().find(g => g.id === this.groupId));
+  private _layerGroup = computed(() => this.mapLayerService.getGroup(this.groupId));
 
   constructor() {
 

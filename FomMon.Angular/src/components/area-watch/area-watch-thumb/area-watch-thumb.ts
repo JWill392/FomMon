@@ -2,7 +2,6 @@ import {Component, computed, DestroyRef, inject, input} from '@angular/core';
 import {ThumbnailMap} from "../../map/thumbnail-map/thumbnail-map";
 import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
 import {AreaWatchService} from "../area-watch.service";
-import {Geometry} from "geojson";
 
 @Component({
   selector: 'app-area-watch-thumb',
@@ -17,7 +16,6 @@ export class AreaWatchThumb {
   private destroyRef = inject(DestroyRef);
 
   id = input.required<string>();
-  overrideGeometry = input<Geometry>();
 
   private data = computed(() => this.areaWatchService.get(this.id()));
   protected geometry = computed(() => this.data()?.geometry);

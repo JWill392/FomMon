@@ -1,6 +1,7 @@
 import {effect, inject, Injectable} from "@angular/core";
 import {MapSelection, MapStateService} from "./map-state.service";
 import {FeatureIdentifier} from "maplibre-gl";
+import {fidEquals} from "./map-util";
 
 @Injectable({ providedIn: 'root'})
 export class MapRoutingService {
@@ -10,11 +11,14 @@ export class MapRoutingService {
 
 
   constructor() {
+    let lastSelection: MapSelection | null = null;
     effect(() => {
       const selection = this.mapStateService.selected();
-      if (!selection) return;
+      const changed = !fidEquals(lastSelection?.featureId, selection?.featureId);
+      if (!selection || !changed) return;
 
       this.handleSelection(selection);
+      lastSelection = selection;
     })
   }
 
