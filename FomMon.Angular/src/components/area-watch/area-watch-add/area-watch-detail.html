@@ -15,7 +15,7 @@
         @let layer = layerService.byKind()[layerKind];
         <mat-chip [value]="layerKind">
           <!--          TODO layer thumbnail; currently only on LayerGroup <img matChipAvatar [src]="layer.thumbnailImg" [alt]="layer.name" />-->
-          {{layer.name}}
+          {{layer?.name}}
         </mat-chip>
       }
     </mat-chip-set>

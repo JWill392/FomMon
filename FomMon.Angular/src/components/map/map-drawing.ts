@@ -58,7 +58,6 @@ export class MapDrawing {
 
     // register layers for ordering
     this.draw.on('ready', () => {
-      console.log("terra draw ready");
       const layers = this.drawControl.cleanStyle(this.map.getStyle(), {onlyTerraDrawLayers: true}).layers.map(l => l.id);
       const groupId = "terradraw" as const;
       this.mapLayerService.addGroup({

@@ -1,7 +1,7 @@
-import {Component, computed, DestroyRef, effect, inject, input, OnInit, } from '@angular/core';
+import {Component, computed, DestroyRef, effect, inject, input, OnInit, Signal,} from '@angular/core';
 import {FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators} from '@angular/forms';
 import {AreaWatchService} from '../area-watch.service';
-import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {takeUntilDestroyed, toSignal} from '@angular/core/rxjs-interop';
 import {NotificationService} from '../../shared/snackbar/notification.service';
 import {LayerConfigService} from '../../layer-type/layer-config.service';
 import {LayerKind} from "../../layer-type/layer-type.model";
@@ -23,6 +23,7 @@ import {MatChip, MatChipListbox, MatChipOption, MatChipSet} from "@angular/mater
 import {MatButton, MatIconButton} from "@angular/material/button";
 import {MatActionList, MatListItem} from "@angular/material/list";
 import {LoaderComponent} from "../../shared/loader/loader.component";
+import {MapLayerService} from "../../map/layer/map-layer.service";
 
 type Mode = 'none' | 'add' | 'view' | 'edit';
 @Component({
@@ -56,6 +57,7 @@ export class AreaWatchDetail implements OnInit {
   protected areaWatchService = inject(AreaWatchService);
   private mapStateService = inject(MapStateService);
   private areaWatchLayerService = inject(AreaWatchLayerService);
+  private mapLayerService = inject(MapLayerService);
   private notService = inject(NotificationService);
   private errorService = inject(ErrorService);
   private router = inject(Router);
@@ -69,6 +71,7 @@ export class AreaWatchDetail implements OnInit {
   protected localState = computed(() => this.data()?.localState ?? 'none')
   private featureId = computed(() => this.id() ? this.areaWatchLayerService.toFeatureIdentifier(this.id()) : undefined);
 
+  private readonly layerVisSnapshot = 'AreaWatchDetail' as const
 
   form = new FormGroup({
     name: new FormControl<string>('', {
@@ -82,6 +85,16 @@ export class AreaWatchDetail implements OnInit {
       // TODO geometry size
     }),
   })
+
+  private formLayersSignal = toSignal(this.form.controls.layers.valueChanges, {
+    initialValue: []
+  });
+  protected currentLayers: Signal<LayerKind[]> = computed(() =>
+    this.mode() === 'view'
+      ? (this.data()?.layers ?? [])
+      : (this.formLayersSignal() ?? [])
+  );
+
   constructor() {
     effect(() => {
       const data = this.data();
@@ -94,9 +107,19 @@ export class AreaWatchDetail implements OnInit {
       }
     })
 
+    effect(() => {
+      this.currentLayers();
+      this.syncLayerVisibility();
+    })
+
   }
 
   ngOnInit(): void {
+    this.mapLayerService.pushVisibilitySnapshot(this.layerVisSnapshot);
+    this.mapLayerService.setVisibility(this.areaWatchLayerService.groupId, true, this.layerVisSnapshot);
+    this.destroyRef.onDestroy(() => this.mapLayerService.popVisibilitySnapshot(this.layerVisSnapshot));
+
+
     if (this.mode() === 'add') {
       this.onLoadedAdd()
 
@@ -108,7 +131,21 @@ export class AreaWatchDetail implements OnInit {
     }
   }
 
+  private syncLayerVisibility() {
+    const currentLayers = this.currentLayers();
+
+    const visibility = this.mapLayerService.featureGroups()
+      .map(g => ({id:g.id, kind:this.layerService.getByGroupId(g.id)?.kind}))
+      .filter(gk => !!gk.kind)
+      .map(gk => [gk.id, currentLayers.includes(gk.kind)] as [string, boolean]);
+    const visMap = new Map<string, boolean>(visibility);
+
+    this.mapLayerService.setVisibilityMany(visMap, this.layerVisSnapshot)
+  }
+
+
   private onLoadedAdd() {
+
     this.startDrawMode({
       mode: 'polygon'
     })

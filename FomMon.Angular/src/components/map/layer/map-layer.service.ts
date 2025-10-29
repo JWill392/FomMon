@@ -1,9 +1,11 @@
 import {computed, inject, Injectable, signal} from '@angular/core';
 import {LayerSpecification} from "maplibre-gl";
 import {LocalStorageService} from "../../shared/local-storage.service";
+import {StackMap} from "../../../datastructures/stack-map";
 
 export type LayerCategory = "base"|"feature"|"internal";
 
+export type LayerVisibilitySnapshot = Map<string, boolean>;
 export interface LayerInteractivity {
   select: boolean;
   hover: boolean;
@@ -48,7 +50,7 @@ export type LayerInfoAdd = Omit<LayerInfo, 'order' | 'subOrder'>;
 export class MapLayerService {
   private _groups = signal<LayerGroup[]>([]);
   private _groupsById = computed(() => new Map(this._groups().map(g => [g.id, g])));
-  private _groupsBySource = computed(() => new Map(this._groups().map(g => [this.toSourceKey(g.source, g.sourceLayer), g])));
+  private _groupsBySource = computed(() => new Map(this._groups().map(g => [this._toSourceKey(g.source, g.sourceLayer), g])));
   private _groupsByCategory = computed(() => Map.groupBy(this._groups(), g => g.category));
 
   public readonly baseGroups = computed(() => this._groupsByCategory().get('base') ?? []);
@@ -59,7 +61,9 @@ export class MapLayerService {
 
   private localStorageService = inject(LocalStorageService);
   private static readonly layerVisibilityKey = 'layerVisibility';
-  private readonly layerVisibilityDefault : Map<string, boolean>;
+
+  private readonly visDefault : string = "default";
+  private readonly visStack : StackMap<string, boolean>
 
   /** detect layer order changes only */
   public readonly layerOrderSignature = computed(() =>
@@ -67,21 +71,26 @@ export class MapLayerService {
   );
 
   constructor() {
-    this.layerVisibilityDefault = this.localStorageService
-      .get(MapLayerService.layerVisibilityKey, 1) ?? new Map<string, boolean>();
+    const defaultVisibility = this.localStorageService
+      .get<LayerVisibilitySnapshot>(MapLayerService.layerVisibilityKey, 1) ?? new Map<string, boolean>();
 
+    this.visStack = new StackMap();
+    this.visStack.pushMap(this.visDefault);
+    this.visStack.setMany(this.visDefault, defaultVisibility);
+    this._syncVisibility(this.visDefault)
   }
 
   addGroup(group: LayerGroupAdd): boolean {
     if (this.getGroup(group.id)) throw new Error(`Group ${group.id} already exists`);
 
-    if (this.layerVisibilityDefault.has(group.id)) {
-      group.visible = this.layerVisibilityDefault.get(group.id)!;
+    if (!this.visStack.hasIn(this.visDefault, group.id)) {
+      this.visStack.setIn(this.visDefault, group.id, group.visible);
     }
+    group.visible = this.visStack.get(group.id);
 
     this._groups.update(groups => [...groups, {
       ...group,
-      source:'',
+      source:'', // currently set from add layer; TODO set in group by making directive on Source
       sourceLayer:''
     }]);
     return true;
@@ -109,16 +118,16 @@ export class MapLayerService {
     }
 
     // order layers within groups based on add order
-    const subOrder = this.getLayers(add.groupId).length;
+    const subOrder = this._getLayers(add.groupId).length;
     const added = {
       ...add
-      , layout: this.layoutWithVisibility(add.layout, group.visible)
+      , layout: this._layoutWithVisibility(add.layout, group.visible)
       , order: group.order
       , subOrder
     };
 
     this._layers.update(layers =>
-      MapLayerService.withInserted(layers, added, (a, b) =>
+      MapLayerService._withInserted(layers, added, (a, b) =>
         a.order - b.order ||
         a.source.localeCompare(b.source) ||
         a.sourceLayer?.localeCompare(b.sourceLayer) ||
@@ -132,45 +141,17 @@ export class MapLayerService {
       this.removeGroup(group);
     }
   }
-
-
   selectBaseLayer(groupId: string): void {
     this._groups().filter(g => g.category === 'base')
       .forEach(g => this.setVisibility(g.id, g.id === groupId));
   }
 
-  setVisibility(groupId: string, value : boolean): void {
-    let group = this.getGroup(groupId);
-    if (!group) return;
-    group = {
-      ...group,
-      visible: value
-    }
-
-    this._groups.update(groups => groups.map(g => g.id === groupId ? group : g))
-
-    this._layers.update(layers => layers.map(l => {
-      if (l.groupId !== groupId) return l;
-      return ({
-        ...l,
-        layout: this.layoutWithVisibility(l.layout, group.visible)
-      });
-    }));
-
-    this.layerVisibilityDefault.set(groupId, value);
-    this.localStorageService.set(MapLayerService.layerVisibilityKey, this.layerVisibilityDefault, 1);
-  }
 
   getGroup(id: string) : LayerGroup | undefined {
     return this._groupsById().get(id)
   }
 
-  private toSourceKey = (source : string, sourceLayer?: string) => source + sourceLayer?`:${sourceLayer}`:'';
-  getGroupBySource(source: string, sourceLayer?: string) : LayerGroup | undefined {
-    return this._groupsBySource().get(this.toSourceKey(source, sourceLayer));
-  }
-
-  private getLayers(groupId: string | string[] | LayerGroup | LayerGroup[] = []) {
+  private _getLayers(groupId: string | string[] | LayerGroup | LayerGroup[] = []) {
     const groupIds = (Array.isArray(groupId) ? groupId : [groupId])
       .map(g => typeof g === 'string' ? g : g.id);
 
@@ -184,16 +165,14 @@ export class MapLayerService {
   }
 
 
-  private layoutWithVisibility(layout: LayerSpecification['layout'], visible: boolean): LayerSpecification['layout'] {
-    return {
-      ...layout,
-      visibility: visible ? 'visible' : 'none'
-    };
+
+  private _toSourceKey = (source : string, sourceLayer?: string) => source + sourceLayer?`:${sourceLayer}`:'';
+  getGroupBySource(source: string, sourceLayer?: string) : LayerGroup | undefined {
+    return this._groupsBySource().get(this._toSourceKey(source, sourceLayer));
   }
 
-
   /** Non-mutable sorted insert */
-  private static withInserted<T>(list: T[], item: T, compare: (a: T, b: T) => number) : T[] {
+  private static _withInserted<T>(list: T[], item: T, compare: (a: T, b: T) => number) : T[] {
     const index = list.findIndex(l => compare(l, item) > 0);
     if (index === -1) {
       return [...list, item];
@@ -204,5 +183,78 @@ export class MapLayerService {
         ...list.slice(index)
       ]
     }
+  }
+
+
+
+
+
+  /** Set visibility of a layer and record original state in snapshot */
+  pushVisibilitySnapshot(snapshotName: string) {
+    return this.visStack.pushMap(snapshotName);
+  }
+
+  setVisibility(groupId: string, visible: boolean, snapshotName?: string) : boolean {
+    if (!snapshotName) {snapshotName = this.visDefault}
+
+    const changed = this.visStack.setIn(snapshotName, groupId, visible);
+    if (changed) this._syncVisibility(snapshotName);
+    return changed;
+  }
+  setVisibilityMany(visibility: LayerVisibilitySnapshot, snapshotName?: string) : boolean {
+    if (!snapshotName) {snapshotName = this.visDefault}
+
+    const changed = this.visStack.setMany(snapshotName, visibility);
+    if (changed) this._syncVisibility(snapshotName);
+    return changed;
+  }
+
+
+  /** Restore visibility of layers from snapshot */
+  popVisibilitySnapshot(name: string) : boolean {
+    const changed = !!this.visStack.popMap(name);
+    if (changed) this._syncVisibility(name);
+    return changed;
+  }
+
+
+  private _syncVisibility(changedSnapshot?: string) {
+    for (const group of this._groups()) {
+      const visible = this.visStack.get(group.id)
+      if (visible === undefined) continue;
+      this._setVisibility(group.id, visible);
+    }
+
+    if (changedSnapshot === this.visDefault) {
+      const visDefaultValue = this.visStack.getAllIn(this.visDefault)
+      this.localStorageService.set(MapLayerService.layerVisibilityKey, visDefaultValue, 1);
+    }
+  }
+
+  private _setVisibility(groupId: string, value : boolean): void {
+    let group = this.getGroup(groupId);
+    if (!group) return;
+    if (group.visible === value) return;
+    group = {
+      ...group,
+      visible: value
+    }
+
+    this._groups.update(groups => groups.map(g => g.id === groupId ? group : g))
+
+    this._layers.update(layers => layers.map(l => {
+      if (l.groupId !== groupId) return l;
+      return ({
+        ...l,
+        layout: this._layoutWithVisibility(l.layout, group.visible)
+      });
+    }));
+  }
+
+  private _layoutWithVisibility(layout: LayerSpecification['layout'], visible: boolean): LayerSpecification['layout'] {
+    return {
+      ...layout,
+      visibility: visible ? 'visible' : 'none'
+    };
   }
 }

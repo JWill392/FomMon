@@ -1,4 +1,4 @@
-import {LayerType} from './layer-type.model';
+import {LayerKind, LayerType} from './layer-type.model';
 import {computed, inject, Injectable, signal} from '@angular/core';
 import {tap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
@@ -37,5 +37,12 @@ export class LayerConfigService implements ServiceWithState {
         ),
         this._state.loadState
       )
+  }
+
+  getGroupId(kind : LayerKind) {
+    return kind as string;
+  }
+  getByGroupId(groupId : string) {
+    return this.byKind()[groupId];
   }
 }

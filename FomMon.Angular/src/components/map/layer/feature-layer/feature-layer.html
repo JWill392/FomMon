@@ -4,9 +4,8 @@
         [attribution]="layer().attribution"
         [promoteId]="layer().sourceIdColumn"
 >
-  @let groupId=layer().kind;
   <app-map-layer-group
-      [groupId]="groupId"
+      [groupId]="groupId()"
       category="feature"
       [name]="layer().name"
       [order]="5"
@@ -38,7 +37,7 @@
           }"
             [layout]="mapLayerService.getLayout(idFill)"
             appMapLayer
-            [groupId]="groupId"
+            [groupId]="groupId()"
 
     ></mgl-layer>
 
@@ -70,7 +69,7 @@
         }"
             [layout]="mapLayerService.getLayout(idOutline)"
             appMapLayer
-            [groupId]="groupId"
+            [groupId]="groupId()"
             [overrideInteractivity]="{select: false, hover: false}"
     ></mgl-layer>
   } @else if (layer().geometryType === 'LINESTRING') {
@@ -106,7 +105,7 @@
         }"
             [layout]="mapLayerService.getLayout(idLine)"
             appMapLayer
-            [groupId]="groupId"
+            [groupId]="groupId()"
     ></mgl-layer>
   }
 
