@@ -21,8 +21,8 @@ export class LayerConfigService implements ServiceWithState {
   private _data = signal<LayerType[]>([]);
   readonly data = this._data.asReadonly();
 
-  byKind = computed(() => Object.fromEntries(this.data()?.map(l => [l.kind, l])));
-  kinds = computed(() =>  this.data()?.map(l => l.kind));
+  private readonly byKind = computed(() => Object.fromEntries(this.data()?.map(l => [l.kind, l])));
+  readonly kinds = computed(() =>  this.data()?.map(l => l.kind));
 
   initialize$(): Observable<never> {
     let loadUrl = '/api/layer';
@@ -39,10 +39,15 @@ export class LayerConfigService implements ServiceWithState {
       )
   }
 
+  get(kind : LayerKind) : LayerType | undefined {
+    return this.byKind()[kind];
+  }
+
   getGroupId(kind : LayerKind) {
     return kind as string;
   }
   getByGroupId(groupId : string) {
-    return this.byKind()[groupId];
+    const kind = groupId as LayerKind; // mapping is 1-to-1 currently
+    return this.byKind()[kind];
   }
 }

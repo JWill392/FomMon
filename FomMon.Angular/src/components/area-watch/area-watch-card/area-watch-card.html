@@ -14,7 +14,7 @@
     <div class="layers">
       @if (layerService.state.isReady()) {
         @for (l of data()?.layers; track l) {
-          <li class="badge"><p>{{ layerService.byKind()[l].name }}</p></li>
+          <li class="badge"><p>{{ layerService.get(l)?.name }}</p></li>
         }
       }
     </div>

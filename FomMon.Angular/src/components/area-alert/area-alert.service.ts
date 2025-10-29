@@ -52,7 +52,7 @@ export class AreaAlertService implements ServiceWithState {
 
   getFeatureId(alert: AreaAlert) {
     const kind = alert.featureReference.layerKind;
-    const layer = this.layerConfigService.byKind()[kind];
+    const layer = this.layerConfigService.get(kind);
     return {
       source: kind,
       sourceLayer: layer.tileSource,

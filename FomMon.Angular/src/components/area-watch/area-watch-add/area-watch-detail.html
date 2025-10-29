@@ -12,7 +12,7 @@
     <mat-label>Layers</mat-label>
     <mat-chip-set id="layers">
       @for (layerKind of data()?.layers; track ""+layerKind) {
-        @let layer = layerService.byKind()[layerKind];
+        @let layer = layerService.get(layerKind);
         <mat-chip [value]="layerKind">
           <!--          TODO layer thumbnail; currently only on LayerGroup <img matChipAvatar [src]="layer.thumbnailImg" [alt]="layer.name" />-->
           {{layer?.name}}
