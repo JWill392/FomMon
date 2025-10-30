@@ -17,7 +17,7 @@ import {phosphorBinoculars, phosphorPencil, phosphorTrash} from "@ng-icons/phosp
 import {LocalState} from "../../shared/service/local-state";
 import {RoutePaths} from "../../../routes/app.routes";
 import {Location} from "@angular/common";
-import {MatError, MatFormField, MatLabel} from "@angular/material/select";
+import {MatError, MatFormField, MatHint, MatLabel} from "@angular/material/select";
 import {MatInput} from "@angular/material/input";
 import {MatChip, MatChipListbox, MatChipOption, MatChipSet} from "@angular/material/chips";
 import {MatButton, MatIconButton} from "@angular/material/button";
@@ -44,7 +44,8 @@ type Mode = 'none' | 'add' | 'view' | 'edit';
     MatActionList,
     MatListItem,
     MatError,
-    LoaderComponent
+    LoaderComponent,
+    MatHint
   ],
   templateUrl: './area-watch-detail.html',
   styleUrl: './area-watch-detail.scss',

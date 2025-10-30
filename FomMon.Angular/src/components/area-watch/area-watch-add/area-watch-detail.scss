@@ -1,8 +1,8 @@
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.view-container {
+  display: block;
+  padding: 0 5px;
 }
+
 
 .name-container {
   display: flex;
@@ -12,14 +12,6 @@ form {
   padding: 5px;
 }
 
-
-
-.action-item-container {
-  flex: 0 0 auto;
-  flex-direction: column;
-  display: flex;
-  gap: 5px;
-}
 
 .action-item {
   display: flex;
@@ -34,24 +26,26 @@ form {
   display: block;
   font-size: 26px;
 }
-.action-item-icon:hover {
-  color: #000;
+
+
+
+form {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 5px;
 }
-
-
 
 .button-container {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  padding: 10px;
+  padding: 0 10px;
 }
 
 
 .chip-form-field {
   display: flex;
   flex-direction: column;
-  margin-bottom: 16px;
   padding: 16px 0 4px 0;
 }
 
@@ -63,16 +57,7 @@ form {
   display: block;
 }
 
-.chip-form-field-invalid .chip-form-field-label {
-  color: var(--mat-error-color, #f44336);
-}
 
 .chip-form-field mat-chip-listbox {
   margin-bottom: 4px;
-}
-
-.chip-form-field-error {
-  color: var(--mat-error-color, #f44336);
-  font-size: 12px;
-  margin-top: 4px;
 }

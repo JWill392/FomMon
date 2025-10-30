@@ -1,33 +1,36 @@
 <app-loader [dependentStates]="[this.layerService.state, this.areaWatchService.state]">
 @if (mode() === 'view') {
+  <div class="view-container">
+    <div class="name-container">
+      <h2>{{ data()?.name }}</h2>
+      <button matIconButton class="action-item" [disabled]="this.localState() !== 'added'" (click)="navigateEdit($event)">
+        <ng-icon class="action-item-icon" name="phosphorPencil" />
+      </button>
+    </div>
 
-  <div class="name-container">
-    <h3>{{ data()?.name }}</h3>
-    <button matIconButton class="action-item" [disabled]="this.localState() !== 'added'" (click)="navigateEdit($event)">
-      <ng-icon class="action-item-icon" name="phosphorPencil" />
-    </button>
+    <div class="layers-container">
+      <mat-label>Layers</mat-label>
+      <mat-chip-set id="layers">
+        @for (layerKind of data()?.layers; track ""+layerKind) {
+          @let layer = layerService.get(layerKind);
+          <mat-chip [value]="layerKind">
+            <!--          TODO layer thumbnail; currently only on LayerGroup <img matChipAvatar [src]="layer.thumbnailImg" [alt]="layer.name" />-->
+            {{layer?.name}}
+          </mat-chip>
+        }
+      </mat-chip-set>
+    </div>
+
+    <div class="action-container">
+      <mat-action-list role="list" aria-label="Actions">
+        <mat-label>Actions</mat-label>
+        <button mat-list-item class="action-item" [disabled]="this.localState() !== 'added'"  (click)="navigateDelete($event)">
+          <ng-icon matListItemIcon class="action-item-icon" name="phosphorTrash" />
+          <p>Delete</p>
+        </button>
+      </mat-action-list>
+    </div>
   </div>
-
-  <div class="layers-container">
-    <mat-label>Layers</mat-label>
-    <mat-chip-set id="layers">
-      @for (layerKind of data()?.layers; track ""+layerKind) {
-        @let layer = layerService.get(layerKind);
-        <mat-chip [value]="layerKind">
-          <!--          TODO layer thumbnail; currently only on LayerGroup <img matChipAvatar [src]="layer.thumbnailImg" [alt]="layer.name" />-->
-          {{layer?.name}}
-        </mat-chip>
-      }
-    </mat-chip-set>
-  </div>
-
-  <mat-action-list role="list" aria-label="Actions">
-    <button mat-list-item class="action-item" [disabled]="this.localState() !== 'added'"  (click)="navigateDelete($event)">
-      <ng-icon matListItemIcon class="action-item-icon" name="phosphorTrash" />
-      <p>Delete</p>
-    </button>
-  </mat-action-list>
-
 
 
 } @else if (mode() === 'edit' || mode() === 'add') {
@@ -38,6 +41,7 @@
             autocomplete="off" data-lpignore="true" data-form-type="other"
            placeholder="Name"
     >
+    <mat-label>Name</mat-label>
     @if (form.controls.name.hasError('required')) {
       <mat-error>Name is required</mat-error>
     }
@@ -56,11 +60,9 @@
       }
     </mat-chip-listbox>
     @if (form.controls.layers.invalid && form.controls.layers.touched) {
-      <div class="chip-form-field-error">
         @if (form.controls.layers.hasError('required')) {
-          At least one layer is required
+          <mat-error>At least one layer is required</mat-error>
         }
-      </div>
     }
   </div>
   <div class="error-container">

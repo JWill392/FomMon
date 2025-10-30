@@ -13,10 +13,11 @@ export class MapRoutingService {
   constructor() {
     let lastSelection: MapSelection | null = null;
     effect(() => {
-      const selection = this.mapStateService.selected();
+      const selection = this.mapStateService.selected(); // TODO wrong; should still route if deselect and reselect same feature.  key is not if already open.
       const changed = !fidEquals(lastSelection?.featureId, selection?.featureId);
       if (!selection || !changed) return;
 
+      // TODO close detail panel if opened by map router, and if not edit mode
       this.handleSelection(selection);
       lastSelection = selection;
     })
