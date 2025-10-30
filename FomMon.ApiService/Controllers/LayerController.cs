@@ -1,5 +1,5 @@
 using FomMon.ApiService.Contracts;
-using FomMon.Data.Configuration.Layer;
+using FomMon.Common.Configuration.Layer;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

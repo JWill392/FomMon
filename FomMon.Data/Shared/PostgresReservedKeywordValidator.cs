@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace FomMon.Data.Infrastructure;
+namespace FomMon.Data.Shared;
 
 public class PostgresReservedKeywordValidator
 {

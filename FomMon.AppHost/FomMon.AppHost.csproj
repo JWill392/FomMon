@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FomMon.ApiService\FomMon.ApiService.csproj" />
-    <ProjectReference Include="..\FomMon.Data\FomMon.Data.csproj" IsAspireProjectResource="false" />
+      <ProjectReference Include="..\FomMon.Data\FomMon.Data.csproj" IsAspireProjectResource="false" />
     <ProjectReference Include="..\FomMon.MigrationService\FomMon.MigrationService.csproj" />
       <ProjectReference Include="..\MapLibre.Martin.Hosting\MapLibre.Martin.Hosting.csproj" IsAspireProjectResource="false" />
       <ProjectReference Include="..\MinIO.MinIO.Hosting\MinIO.MinIO.Hosting.csproj" IsAspireProjectResource="false" />

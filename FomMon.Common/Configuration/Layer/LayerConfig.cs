@@ -1,6 +1,6 @@
-using FomMon.Data.Shared;
+using FomMon.Common.Shared;
 
-namespace FomMon.Data.Configuration.Layer;
+namespace FomMon.Common.Configuration.Layer;
 
 public record LayerConfig(
     LayerKind Kind,

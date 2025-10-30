@@ -1,7 +1,7 @@
-﻿using Aspire.Hosting.ApplicationModel;
-using MapLibre.Martin.Hosting;
+﻿using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 
-namespace Aspire.Hosting;
+namespace MapLibre.Martin.Hosting;
 
 internal static class MartinContainerImageTags
 {

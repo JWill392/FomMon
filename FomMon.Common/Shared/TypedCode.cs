@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace FomMon.Data.Shared;
+namespace FomMon.Common.Shared;
 
 /// <summary>
 /// Statically typed code value.  Behaves like a string, but with type safety.

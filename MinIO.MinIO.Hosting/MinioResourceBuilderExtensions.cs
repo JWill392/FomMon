@@ -28,6 +28,7 @@ public static class MinioResourceBuilderExtensions
             .WithEnvironment("MINIO_ROOT_PASSWORD", minioResource.RootPassword)
             .WithVolume("minio", "/data", isReadOnly:false)
             .WithArgs("server", "/data");
+        
     }
     
     internal static class MinioContainerImageTags

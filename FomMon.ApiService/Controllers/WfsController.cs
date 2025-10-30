@@ -1,6 +1,5 @@
 using FomMon.ApiService.Jobs;
-using FomMon.ApiService.Services;
-using FomMon.Data.Configuration.Layer;
+using FomMon.Common.Configuration.Layer;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FomMon.ApiService.Controllers;

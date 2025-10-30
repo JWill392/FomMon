@@ -3,8 +3,7 @@ using FomMon.Data.Contexts;
 using FomMon.Data.Models;
 using FomMon.ServiceDefaults;
 using FomMon.ApiService.Shared;
-using FomMon.Data.Configuration.Layer;
-using MapsterMapper;
+using FomMon.Common.Configuration.Layer;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
 using Npgsql;
@@ -23,8 +22,7 @@ public interface IFeatureService
 
 public sealed class FeatureService(
     AppDbContext db, 
-    IClockService clock, 
-    IMapper mapper) : IFeatureService
+    IClockService clock) : IFeatureService
 {
     private record FeatureSourceRecord(
         string SourceFeatureId, 

@@ -1,5 +1,4 @@
-﻿using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
+﻿using Aspire.Hosting.ApplicationModel;
 
 namespace MinIO.MinIO.Hosting;
 

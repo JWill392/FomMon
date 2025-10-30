@@ -1,6 +1,7 @@
 // Note: open browser from dashboard link in terminal output (includes login token)
 using FomMon.AppHost.Extensions;
-using FomMon.Data.Configuration.Layer;
+using FomMon.Common.Configuration.Layer;
+using MapLibre.Martin.Hosting;
 using Microsoft.Extensions.Hosting;
 using MinIO.MinIO.Hosting;
 
@@ -33,11 +34,27 @@ var minio = builder.AddMinio("minio", minioUser, minioPwd)
     .WithLifetime(ContainerLifetime.Persistent);
 
 
+var cache = builder.AddRedis("cache")
+    .WithRedisInsight(c =>
+    {
+        c.WithHostPort(46235);
+        c.WithEnvironment("RI_ACCEPT_TERMS_AND_CONDITIONS", "true");
+    })
+    .WithDataVolume(isReadOnly: false)
+    .WithPersistence(
+        interval: TimeSpan.FromMinutes(5),
+        keysChangedThreshold: 100
+    )
+    .WithLifetime(ContainerLifetime.Persistent); 
+
+
 var migrations = builder.AddProject<Projects.FomMon_MigrationService>("migrations")
     .WithReference(applicationDb)
     .WaitFor(applicationDb)
     .WithReference(minio)
     .WaitFor(minio)
+    .WithReference(cache)
+    .WaitFor(cache)
     .WithParentRelationship(applicationDb);
 
 var tileserver = builder.AddMapLibreMartin("tileserver", 
@@ -65,18 +82,6 @@ var keycloak = builder.AddKeycloak("keycloak", 8080)
     .WithRealmImport("./realm-export.json")
     .WithLifetime(ContainerLifetime.Persistent);
 
-var cache = builder.AddRedis("cache")
-    .WithRedisInsight(c =>
-    {
-        c.WithHostPort(46235);
-        c.WithEnvironment("RI_ACCEPT_TERMS_AND_CONDITIONS", "true");
-    })
-    .WithDataVolume(isReadOnly: false)
-    .WithPersistence(
-        interval: TimeSpan.FromMinutes(5),
-        keysChangedThreshold: 100
-        )
-    .WithLifetime(ContainerLifetime.Persistent); 
 
 // hangfire dashboard: http://localhost:5389/hangfire
 var apiService = builder.AddProject<Projects.FomMon_ApiService>("apiservice")

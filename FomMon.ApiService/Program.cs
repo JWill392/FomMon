@@ -1,16 +1,15 @@
-using FomMon.ApiService;
 using FomMon.ApiService.FomApi;
 using FomMon.ApiService.Infrastructure;
 using FomMon.ApiService.Jobs;
 using FomMon.ApiService.Jobs.FomDownload;
 using FomMon.ApiService.Services;
 using FomMon.ApiService.Shared;
-using FomMon.Data.Configuration;
+using FomMon.Common.Configuration;
+using FomMon.Common.Configuration.Minio;
+using FomMon.Common.Infrastructure;
 using FomMon.Data.Contexts;
 using FomMon.ServiceDefaults;
 using Hangfire;
-using Hangfire.Redis.StackExchange;
-using Minio;
 using Extensions = FomMon.ServiceDefaults.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,21 +41,10 @@ builder.Services.AddAuthentication()
 
 
 // Database
-builder.Services.AddAppDbContext(builder.Configuration, builder.Environment.IsDevelopment());
-
-// Redis
-builder.AddRedisClient(connectionName: "cache");
+builder.AddAppDbContext();
 
 // Object storage
-builder.Services.AddMinio(c =>
-{
-    var config = ObjectStorageConfiguration.ParseMinioConnectionString(
-        builder.Configuration.GetConnectionString("minio") 
-        ?? throw new ArgumentException("Missing minio connection string"));
-    c.WithEndpoint(config.endpoint);
-    c.WithCredentials(config.username, config.password);
-    if (builder.Environment.IsDevelopment()) c.WithSSL(false);
-});
+builder.AddMinio("minio");
 builder.Services.AddMinioObjectStorageService();
 builder.Services.AddScoped<IEntityObjectStorageService, VersionedEntityObjectStorageService>();
 
@@ -65,18 +53,9 @@ builder.Services.AddHttpClient<FomApiClient>(c => c.BaseAddress = new Uri("https
 
 
 // Hangfire 
-builder.Services.AddHangfire(c => c
-        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-        .UseSimpleAssemblyNameTypeSerializer()
-        .UseRecommendedSerializerSettings()
-        .UseRedisStorage(builder.Configuration.GetConnectionString("cache"), 
-            new RedisStorageOptions()
-            {
-                Prefix = "{fommon.apiservice.hangfire}:",
-            })
-        .WithJobExpirationTimeout(TimeSpan.FromDays(7))
-    );
-builder.Services.AddHangfireServer();
+builder.AddHangfireRedis("cache", "{fommon.hangfire}:");
+
+
 
 // Background jobs
 builder.Services.AddFomDownloadJob();
@@ -93,7 +72,7 @@ builder.Services.AddScoped<IFeatureService, FeatureService>();
 builder.Services.AddControllers(o =>
     {
         o.Filters.Add<UserMapperFilter>(); // map keycloak user to app user
-        o.Filters.Add<RequireUserIdFilter>(); // double check user id successfully mapped to app user
+        o.Filters.Add<RequireUserIdFilter>(); // confirm user id successfully mapped to app user
     })
     .AddJsonOptions(o => Extensions.SetJsonSerializerOptions(o.JsonSerializerOptions)); // for controllers. ConfigureHttpJsonOptions doesn't work
     

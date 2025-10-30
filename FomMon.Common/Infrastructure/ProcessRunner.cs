@@ -1,9 +1,11 @@
+using System.Diagnostics;
 using CliWrap;
 using CliWrap.Buffered;
-using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OpenTelemetry.Trace;
 
-namespace FomMon.ApiService.Infrastructure;
+namespace FomMon.Common.Infrastructure;
 
 public interface IProcessRunner
 {

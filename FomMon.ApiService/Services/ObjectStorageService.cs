@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using FluentResults;
+using FomMon.Common.Configuration.Minio;
 using Minio;
 using Minio.DataModel.Args;
 using OpenTelemetry.Trace;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Metadata;
 
 namespace FomMon.ApiService.Services;
 
@@ -40,7 +40,7 @@ public class MinioObjectStorageService(
 {
     private const int MaxSizeMb = 5;
     
-    private const string BucketName = Data.Configuration.ObjectStorageConfiguration.ImageBucket;
+    private const string BucketName = MinioConfiguration.ImageBucket;
 
     public const string ActivitySourceName = "FomMon.ProfileImageService";
     private static readonly ActivitySource ActivitySource = new(ActivitySourceName);

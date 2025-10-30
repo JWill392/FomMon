@@ -1,7 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
-using FomMon.Data.Configuration.Layer;
-using NetTopologySuite.Geometries;
+using FomMon.Common.Configuration.Layer;
 using NodaTime;
 
 namespace FomMon.ApiService.Contracts;

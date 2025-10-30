@@ -1,6 +1,6 @@
-namespace FomMon.Data.Shared;
+namespace FomMon.Common.Shared;
 
-public class SqlUtil
+public static class SqlUtil
 {
     
     public static string ValidateSqlIdentifier(string identifier)

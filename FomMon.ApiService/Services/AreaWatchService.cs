@@ -1,13 +1,12 @@
 ﻿using FluentResults;
 using FomMon.ApiService.Contracts;
-using FomMon.ApiService.Services;
 using FomMon.Data.Contexts;
 using FomMon.Data.Models;
 using FomMon.ServiceDefaults;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 
-namespace FomMon.ApiService;
+namespace FomMon.ApiService.Services;
 
 public interface IAreaWatchService
 {

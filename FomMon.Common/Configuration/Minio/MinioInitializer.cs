@@ -1,18 +1,24 @@
-using FomMon.Data.Configuration;
 using Microsoft.Extensions.Logging;
 using Minio;
 using Minio.DataModel.Args;
 using Minio.DataModel.ILM;
 
-namespace FomMon.MigrationService;
+namespace FomMon.Common.Configuration.Minio;
 
-public class MinioInitializer(IMinioClient minioClient, ILogger<MinioInitializer> logger)
+
+public class MinioInitializer(
+    IMinioClient minioClient, 
+    ILogger<MinioInitializer> logger)
 {
-    public async Task EnsureBucketsExistAsync(CancellationToken c = default)
+    public async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await EnsureBucketExistsAsync(ObjectStorageConfiguration.ImageBucket, c);
-        await ConfigureBucketVersioningAsync(ObjectStorageConfiguration.ImageBucket, c);
-        await ConfigureBucketLifecycleAsync(ObjectStorageConfiguration.ImageBucket, c);
+        await EnsureBucketsExistAsync(stoppingToken);
+    }
+    private async Task EnsureBucketsExistAsync(CancellationToken c = default)
+    {
+        await EnsureBucketExistsAsync(MinioConfiguration.ImageBucket, c);
+        await ConfigureBucketVersioningAsync(MinioConfiguration.ImageBucket, c);
+        await ConfigureBucketLifecycleAsync(MinioConfiguration.ImageBucket, c);
     }
 
     private async Task EnsureBucketExistsAsync(string bucketName, CancellationToken c)
@@ -85,4 +91,5 @@ public class MinioInitializer(IMinioClient minioClient, ILogger<MinioInitializer
             throw;
         }
     }
+
 }

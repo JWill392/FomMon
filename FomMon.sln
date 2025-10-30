@@ -18,6 +18,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapLibre.Martin.Hosting", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinIO.MinIO.Hosting", "MinIO.MinIO.Hosting\MinIO.MinIO.Hosting.csproj", "{B4BB5DA3-2752-4436-B46F-8826E33110FF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FomMon.Common", "FomMon.Common\FomMon.Common.csproj", "{434EE5F2-B248-4EDB-BB56-9A026D623415}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,10 @@ Global
 		{B4BB5DA3-2752-4436-B46F-8826E33110FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B4BB5DA3-2752-4436-B46F-8826E33110FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B4BB5DA3-2752-4436-B46F-8826E33110FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{434EE5F2-B248-4EDB-BB56-9A026D623415}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{434EE5F2-B248-4EDB-BB56-9A026D623415}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{434EE5F2-B248-4EDB-BB56-9A026D623415}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{434EE5F2-B248-4EDB-BB56-9A026D623415}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

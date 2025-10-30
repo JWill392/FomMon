@@ -8,6 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.StackExchange.Redis" Version="9.5.2" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.21" />
+    <PackageReference Include="Hangfire.Redis.StackExchange" Version="1.12.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.9">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -31,5 +34,11 @@
   <ItemGroup>
     <ProjectReference Include="..\FomMon.Data\FomMon.Data.csproj" />
     <ProjectReference Include="..\FomMon.ServiceDefaults\FomMon.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Hangfire.Core">
+      <HintPath>..\..\..\..\.nuget\packages\hangfire.core\1.8.21\lib\netstandard2.0\Hangfire.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

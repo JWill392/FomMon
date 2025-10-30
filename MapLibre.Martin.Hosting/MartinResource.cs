@@ -1,7 +1,8 @@
 ﻿
-using MapLibre.Martin.Hosting;
+using Aspire.Hosting;
+using Aspire.Hosting.ApplicationModel;
 
-namespace Aspire.Hosting.ApplicationModel;
+namespace MapLibre.Martin.Hosting;
 
 public sealed class MartinResource(string name) : ContainerResource(name), IResourceWithServiceDiscovery
 {

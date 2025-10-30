@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
-using FomMon.Data.Shared;
+using FomMon.Common.Shared;
 
-namespace FomMon.Data.Configuration.Layer;
+namespace FomMon.Common.Configuration.Layer;
 
 /// <summary>
 /// Code value for kind of layer. Provides some type-safety for this 'runtime enum'.

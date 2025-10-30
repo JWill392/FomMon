@@ -1,4 +1,4 @@
-using FomMon.Data.Configuration.Layer;
+using FomMon.Common.Configuration.Layer;
 
 namespace FomMon.ApiService.Contracts;
 

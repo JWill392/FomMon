@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using FomMon.Data.Configuration.Layer;
+using FomMon.Common.Configuration.Layer;
 using NodaTime;
 
 namespace FomMon.Data.Models;

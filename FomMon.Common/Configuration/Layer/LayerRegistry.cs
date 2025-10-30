@@ -1,8 +1,7 @@
 using System.Collections.Immutable;
-using FomMon.Data.Shared;
-using NetTopologySuite.IO;
+using FomMon.Common.Shared;
 
-namespace FomMon.Data.Configuration.Layer;
+namespace FomMon.Common.Configuration.Layer;
 
 /// <summary>
 /// Configuration for layers.

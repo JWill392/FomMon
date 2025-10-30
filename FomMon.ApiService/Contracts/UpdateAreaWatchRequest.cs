@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using FomMon.Data.Configuration.Layer;
+using FomMon.Common.Configuration.Layer;
 using FomMon.Data.Models;
 using Mapster;
 using NetTopologySuite.Geometries;

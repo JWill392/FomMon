@@ -2,22 +2,32 @@ using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using FomMon.Data.Contexts;
 using FomMon.MigrationService.Seeding;
-using Minio.DataModel.Args;
 
 namespace FomMon.MigrationService;
 
+public static class MigrationWorkerExtensions
+{
+    public static IHostApplicationBuilder AddMigrationWorker(this IHostApplicationBuilder builder)
+    {
+        builder.Services.AddSingleton<MigrationWorker>();
+        builder.Services.AddOpenTelemetry()
+            .WithTracing(tracing => tracing.AddSource(MigrationWorker.ActivitySourceName));
+        
+        return builder;
+    }
+}
+
 public class MigrationWorker(
     IServiceProvider serviceProvider,
-    MinioInitializer minioInitializer,
-    IHostApplicationLifetime hostApplicationLifetime,
-    ILogger<MigrationWorker> logger) : BackgroundService
+    ILogger<MigrationWorker> logger)
 {
     public const string ActivitySourceName = "Migrations";
     private static readonly ActivitySource ActivitySource = new(ActivitySourceName);
-
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    
+    
+    public async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        using var activity = ActivitySource.StartActivity("Migrating database", ActivityKind.Client);
+        using var activity = ActivitySource.StartActivity();
 
         try
         {
@@ -34,10 +44,10 @@ public class MigrationWorker(
             using (var scope = serviceProvider.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                
+
                 await EnsureDevSeededAsync(db, cancellationToken);
             }
-            
+
         }
         catch (Exception ex)
         {
@@ -46,9 +56,6 @@ public class MigrationWorker(
             throw;
         }
         
-        await minioInitializer.EnsureBucketsExistAsync(cancellationToken);
-
-        hostApplicationLifetime.StopApplication();
     }
 
     private static async Task RunMigrationAsync(AppDbContext db, CancellationToken c)

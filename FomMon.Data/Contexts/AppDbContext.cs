@@ -1,12 +1,13 @@
-﻿using FomMon.Data.Models;
+﻿using FomMon.Common.Configuration.Layer;
+using FomMon.Data.Models;
+using FomMon.Data.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
-using FomMon.Data.Configuration.Layer;
-using FomMon.Data.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace FomMon.Data.Contexts
 {
@@ -137,23 +138,23 @@ namespace FomMon.Data.Contexts
     
     public static class DataServiceCollectionExtensions
     {
-        public static IServiceCollection AddAppDbContext(
-            this IServiceCollection services,
-            IConfiguration configuration,
-            bool isDevelopment)
+        public static IHostApplicationBuilder AddAppDbContext(
+            this IHostApplicationBuilder builder)
         {
             // Try standard and env-var (Aspire) forms before failing.
             string? connectionString =
-                configuration.GetConnectionString(AppDbContext.DbName) ??
-                configuration.GetSection("ConnectionStrings").GetValue<string>(AppDbContext.DbName) ??
+                builder.Configuration.GetConnectionString(AppDbContext.DbName) ??
+                builder.Configuration.GetSection("ConnectionStrings").GetValue<string>(AppDbContext.DbName) ??
                 throw new InvalidOperationException($"Connection string not found {AppDbContext.DbName}"); // development design-time override
             
-            if (isDevelopment) connectionString = $"{connectionString};Include Error Detail=true";
+            if (builder.Environment.IsDevelopment()) connectionString = $"{connectionString};Include Error Detail=true";
 
-            return services.AddNpgsql<AppDbContext>(
+            builder.Services.AddNpgsql<AppDbContext>(
                 connectionString,
                 AppDbContext.SetNpgsqlOptions,
-                o => AppDbContext.SetDbContextOptions(o, isDevelopment));
+                o => AppDbContext.SetDbContextOptions(o, builder.Environment.IsDevelopment()));
+
+            return builder;
         }
     }
 }

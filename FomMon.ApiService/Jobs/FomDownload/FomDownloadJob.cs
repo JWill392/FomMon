@@ -52,8 +52,8 @@ public sealed class FomDownloadJob(
     public const string ActivitySourceName = "FomMon.FomDownloader";
     private static readonly ActivitySource ActivitySource = new(ActivitySourceName);
 
-    public const string GetProjectsJobName = nameof(FomDownloadJob.GetProjects);
-    public const string GetPublicNoticesJobName = nameof(FomDownloadJob.GetPublicNotices);
+    public const string GetProjectsJobName = nameof(GetProjects);
+    public const string GetPublicNoticesJobName = nameof(GetPublicNotices);
 
 
     public async Task GetProjects(CancellationToken c)
