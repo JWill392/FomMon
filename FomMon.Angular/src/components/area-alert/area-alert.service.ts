@@ -1,4 +1,4 @@
-import {effect, inject, Injectable, signal} from "@angular/core";
+import {computed, effect, inject, Injectable, signal} from "@angular/core";
 import {AreaAlert} from "./area-alert.model";
 import {Observable} from "rxjs";
 import {ServiceWithState} from "../shared/service/service-state";
@@ -16,11 +16,11 @@ export class AreaAlertService implements ServiceWithState {
   private userService = inject(UserService);
   private layerConfigService = inject(LayerConfigService);
 
-  private _state = new ServiceLoadState();
+  private _state = new ServiceLoadState([this.layerConfigService.state]);
   readonly state = this._state.asReadonly();
 
   private _data = signal<AreaAlert[]>([]);
-  readonly data = this._data.asReadonly();
+  readonly data = computed(() => this.state.isReady() ? this._data() : [])
 
   constructor() {
     effect(() => {
