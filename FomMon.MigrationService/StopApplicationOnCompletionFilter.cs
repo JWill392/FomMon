@@ -20,7 +20,7 @@ public class StopApplicationOnCompletionFilter(IHostApplicationLifetime lifetime
     public void OnCreated(CreatedContext context)
     {
         Interlocked.Increment(ref _runningJobs);
-        LogJobState(LogLevel.Information, context.BackgroundJob, "created");
+        LogJobState(LogLevel.Debug, context.BackgroundJob, "created");
     }
     
     public void OnStateApplied(ApplyStateContext context, IWriteOnlyTransaction transaction)
@@ -29,7 +29,7 @@ public class StopApplicationOnCompletionFilter(IHostApplicationLifetime lifetime
         {
             case SucceededState state:
                 var jobCount = Interlocked.Decrement(ref _runningJobs);
-                LogJobState(LogLevel.Information, context.BackgroundJob, "succeeded");
+                LogJobState(LogLevel.Debug, context.BackgroundJob, "succeeded");
             
                 if (jobCount == 0)
                 {
@@ -45,7 +45,7 @@ public class StopApplicationOnCompletionFilter(IHostApplicationLifetime lifetime
             
             case EnqueuedState state when context.OldStateName == DeletedState.StateName:
                 Interlocked.Increment(ref _runningJobs);
-                LogJobState(LogLevel.Information, context.BackgroundJob, "requeued");
+                LogJobState(LogLevel.Debug, context.BackgroundJob, "requeued");
                 
                 break;
         }

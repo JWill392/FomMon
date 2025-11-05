@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using FluentResults;
 using FomMon.Common.Configuration.Layer;
 using FomMon.Common.Infrastructure;
 using FomMon.Common.Shared;
@@ -90,16 +91,14 @@ public class GdalWfsDownloadJob(
     IProcessRunner processRunner,
     IConfiguration configuration,
     ILogger<GdalWfsDownloadJob> logger,
+    IDatabaseConfiguration dbConfig,
     IOptions<WfsDownloadJobSettings> options) : IWfsDownloadJob
 {
-    public const string ActivitySourceName = "FomMon.WfsDownloader";
+    public const string ActivitySourceName = nameof(GdalWfsDownloadJob);
     
     private static readonly ActivitySource ActivitySource = new(ActivitySourceName);
     private readonly WfsDownloadJobSettings _settings = options.Value;
     
-    private readonly string _pgConnectionString = 
-        configuration.GetConnectionString("application") ??
-        throw new Exception("Connection string not found");
 
     
     public async Task DownloadToDbAsync(
@@ -202,19 +201,18 @@ public class GdalWfsDownloadJob(
     private async Task<long> RunOgr2Ogr(int? limit, LayerConfig layerCfg, LayerType layer,
         CancellationToken c)
     {
-        // Build PostgreSQL connection string for ogr2ogr
-        var builder = new NpgsqlConnectionStringBuilder(_pgConnectionString);
-        var pgString = $"PG:host={builder.Host} port={builder.Port} dbname={builder.Database} " +
-                       $"user={builder.Username} password={builder.Password} " +
+        // change to environmental variables
+        var pgString = $"PG:host={dbConfig.Host} port={dbConfig.Port} dbname={dbConfig.Database} " +
+                       $"user={dbConfig.Username} password={dbConfig.Password} " +
                        $"active_schema={LayerRegistry.Schema}";
-
             
         // Build ogr2ogr arguments
         var args = new List<string>
         {
-            "--config", "OGR_WFS_PAGE_SIZE", _settings.OgrWfsPageSize.ToString(), // TODO configure
+            "--config", "OGR_WFS_PAGE_SIZE", _settings.OgrWfsPageSize.ToString(),
             "--config", "OGR_WFS_PAGING_ALLOWED", _settings.OgrWfsPagingAllowed ? "ON" : "OFF",
-            "-f", "PostgreSQL",
+            "-f",
+            "PostgreSQL",
             pgString,
             $"WFS:{layerCfg.WfsUrl}",
             layerCfg.WfsLayer!, // layer name
@@ -238,33 +236,13 @@ public class GdalWfsDownloadJob(
         {
             timeoutCts.CancelAfter(TimeSpan.FromSeconds(_settings.TimeoutSeconds));
 
-            ProcessResult result;
-            try
+            Result<ProcessResult> result = await processRunner.RunAsync(_settings.Ogr2OgrPath, args, timeoutCts.Token);
+            if (result.IsFailed)
             {
-                result = await processRunner.RunAsync(_settings.Ogr2OgrPath, args, timeoutCts.Token);
-
-            }
-            catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested && !c.IsCancellationRequested)
-            {
-                var ex = new TimeoutException(
-                    $"ogr2ogr operation timed out after {_settings.TimeoutSeconds} seconds");
-                Activity.Current?.SetStatus(ActivityStatusCode.Error, "Timeout");
-                Activity.Current?.AddException(ex);
-                throw ex;
-            }
-            catch (Exception ex)
-            {
-                Activity.Current?.SetStatus(ActivityStatusCode.Error, ex.Message);
-                Activity.Current?.AddException(ex);
-                throw;
+                Activity.Current?.SetStatus(ActivityStatusCode.Error, result.Errors.First().Message);
+                throw new Exception(result.Errors.First().Message);
             }
             
-            if (result.ExitCode != 0)
-            {
-                Activity.Current?.SetStatus(ActivityStatusCode.Error, $"Exit code: {result.ExitCode}");
-                throw new Exception(
-                    $"ogr2ogr failed with exit code {result.ExitCode}. Error: {result.Error}");
-            }
         }
             
             

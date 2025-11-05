@@ -96,7 +96,11 @@ export class MapLayerService {
     return true;
   }
 
-  private removeGroup(id: string): void {
+  removeGroup(id: string): void {
+    this._removeGroup(id);
+    this._layers.update(layers => layers.filter(l => l.groupId !== id));
+  }
+  private _removeGroup(id: string): void {
     this._groups.update(groups => groups.filter(g => g.id !== id));
   }
 
@@ -138,7 +142,7 @@ export class MapLayerService {
     const group = this.getLayer(id)?.groupId;
     this._layers.update(layers => layers.filter(l => l.id !== id));
     if (!this._layers().some(l => l.groupId === group)) {
-      this.removeGroup(group);
+      this._removeGroup(group);
     }
   }
   selectBaseLayer(groupId: string): void {

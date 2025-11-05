@@ -1,19 +1,14 @@
-import {
-  Component,
-  computed, effect,
-  inject,
-  input, output,
-  signal
-} from '@angular/core';
-import {GeoJSONSourceComponent, LayerComponent, MapComponent, RasterSourceComponent} from "@maplibre/ngx-maplibre-gl";
+import {Component, computed, effect, HostBinding, inject, input, output, signal} from '@angular/core';
+import {GeoJSONSourceComponent, LayerComponent, MapComponent} from "@maplibre/ngx-maplibre-gl";
 import {Map as MapLibreMap} from "maplibre-gl";
 import {Geometry} from "geojson";
 import {boundingBox} from "../map-util";
-import {toPng} from 'html-to-image';
+import {toPng as htmlToPng} from 'html-to-image';
 import {ErrorService} from "../../shared/error.service";
 import {v4 as uuidv4} from 'uuid';
 import {booleanEqual as turfBooleanEqual} from '@turf/boolean-equal'
 import {LoaderComponent, LoaderPlaceholderComponent} from "../../shared/loader/loader.component";
+import {MapDisplayService} from "../map-display.service";
 
 type State = 'idle' | 'image-input' | 'map-loading' | 'map-ready' | 'map-saved-image' | 'error';
 
@@ -29,7 +24,6 @@ type State = 'idle' | 'image-input' | 'map-loading' | 'map-ready' | 'map-saved-i
     MapComponent,
     GeoJSONSourceComponent,
     LayerComponent,
-    RasterSourceComponent,
     LoaderComponent,
     LoaderPlaceholderComponent,
   ],
@@ -40,6 +34,7 @@ type State = 'idle' | 'image-input' | 'map-loading' | 'map-ready' | 'map-saved-i
 })
 export class ThumbnailMap {
   private readonly errorService = inject(ErrorService);
+  protected readonly mapDisplayService = inject(MapDisplayService);
 
   geometry = input.required<Geometry>();
   fillColor = input.required<string>();
@@ -56,7 +51,6 @@ export class ThumbnailMap {
   protected readonly bbox = computed(() => this.geometry() ? boundingBox(this.geometry()) : undefined)
 
   protected readonly sourceId = computed(() => `thumbnail-map-${this.instanceId}`);
-  protected readonly layerIdBase = computed(() => `thumbnail-map-base-${this.instanceId}`)
   protected readonly layerIdFill = computed(() => `thumbnail-map-fill-${this.instanceId}`);
   protected readonly imageId = computed(() => `thumbnail-map-image-${this.instanceId}`);
 
@@ -67,6 +61,78 @@ export class ThumbnailMap {
   protected readonly lastImgSrc = signal<string | undefined>(undefined);
 
   protected readonly instanceId = uuidv4();
+
+  private _scaleFactor = 2;
+  @HostBinding('style.--thumbnail-scale-factor')
+  get cssScaleFactor() {return this._scaleFactor;}
+
+  /** Simplified style for thumbnails - shows labels at all zoom levels */
+  protected thumbnailStyle = computed(() => {
+    const spec = structuredClone(this.mapDisplayService.style()); // Deep clone the main style
+    // Remove or minimize zoom-dependent visibility for important layers
+    spec.layers.forEach(layer => {
+      // Force labels to be visible
+      if (layer.id?.includes('label-') || layer.type === 'symbol') {
+        // Remove minzoom restrictions
+        delete layer.minzoom;
+
+        // Override opacity to always be visible
+        if (layer.paint) {
+          if ('text-opacity' in layer.paint) {
+            layer.paint['text-opacity'] = 1;
+          }
+          if ('icon-opacity' in layer.paint) {
+            layer.paint['icon-opacity'] = 0.8;
+          }
+          if ('fill-opacity' in layer.paint) {
+            layer.paint['fill-opacity'] = 1;
+          }
+          if ('line-opacity' in layer.paint) {
+            layer.paint['line-opacity'] = 1;
+          }
+        }
+      }
+
+
+      // Scale up text and icon sizes
+      if (layer.layout) {
+
+        // Scale text-size
+        if ('text-size' in layer.layout) {
+
+          // hide labels that would be clipped by edge of thumbnail
+          layer.layout['text-padding'] = 20 * this._scaleFactor;
+          const textSize = layer.layout['text-size'];
+          if (typeof textSize === 'number') {
+            layer.layout['text-size'] = textSize * this._scaleFactor;
+          } else {
+            layer.layout['text-size'] = 10 * this._scaleFactor;
+          }
+        }
+        // Scale icon-size
+        if ('icon-size' in layer.layout) {
+          const iconSize = layer.layout['icon-size'];
+
+          // hide icons that would be clipped by edge of thumbnail
+          layer.layout['icon-padding'] = 20 * this._scaleFactor;
+
+          if (typeof iconSize === 'number') {
+            layer.layout['icon-size'] = iconSize * this._scaleFactor;
+          } else {
+            layer.layout['icon-size'] = this._scaleFactor;
+          }
+        }
+
+        // Scale symbol-spacing if present
+        if ('symbol-spacing' in layer.layout && typeof layer.layout['symbol-spacing'] === 'number') {
+          layer.layout['symbol-spacing'] = layer.layout['symbol-spacing'] * this._scaleFactor;
+        }
+      }
+
+    });
+    return spec;
+  });
+
 
   constructor() {
     // on input set/changed
@@ -157,8 +223,7 @@ export class ThumbnailMap {
   private saveMapToImage() {
     this.map().redraw();
 
-    toPng(this.map().getContainer(),
-      {skipFonts: true})
+    htmlToPng(this.map().getContainer())
       .then(async (dataUrl) => {
           if (!dataUrl || !dataUrl.startsWith('data:image/')) {
             throw new Error('Invalid image data URL generated: ' + dataUrl);

@@ -1,10 +1,10 @@
-// Note: open browser from dashboard link in terminal output (includes login token)
 using FomMon.AppHost.Extensions;
 using FomMon.Common.Configuration.Layer;
 using MapLibre.Martin.Hosting;
 using Microsoft.Extensions.Hosting;
 using MinIO.MinIO.Hosting;
 
+// Note: open browser from dashboard link in terminal output (includes login token)
 var builder = DistributedApplication.CreateBuilder(args);
 
 // prompted to set on first run.  Select 'save to user secrets', then can share with IDE manually.
@@ -14,7 +14,10 @@ var pgPwd =  builder.AddParameter("pgPassword", secret: true);
 var postgres = builder.AddPostgres("postgres", pgUser, pgPwd)
     .WithImage("postgis/postgis")
     //.WithPgAdmin(pgAdmin => pgAdmin.WithHostPort(5050));
-    .WithPgWeb(pgWeb => pgWeb.WithHostPort(5051))
+    .WithPgWeb(pgWeb => pgWeb
+        .WithHostPort(5051)
+        .WithLifetime(ContainerLifetime.Persistent)
+    )
     .WithDataVolume(isReadOnly: false) // persist to subsequent debugging sessions
     .WithLifetime(ContainerLifetime.Persistent); 
 
@@ -66,8 +69,10 @@ var tileserver = builder.AddMapLibreMartin("tileserver",
     .WaitForCompletion(migrations)
     .WithCacheSizeMb(1024)
     .WithPgDefaultSrid(LayerRegistry.DefaultSrid)
-    .WithAutoPublishSchemas(LayerRegistry.Schema)
+    .WithAutoPublishTables("{table}", fromSchemas:[LayerRegistry.Schema])
+    .WithAutoPublishFunctions(fromSchemas:["osm"], sourceIdFormat:"{function}") // TODO configure OSM schema
     .WithLifetime(ContainerLifetime.Persistent); // Note: Requires restart on schema change
+
 
 if (builder.Environment.IsDevelopment())
 {

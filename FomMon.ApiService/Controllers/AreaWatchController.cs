@@ -1,8 +1,6 @@
-﻿using FluentResults;
-using FomMon.ApiService.Contracts;
+﻿using FomMon.ApiService.Contracts;
 using FomMon.ApiService.Infrastructure;
 using FomMon.ApiService.Services;
-using FomMon.Data.Models;
 using MapsterMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -15,8 +13,8 @@ public class AreaWatchController(
     IAreaWatchService service, 
     IMapper mapper, 
     ICurrentUser currentUser,
-    IObjectStorageService objectStorageService
-    ) : ControllerBase
+    IObjectStorageService objectStorageService,
+    ILogger<AreaWatchController> logger) : ControllerBase
 {
 
     [HttpPost]
@@ -101,8 +99,9 @@ public class AreaWatchController(
 
         if (errors is not null)
         {
+            logger.LogError("Failed to upload thumbnail image: {guid}, {Errors}", id, errors);
             if (errors.Any(e => e is NotFoundError)) return NotFound();
-            return BadRequest(errors);
+            return BadRequest(new {errors = errors.Select(e => e.Message)});
         }
         
         var url = await objectStorageService.GetImageUrlAsync(name, 3600, c);

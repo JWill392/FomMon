@@ -38,6 +38,9 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+# Downloaded data
+FomMon.MigrationService/data
+
 # Visual Studio 2015/2017 cache/options directory
 .vs/
 # Uncomment if you have tasks that create the project's static files in wwwroot
@@ -147,10 +150,6 @@ _TeamCity*
 # DotCover is a Code Coverage Tool
 *.dotCover
 
-# AxoCover is a Code Coverage Tool
-.axoCover/*
-!.axoCover/settings.json
-
 # Coverlet is a free, cross platform Code Coverage Tool
 coverage*.json
 coverage*.xml
@@ -207,10 +206,6 @@ PublishScripts/
 *.snupkg
 # The packages folder can be ignored because of Package Restore
 **/[Pp]ackages/*
-# except build/, which is used as an MSBuild target.
-!**/[Pp]ackages/build/
-# Uncomment if necessary however generally it will be regenerated when needed
-#!**/[Pp]ackages/repositories.config
 # NuGet v3's project.json files produces more ignorable files
 *.nuget.props
 *.nuget.targets
@@ -235,8 +230,6 @@ _pkginfo.txt
 # Visual Studio cache files
 # files ending in .cache can be ignored
 *.[Cc]ache
-# but keep track of directories ending in .cache
-!?*.[Cc]ache/
 
 # Others
 ClientBin/
@@ -336,10 +329,6 @@ paket-files/
 __pycache__/
 *.pyc
 
-# Cake - Uncomment if you are using it
-# tools/**
-# !tools/packages.config
-
 # Tabs Studio
 *.tss
 
@@ -387,10 +376,6 @@ FodyWeavers.xsd
 
 # VS Code files for those working on multiple tools
 .vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
 *.code-workspace
 
 # Local History for Visual Studio Code

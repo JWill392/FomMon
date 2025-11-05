@@ -7,6 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <Reference Include="FluentResults">
+        <HintPath>..\..\..\..\.nuget\packages\fluentresults\4.0.0\lib\net9.0\FluentResults.dll</HintPath>
+      </Reference>
       <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
       <Reference Include="Microsoft.Extensions.Hosting.Abstractions">
         <HintPath>..\..\..\..\..\..\usr\lib\dotnet\shared\Microsoft.AspNetCore.App\9.0.10\Microsoft.Extensions.Hosting.Abstractions.dll</HintPath>

@@ -207,7 +207,7 @@ public sealed class UserService(AppDbContext db,
             "#f79256", "#fbd1a2", "#7dcfb6", "#00b2ca", "#1d4e89"
         ];
         
-        const int padding = 50;
+        const int padding = 80;
 
         const int blockCountX = 5;
         const int blockCountY = 5;

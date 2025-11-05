@@ -19,11 +19,7 @@ public sealed class Project : IVersioned
     public string StateDescription => GetWorkflowStateDescription(State);
 
     public required Instant Created { get; set; }
-
-    /// <summary>
-    /// Time features were last downloaded
-    /// </summary>
-    public Instant? FeaturesRefreshed { get; set; } = null;
+    
 
     public Instant? Closed { get; set; } = null;
 

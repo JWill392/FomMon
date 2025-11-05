@@ -1,74 +1,77 @@
 <mgl-map class="map"
-         [style]="'https://demotiles.maplibre.org/style.json'"
+         id="map"
+         [style]="mapDisplayService.style()"
          [center]="appConfig.get().map.defaultCenter"
          [zoom]="appConfig.get().map.defaultZoom"
          hash="ml"
-         [transformRequest]="transformLocalUrl"
+         [transformRequest]="mapDisplayService.transformLocalUrl"
          (mapLoad)="onMapLoad($event)"
+
          [dragRotate]="false"
          [touchZoomRotate]="false"
          [attributionControl]="{compact: true}"
          (mapClick)="mapInteraction()?.handleMapClick($event)"
+
 >
   <!-- OSM Base Layer -->
-  <mgl-raster-source
-      id="osm-base"
-      [tiles]="['https://tile.openstreetmap.org/{z}/{x}/{y}.png']"
-      [tileSize]="256"
-      attribution="© OpenStreetMap contributors"
-  >
-    <app-map-layer-group
-        groupId="osm-base"
-        thumbnailImg="assets/layer-preview-osm-base.png"
-        name="Map"
-        [order]="0"
-        [initiallyVisible]="true"
-        category="base"/>
+<!--  <mgl-raster-source-->
+<!--      id="osm-base"-->
+<!--      [tiles]="['https://tile.openstreetmap.org/{z}/{x}/{y}.png']"-->
+<!--      [tileSize]="256"-->
+<!--      attribution="© OpenStreetMap contributors"-->
+<!--  >-->
+<!--    <app-map-layer-group-->
+<!--        groupId="osm-base"-->
+<!--        thumbnailImg="assets/layer-preview-osm-base.png"-->
+<!--        name="Map"-->
+<!--        [order]="0"-->
+<!--        [initiallyVisible]="true"-->
+<!--        category="base"/>-->
 
-    <mgl-layer
-        source="osm-base"
-        id="osm-base"
-        type="raster"
-        [minzoom]="0"
-        [maxzoom]="19"
-        [layout]="mapLayerService.getLayout('osm-base')"
+<!--    <mgl-layer-->
+<!--        source="osm-base"-->
+<!--        id="osm-base"-->
+<!--        type="raster"-->
+<!--        [minzoom]="0"-->
+<!--        [maxzoom]="19"-->
+<!--        [layout]="mapLayerService.getLayout('osm-base')"-->
 
-        appMapLayer
-        groupId="osm-base"
-    />
-  </mgl-raster-source>
+<!--        appMapLayer-->
+<!--        groupId="osm-base"-->
+<!--    />-->
+<!--  </mgl-raster-source>-->
 
-  <!-- ESRI Imagery Base Layer -->
-  <mgl-raster-source
-      id="esri-imagery"
-      [tiles]="['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}']"
-      [tileSize]="256"
-      attribution="Esri, Maxar, Earthstar Geographics, and the GIS User Community"
-  >
-    <app-map-layer-group
-        groupId="esri-imagery"
-        category="base"
-        thumbnailImg="assets/layer-preview-esri-imagery.png"
-        name="Satellite"
-        [order]="0"
-    />
-    <mgl-layer
-        source="esri-imagery"
-        id="esri-imagery"
-        type="raster"
-        [minzoom]="0"
-        [maxzoom]="19"
-        [layout]="mapLayerService.getLayout('esri-imagery')"
+<!--  &lt;!&ndash; ESRI Imagery Base Layer &ndash;&gt;-->
+<!--  <mgl-raster-source-->
+<!--      id="esri-imagery"-->
+<!--      [tiles]="['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}']"-->
+<!--      [tileSize]="256"-->
+<!--      attribution="Esri, Maxar, Earthstar Geographics, and the GIS User Community"-->
+<!--  >-->
+<!--    <app-map-layer-group-->
+<!--        groupId="esri-imagery"-->
+<!--        category="base"-->
+<!--        thumbnailImg="assets/layer-preview-esri-imagery.png"-->
+<!--        name="Satellite"-->
+<!--        [order]="0"-->
+<!--    />-->
+<!--    <mgl-layer-->
+<!--        source="esri-imagery"-->
+<!--        id="esri-imagery"-->
+<!--        type="raster"-->
+<!--        [minzoom]="0"-->
+<!--        [maxzoom]="19"-->
+<!--        [layout]="mapLayerService.getLayout('esri-imagery')"-->
 
-        appMapLayer
-        groupId="esri-imagery"
-    />
-  </mgl-raster-source>
+<!--        appMapLayer-->
+<!--        groupId="esri-imagery"-->
+<!--    />-->
+<!--  </mgl-raster-source>-->
 
 
   <!-- Domain Feature Layers (Vector Tiles) -->
   @for (layer of domainLayers() ?? []; track layer.kind) {
-    <app-feature-layer [layer]="layer" url="local://./tileserver/{{layer.tileSource}}/{z}/{x}/{y}"/>
+    <app-feature-layer [layer]="layer" [url]="'local://./tileserver/'+layer.tileSource+'/{z}/{x}/{y}'"/>
   }
 
   @if (isAuthenticated()) {
@@ -79,9 +82,9 @@
   <mgl-control position="top-right">
     <app-user-menu />
   </mgl-control>
-  <mgl-control position="bottom-right">
-    <app-base-layer-switcher/>
-  </mgl-control>
+<!--  <mgl-control position="bottom-right">-->
+<!--    <app-base-layer-switcher/>-->
+<!--  </mgl-control>-->
 
   <!-- Controls -->
   <mgl-control mglScale [maxWidth]="100" unit="metric" position="bottom-right"></mgl-control>
@@ -97,9 +100,9 @@
     <app-sidebar/>
   </mgl-control>
 
-  <app-map-drawing />
   @if (this.map()) {
     <app-map-interaction [map]="map()" />
+    <app-map-drawing [map]="map()" />
   }
 
 </mgl-map>

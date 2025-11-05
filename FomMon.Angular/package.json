@@ -11,7 +11,8 @@
     "start:default": "ng serve --port $PORT --configuration development",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "postinstall": "node scripts/download-versatiles-style-assets.js"
   },
   "prettier": {
     "printWidth": 100,
@@ -41,7 +42,8 @@
     "@turf/area": "^7.2.0",
     "@turf/bbox": "^7.2.0",
     "@turf/boolean-equal": "^7.2.0",
-    "@watergis/maplibre-gl-terradraw": "^1.9.2",
+    "@versatiles/style": "^5.7.0",
+    "@watergis/maplibre-gl-terradraw": "^1.9.5",
     "html-to-image": "^1.11.13",
     "keycloak-angular": "^20.0.0",
     "keycloak-js": "^26.2.0",
@@ -66,6 +68,7 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "run-script-os": "^1.1.6",
+    "tar": "^7.5.2",
     "typescript": "^5.9.2"
   }
 }

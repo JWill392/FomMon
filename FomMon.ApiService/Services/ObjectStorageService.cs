@@ -30,7 +30,7 @@ public static class MinioObjectStorageServiceExtensions
     }
 }
 
-public class InvalidFileTypeError : Error;
+public class InvalidFileTypeError(string message) : Error(message);
 public class FileSizeError(string message) : Error(message);
 
 public class MinioObjectStorageService(
@@ -42,7 +42,7 @@ public class MinioObjectStorageService(
     
     private const string BucketName = MinioConfiguration.ImageBucket;
 
-    public const string ActivitySourceName = "FomMon.ProfileImageService";
+    public const string ActivitySourceName = nameof(MinioObjectStorageService);
     private static readonly ActivitySource ActivitySource = new(ActivitySourceName);
 
     public async Task<Result> UploadImageAsync(string objectName, Stream imageStream, long length, CancellationToken c = default)
@@ -54,8 +54,9 @@ public class MinioObjectStorageService(
         ArgumentException.ThrowIfNullOrWhiteSpace(objectName);
 
         // Validate file type
-        string? imgMimeType = await ValidFormat(imageStream, ["image/jpeg", "image/png", "image/webp"], c);
-        if(imgMimeType is null) return Result.Fail(new InvalidFileTypeError());
+        string[] allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+        (string? imgAllowedType, string[] foundTypes) = await ValidFormat(imageStream, allowedTypes, c);
+        if(imgAllowedType is null) return Result.Fail(new InvalidFileTypeError($"File type '{foundTypes.FirstOrDefault()}' is not supported. Supported types: {String.Join(", ",allowedTypes)}"));
 
         // Validate file size
         // TODO configure max size
@@ -69,7 +70,7 @@ public class MinioObjectStorageService(
                 .WithObject(objectName)
                 .WithStreamData(imageStream)
                 .WithObjectSize(imageStream.Length)
-                .WithContentType(imgMimeType); 
+                .WithContentType(imgAllowedType); 
 
             await minioClient.PutObjectAsync(putObjectArgs, c);
         }
@@ -84,21 +85,24 @@ public class MinioObjectStorageService(
         return Result.Ok();
     }
 
-    private static async Task<string?> ValidFormat(Stream imageStream, string[] allowedMimetypes, CancellationToken c = default)
+    private async Task<(string? validType, string[] foundTypes)> ValidFormat(Stream imageStream, string[] allowedMimetypes, CancellationToken c = default)
     {
         try
         {
             var format = await Image.DetectFormatAsync(imageStream, c);
+            var foundTypes = format.MimeTypes.ToArray();
+            logger.LogInformation("Found types: {FoundTypes}", String.Join(", ", foundTypes));
 
-            string? allowedType = format.MimeTypes.Intersect(allowedMimetypes).FirstOrDefault();
+            string? validType = foundTypes.Intersect(allowedMimetypes).FirstOrDefault();
 
-            return allowedType;
+            return (validType, foundTypes);
         }
         catch (Exception ex) when (ex is InvalidImageContentException or 
                                        NotSupportedException or 
                                        UnknownImageFormatException)
         {
-            return null;
+            logger.LogDebug($"Exception parsing image: {ex.Message}");
+            return (null, []);
         }
     }
 

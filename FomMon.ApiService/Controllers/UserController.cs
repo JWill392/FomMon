@@ -42,12 +42,18 @@ public class UserController(
         try
         {
             await using var imageStream = file.OpenReadStream();
-            var (objectName, errors) = await userService.UploadProfileImage(currentUser.Id!.Value, imageStream, file.Length, c);
-            if (errors is not null) return BadRequest(errors);
+            var result = await userService.UploadProfileImage(currentUser.Id!.Value, imageStream, file.Length, c);
+            if (result.IsFailed)
+            {
+                if (result.HasError<NotFoundError>())
+                    return NotFound();
+    
+                return BadRequest(new {errors = result.Errors.Select(e => e.Message)});
+            }
             
             // TODO return URL
             
-            return Ok(new { message = "Profile image uploaded successfully", objectName });
+            return Ok(new { message = "Profile image uploaded successfully", result.Value });
         }
         catch (ArgumentException ex)
         {

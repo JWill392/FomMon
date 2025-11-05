@@ -62,6 +62,7 @@ export class MapInteraction implements OnInit {
     if (this.mapStateService.mode() !== 'select') return;
     if (e.defaultPrevented) return;
 
+
     const features = this.map().queryRenderedFeatures(e.point);
     if (features && features.length > 0) {
       const hasInteractiveFeature = features.some(feature => {

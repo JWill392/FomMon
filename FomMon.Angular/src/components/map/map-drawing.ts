@@ -1,4 +1,4 @@
-import {Component, DestroyRef, effect, inject, signal} from '@angular/core';
+import {Component, DestroyRef, effect, inject, input, OnDestroy, OnInit, signal} from '@angular/core';
 import {MaplibreTerradrawControl} from "@watergis/maplibre-gl-terradraw";
 import {TerraDraw} from "terra-draw";
 import {Map as MapLibreMap} from "maplibre-gl";
@@ -14,17 +14,19 @@ import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
   template: '',
   styles: []
 })
-export class MapDrawing {
+export class MapDrawing implements OnInit {
   private readonly mapStateService = inject(MapStateService);
   private readonly mapLayerService = inject(MapLayerService);
   private readonly errorService = inject(ErrorService);
   private readonly destroyRef = inject(DestroyRef);
 
-  private map : MapLibreMap;
+  readonly map = input.required<MapLibreMap>();
 
   protected currentDrawCommand = signal<DrawCommand | undefined>(undefined);
   private drawControl : MaplibreTerradrawControl | undefined;
   private draw : TerraDraw | undefined;
+
+  private readonly terradrawGroupId = 'terradraw' as const;
 
   constructor() {
     effect(() => this.handleModeChange())
@@ -40,53 +42,75 @@ export class MapDrawing {
   }
 
 
-  // terradraw doesn't work with signals; must be set synchronously when map loaded
-  public register(map: MapLibreMap) {
-    this.map = map;
+  public ngOnInit() {
+    // this.map = map;
+    if (!this.map()) throw new Error('Map not initialized');
+
     this.drawControl = new MaplibreTerradrawControl({
       modes: ['polygon', 'select', 'delete-selection', 'render'],
       open: true
     });
-    map.addControl(this.drawControl, 'top-right');
+    this.map().addControl(this.drawControl, 'top-right');
+    this.destroyRef.onDestroy(() => this.map().removeControl(this.drawControl));
 
     this.draw = this.drawControl.getTerraDrawInstance();
     if (!this.draw) {
       this.errorService.handleError(new Error('Failed to get terra draw instance'));
       return undefined;
     }
+
+    // just hide until in draw mode (too slow to add control on entering draw mode)
     this.hideDrawControl();
 
-    // register layers for ordering
-    this.draw.on('ready', () => {
-      const layers = this.drawControl.cleanStyle(this.map.getStyle(), {onlyTerraDrawLayers: true}).layers.map(l => l.id);
-      const groupId = "terradraw" as const;
-      this.mapLayerService.addGroup({
-        id: groupId,
-        name: "TerraDraw",
-        order: 100,
-        visible: true,
-        interactivity: {select: false, hover: false},
-        category: "internal",
-        thumbnailImg: "",
-      });
-      for (const lid of layers) {
-        this.mapLayerService.addLayer({
-          id: lid,
-          groupId: groupId,
-          layout: null,
-          source: "",
-          sourceLayer: "",
-        });
-      }
+    this.map().once('idle', () => {
+      const drawEnabled = this.draw["_enabled"];
+      if (drawEnabled) {
+        // 'ready' will never be emitted, and otherwise impossible to know this based on public draw state
+        this.onDrawReady();
+      } else {
+        const onReady = this.onDrawReady.bind(this)
+        this.draw.on('ready', onReady)
+        this.destroyRef.onDestroy(() => {this.draw.off('ready', onReady)})
 
-      this.mapStateService.drawCommand$
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe(command => {
-          this.enterDrawMode(command)
-        })
-    })
+        this.draw.start(); // not called reliably by terradraw control because it assumes map.loaded and map.once('load')
+        // covers all cases, but really loaded & load are (weirdly) totally unrelated concepts
+      }
+    });
 
     return this.draw;
+  }
+
+
+  private onDrawReady() {
+    const layers = this.drawControl.cleanStyle(this.map().getStyle(), {onlyTerraDrawLayers: true}).layers.map(l => l.id);
+
+
+  // register layers for ordering
+    this.mapLayerService.addGroup({
+      id: this.terradrawGroupId,
+      name: "TerraDraw",
+      order: 100,
+      visible: true,
+      interactivity: {select: false, hover: false},
+      category: "internal",
+      thumbnailImg: "",
+    });
+    for (const lid of layers) {
+      this.mapLayerService.addLayer({
+        id: lid,
+        groupId: this.terradrawGroupId,
+        layout: null,
+        source: "",
+        sourceLayer: "",
+      });
+    }
+    this.destroyRef.onDestroy(() => {this.mapLayerService.removeGroup(this.terradrawGroupId)});
+
+    this.mapStateService.drawCommand$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(command => {
+        this.enterDrawMode(command)
+      })
   }
 
   private enterDrawMode(command: DrawCommand) : void {
@@ -98,11 +122,8 @@ export class MapDrawing {
     this.showDrawControl();
 
 
-    if (command.id) {
-      this.mapStateService.hide(command.id);
-    }
-
     if (command.geometry) {
+      // import geometry to terradraw
       const drawFeatureId = uuidv4();
       this.draw.addFeatures([{
         id: drawFeatureId, // has to be guid or silently dies
@@ -112,10 +133,18 @@ export class MapDrawing {
           mode: command.mode
         }
       }]);
+
+      // hide redundant real feature geometry
+      if (command.id) {
+        var timeout = setTimeout(() => this.mapStateService.hide(command.id), 100);
+        this.destroyRef.onDestroy(() => clearTimeout(timeout))
+
+      }
       this.draw.selectFeature(drawFeatureId);
     } else {
       this.draw.setMode(command.mode);
     }
+
 
     this.draw.on('finish', (id: any) => {
       const feature = this.draw.getSnapshotFeature(id);

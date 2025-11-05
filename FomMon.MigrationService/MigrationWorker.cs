@@ -21,7 +21,7 @@ public class MigrationWorker(
     IServiceProvider serviceProvider,
     ILogger<MigrationWorker> logger)
 {
-    public const string ActivitySourceName = "Migrations";
+    public const string ActivitySourceName = nameof(MigrationWorker);
     private static readonly ActivitySource ActivitySource = new(ActivitySourceName);
     
     

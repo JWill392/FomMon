@@ -1,0 +1,3 @@
+[submodule "osm-config/themepark"]
+	path = lib/osm2pgsql-themepark
+	url = https://github.com/osm2pgsql-dev/osm2pgsql-themepark.git

@@ -1,12 +1,7 @@
 import {DestroyRef, effect, inject, Injectable, signal} from '@angular/core';
 import Keycloak from 'keycloak-js';
-import {
-  KEYCLOAK_EVENT_SIGNAL,
-  KeycloakEventType,
-  typeEventArgs,
-  ReadyArgs
-} from 'keycloak-angular';
-import {UserFactory, User} from "./user";
+import {KEYCLOAK_EVENT_SIGNAL, KeycloakEvent, KeycloakEventType, ReadyArgs, typeEventArgs} from 'keycloak-angular';
+import {User, UserFactory} from "./user";
 import {HttpClient} from "@angular/common/http";
 import {catchError, map, tap} from "rxjs/operators";
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
@@ -39,25 +34,32 @@ export class UserService implements ServiceWithState {
     effect(() => {
       const keycloakEvent = this.keycloakSignal();
 
-      if (keycloakEvent.type === KeycloakEventType.Ready) {
-        const auth : boolean = typeEventArgs<ReadyArgs>(keycloakEvent.args);
-
-        if (auth) {
-          // initial API call to allow api to record keycloak user after registration
-          this.load$()
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe();
-
-          this.loadImageUrl$()
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe();
-        }
-      }
-
-      if (keycloakEvent.type === KeycloakEventType.AuthLogout) {
-        this.clearData();
+      switch (keycloakEvent.type) {
+        case KeycloakEventType.Ready:
+          this.handleKeycloakReady(keycloakEvent);
+          break;
+        case KeycloakEventType.AuthLogout:
+          this.clearData();
+          break;
       }
     });
+  }
+
+  private handleKeycloakReady(event: KeycloakEvent) {
+    const auth : boolean = typeEventArgs<ReadyArgs>(event.args);
+
+    if (!auth) return;
+    // initial API call to allow api to record keycloak user after registration
+    this.load$()
+      .pipe(
+        tap({
+          complete: () => this.loadImageUrl$()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe()
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   private clearData() {

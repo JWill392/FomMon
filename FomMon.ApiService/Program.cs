@@ -53,7 +53,7 @@ builder.Services.AddHttpClient<FomApiClient>(c => c.BaseAddress = new Uri("https
 
 
 // Hangfire 
-builder.AddHangfireRedis("cache", "{fommon.hangfire}:");
+builder.AddHangfireRedis("cache", "{fommon.apiservice.hangfire}:");
 
 
 

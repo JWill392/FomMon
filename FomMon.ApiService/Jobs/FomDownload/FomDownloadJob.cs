@@ -18,26 +18,27 @@ public static class FomDownloadJobExtensions
     public static IServiceCollection AddFomDownloadJob(this IServiceCollection services)
     {
         services.ConfigureOpenTelemetryTracerProvider(t => t.AddSource(FomDownloadJob.ActivitySourceName));
+        services.AddScoped<IFomDownloadJob, FomDownloadJob>();
         
         return services;
-        
-        // TODO configure job frequency again
-        // services.AddOptions<FomDownloadJobSettings>()
-        //     .BindConfiguration("FomDownloadJob")
-        //     .ValidateDataAnnotations()
-        //     .Validate(s => s.RefreshProjectInterval > TimeSpan.Zero, "RefreshProjectInterval must be > 0")
-        //     .ValidateOnStart();
-        //
     }
 
     public static void ConfigureJobs()
     {
-        RecurringJob.AddOrUpdate<FomDownloadJob>(FomDownloadJob.GetProjectsJobName, x => x.GetProjects(CancellationToken.None), Cron.Daily);
-        RecurringJob.TriggerJob(FomDownloadJob.GetProjectsJobName);  // immediately run once
+        var getProjectJobName = nameof(IFomDownloadJob.GetProjects);
+        RecurringJob.AddOrUpdate<IFomDownloadJob>(getProjectJobName, x => x.GetProjects(CancellationToken.None), Cron.Daily);
+        RecurringJob.TriggerJob(getProjectJobName);  // immediately run once
         
-        RecurringJob.AddOrUpdate<FomDownloadJob>(FomDownloadJob.GetPublicNoticesJobName, x => x.GetPublicNotices(CancellationToken.None), Cron.Daily);
-        RecurringJob.TriggerJob(FomDownloadJob.GetPublicNoticesJobName); // immediately run once
+        var getPublicNoticesJobName = nameof(IFomDownloadJob.GetPublicNotices);
+        RecurringJob.AddOrUpdate<IFomDownloadJob>(getPublicNoticesJobName, x => x.GetPublicNotices(CancellationToken.None), Cron.Daily);
+        RecurringJob.TriggerJob(getPublicNoticesJobName); // immediately run once
     }
+}
+
+public interface IFomDownloadJob
+{
+    Task GetProjects(CancellationToken c);
+    Task GetPublicNotices(CancellationToken c);
 }
 
 /// <summary>
@@ -47,13 +48,10 @@ public sealed class FomDownloadJob(
     FomApiClient apiClient, 
     AppDbContext dbContext,
     IClockService clock,
-    ILogger<FomDownloadJob> logger) 
+    ILogger<FomDownloadJob> logger) : IFomDownloadJob
 {   
-    public const string ActivitySourceName = "FomMon.FomDownloader";
+    public const string ActivitySourceName = nameof(FomDownloadJob);
     private static readonly ActivitySource ActivitySource = new(ActivitySourceName);
-
-    public const string GetProjectsJobName = nameof(GetProjects);
-    public const string GetPublicNoticesJobName = nameof(GetPublicNotices);
 
 
     public async Task GetProjects(CancellationToken c)
@@ -118,7 +116,6 @@ public sealed class FomDownloadJob(
                     Name = p.Name,
                     State = state,
                     Created = apiCalled,
-                    FeaturesRefreshed = null, // set on downloading features
                     Closed = state == Project.WorkflowState.Finalized ? apiCalled : null
                 };
             }).ToList();

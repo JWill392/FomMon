@@ -23,41 +23,33 @@
 
 <!-- include while loading, but css invisible -->
 @if (state() === 'map-loading' || state() === 'map-ready') {
-  <mgl-map class="thumb-map"
-           [class.visible]="state() === 'map-ready'"
-           [attributionControl]="false"
-           [style]="'https://demotiles.maplibre.org/style.json'"
-           [interactive]="false"
-           [fitBounds]="bbox()"
-           [fitBoundsOptions]="{
-            padding: 10,
-            duration: 0
+  <div class="thumb-map-wrapper">
+    <mgl-map class="thumb-map"
+             [class.visible]="state() === 'map-ready'"
+             [attributionControl]="false"
+             [style]="thumbnailStyle()"
+             [transformRequest]="mapDisplayService.transformLocalUrl"
+             [interactive]="false"
+             [fitBounds]="bbox()"
+             [fitBoundsOptions]="{
+              padding: 10,
+              duration: 0
+            }"
+             (mapLoad)="onMapLoad($event)">
+
+      <mgl-geojson-source
+        [id]="sourceId()"
+        [data]="geometry()"/>
+
+      <mgl-layer
+          [source]=sourceId()
+          [id]="layerIdFill()"
+          type="fill"
+          [paint]="{
+            'fill-color': fillColor(),
+            'fill-opacity': 0.5
           }"
-           (mapLoad)="onMapLoad($event)">
-<!--   TODO improve base layer to use something vector; better label visibility-->
-    <mgl-raster-source
-        [id]="layerIdBase()"
-        [tiles]="['https://tile.openstreetmap.org/{z}/{x}/{y}.png']"
-        [tileSize]="256"
-    />
-    <mgl-layer
-        [source]="layerIdBase()"
-        [id]="layerIdBase()"
-        type="raster"
-    />
-
-    <mgl-geojson-source
-      [id]="sourceId()"
-      [data]="geometry()"/>
-
-    <mgl-layer
-        [source]=sourceId()
-        [id]="layerIdFill()"
-        type="fill"
-        [paint]="{
-          'fill-color': fillColor(),
-          'fill-opacity': 0.5
-        }"
-    ></mgl-layer>
-  </mgl-map>
+      ></mgl-layer>
+    </mgl-map>
+  </div>
 }
