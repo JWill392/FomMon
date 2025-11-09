@@ -1,8 +1,10 @@
 # FomMon - A GIS monitoring web app for BC Canada
 
-This project is in early development. It's a personal project to learn c# + angular web app dev. 
+A simple GIS app for watching areas of interest for changes.  Integrates with British Columbia Geographic Warehouse to retrieve government-wide GIS data, as well as Open Street Map.  A land manager might use this to be notified of new trails on their property, or a recreation club may wish to be notified of planned logging operations.
 
-![screenshot.png](screenshot.png)
+This project is in early development. It's a personal project to learn c# + angular development. Many design choices were made to learn libraries, and are not necessarily pragmatic. 
+
+![Screenshot of web app](screenshot.png)
 
 ## Features
  - Watch specified areas for changes
@@ -22,8 +24,10 @@ This project is in early development. It's a personal project to learn c# + angu
  - Landing page
 
 ## Built With
- - Backend:
-   - ASP.NET CORE
+ - Backend
+   - API:
+     - C#
+     - ASP.NET CORE
      - .NET Aspire orchestration
      - Entity Framework Core
      - Hangfire background jobs
@@ -33,8 +37,9 @@ This project is in early development. It's a personal project to learn c# + angu
    - MinIO object storage
    - Redis caching & hangfire persistence
  - Frontend:
+   - Typescript
    - Angular 20
-   - MapLibre
+   - MapLibre GL JS
 
 ## License
 Distributed under the GNU GPLv3.  See LICENSE.txt for more information.
