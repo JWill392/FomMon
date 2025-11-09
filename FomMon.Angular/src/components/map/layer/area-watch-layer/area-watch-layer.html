@@ -11,15 +11,8 @@
 
   <mgl-geojson-source
           [id]=sourceId
+          [data]="featureCollection()"
   >
-    @for (watch of areaWatches(); track watch.id) {
-      @let feat = asFeatureFields(watch);
-      <mgl-feature
-          [geometry]="feat.geometry"
-          [id]="feat.featureId"
-          [properties]="feat.properties"
-      ></mgl-feature>
-    }
 
 
   <app-layer

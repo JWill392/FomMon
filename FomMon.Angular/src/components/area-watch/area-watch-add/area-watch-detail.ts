@@ -83,7 +83,6 @@ export class AreaWatchDetail implements OnInit {
     }),
     geometry: new FormControl<Geometry | null>(null, {
       validators: [Validators.required, areaValidatorFactory({maxAreaHa: 1000000})],
-      // TODO geometry size
     }),
   })
 

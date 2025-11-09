@@ -1,6 +1,6 @@
 import {effect, inject, Injectable, signal} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
-import {AreaWatch, AreaWatchAdd, AreaWatchDto} from './area-watch.model';
+import {AreaWatch, AreaWatchAdd, AreaWatchDto, ThumbnailUrl} from './area-watch.model';
 import {catchError, map, tap} from 'rxjs/operators';
 import {EMPTY, Observable, of, throwError} from 'rxjs';
 import {v4 as uuidv4} from 'uuid';
@@ -10,8 +10,6 @@ import {LoadState, ServiceWithState} from "../shared/service/service-state";
 import {LocalState} from "../shared/service/local-state";
 import {Theme, ThemeService} from "../shared/theme.service";
 import {ErrorService} from "../shared/error.service";
-
-type ThumbnailKey = string;
 
 @Injectable({providedIn: 'root'})
 export class AreaWatchService implements ServiceWithState {
@@ -26,14 +24,7 @@ export class AreaWatchService implements ServiceWithState {
   private _data = signal<AreaWatch[]>([]);
   readonly data = this._data.asReadonly();
 
-  private _thumbnailCache = signal<Map<string, string>>(new Map());
-  // readonly themeThumbnails = computed(() => {
-  //   const currentTheme = this.themeService.theme();
-  //   const themeThumbs = Array.from(this._thumbnailCache())
-  //     .filter(([key]) => this._fromThumbnailKey(key).theme === currentTheme)
-  //     .map(([key, thumb]) => [this._fromThumbnailKey(key).id, thumb] as [string, string])
-  //   return new Map<string, string>(themeThumbs);
-  // });
+  private readonly _thumbnailCache = signal(new Map<string, Map<Theme, ThumbnailUrl>>());
 
   private featureToId = new Map<number, string>();
   private idToFeature = new Map<string, number>();
@@ -55,7 +46,9 @@ export class AreaWatchService implements ServiceWithState {
       const data = this._data();
 
       for (const aw of data) {
-        // TODO this._downloadThumbnail$(aw.id, theme).subscribe()
+        // TODO change to resource to avoid duplicate requests
+        this._downloadThumbnailCached$(aw.id, theme)
+          .subscribe();
       }
     })
   }
@@ -78,7 +71,8 @@ export class AreaWatchService implements ServiceWithState {
               aw.featureId = this.mapToFeatureId(aw.id);
 
               // TODO change to resources.  this is bad because it allows multiple concurrent requests, doesn't accommodate retries or error handling well.
-              //this._downloadThumbnail$(aw.id, this.themeService.theme()).subscribe();
+              this._downloadThumbnailCached$(aw.id, this.themeService.theme())
+                .subscribe();
             });
             this._data.set(body)
           }
@@ -139,34 +133,30 @@ export class AreaWatchService implements ServiceWithState {
   }
 
 
-  private _asThumbnailKey(id : string, theme: Theme) {
-    return `${id}.${theme}`;
-  }
-  private _fromThumbnailKey(key : ThumbnailKey) {
-    const [id, theme] = key.split('.');
-    return {id, theme} as {id: string, theme: Theme};
-  }
 
   private _clearThumbnailCache(id: string) {
-    const themeKeys = this.themeService.allThemes.map(t => this._asThumbnailKey(id, t));
+    if (!this._thumbnailCache().has(id)) return;
 
     this._thumbnailCache.update(thumbnails => {
       const newThumbnails = new Map(thumbnails);
-      themeKeys.forEach(key => newThumbnails.delete(key));
+      newThumbnails.delete(id)
       return newThumbnails;
     });
   }
-  getThumbnail(id: string) : string | undefined {
-    const currentTheme = this.themeService.theme();
-    const key = this._asThumbnailKey(id, currentTheme);
+  getThumbnail(id: string, theme?: Theme) : ThumbnailUrl | undefined {
+    if (!theme) theme = this.themeService.theme();
+    const themeMap = this._thumbnailCache().get(id);
+    if (!themeMap) return undefined;
 
-    return this._thumbnailCache().get(key) ?? undefined;
+    return themeMap.get(theme)
   }
-  private _downloadThumbnail$(id: string, theme: Theme) {
+  private _downloadThumbnailCached$(id: string, theme: Theme) : Observable<ThumbnailUrl> {
     const cache = this.getThumbnail(id);
     if (cache) return of(cache);
 
-    return this.http.get<{thumbnailImageUrl: string}>
+    //console.log('AWS: Thumbnail cache miss; downloading', theme, id);
+
+    return this.http.get<ThumbnailUrl>
     (`api/areawatch/${id}/thumbnail?theme=${theme}`)
     .pipe(
       catchError((error) => throwError(() => {
@@ -175,8 +165,9 @@ export class AreaWatchService implements ServiceWithState {
         this.errorService.handleError(new Error(`Failed to get thumbnail for areawatch ${id}`, {cause: error}));
         return error;
       })),
-      tap(result => this._setThumbnail(id, theme, result.thumbnailImageUrl)),
-      map(result => result.thumbnailImageUrl)
+      tap(result => {
+        this._setThumbnail(id, result);
+      })
     )
   }
 
@@ -188,22 +179,27 @@ export class AreaWatchService implements ServiceWithState {
       .append('theme', theme)
       .append('paramHash', paramHash);
 
-    return this.http.post<{thumbnailImageUrl: string}>
+    return this.http.post<ThumbnailUrl>
     (`api/areawatch/${id}/thumbnail`, formData, {params: queryParms})
       .pipe(
         catchError((error) => throwError(() => {
           this.errorService.handleError(new Error(`Failed to upload thumbnail for areawatch ${id}`, {cause: error}));
           return error;
         })),
-        tap(result => this._setThumbnail(id, theme, result.thumbnailImageUrl))
+        tap(result => this._setThumbnail(id, result))
       )
   }
 
-  private _setThumbnail(id : string, theme: Theme, thumbnailUrl: string) {
-    const key = this._asThumbnailKey(id, theme);
+  private _setThumbnail(id : string, thumbnail: ThumbnailUrl) {
+    let themeMap = this._thumbnailCache().get(id);
+    if (!themeMap) {
+      themeMap = new Map<Theme, ThumbnailUrl>();
+    }
+    themeMap.set(thumbnail.theme, thumbnail);
+
     this._thumbnailCache.update(thumbnails => {
       const newThumbnails = new Map(thumbnails);
-      newThumbnails.set(key, thumbnailUrl);
+      newThumbnails.set(id, themeMap);
       return newThumbnails;
     });
   }
@@ -237,11 +233,13 @@ export class AreaWatchService implements ServiceWithState {
     const original = {...this.get(pat.id)};
     if (!original || original.localState !== LocalState.added) {
       // does not exist or another edit is pending
+      this.errorService.warn('Cannot apply edit, as Watch has already been changed', original.localState)
       return EMPTY;
     }
 
     pat.localState = LocalState.pending_edit;
     this.patchLocal(pat);
+
 
     return this.http.patch(`api/areawatch/${pat.id}`, pat)
       .pipe(
@@ -249,8 +247,7 @@ export class AreaWatchService implements ServiceWithState {
           pat.localState = LocalState.added;
           this.patchLocal(original) // revert edit
 
-          this.errorService.handleError(new Error(`Failed to patch areawatch ${pat.id}`, {cause: error}));
-          return error;
+          return this.errorService.handleError(new Error(`Failed to patch areawatch ${pat.id}`), error);
         })),
         map(result => ({...result, localState: LocalState.added})),
         tap(result => {

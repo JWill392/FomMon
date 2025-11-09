@@ -4,6 +4,8 @@ import {MatSlideToggle} from "@angular/material/slide-toggle";
 import {ThemeService} from "../../shared/theme.service";
 import {MatActionList, MatListItem} from "@angular/material/list";
 import {MatButton} from "@angular/material/button";
+import {LoaderComponent, LoaderPlaceholderComponent} from "../../shared/loader/loader.component";
+import {MatProgressSpinner} from "@angular/material/progress-spinner";
 
 @Component({
   selector: 'app-user-menu',
@@ -11,7 +13,10 @@ import {MatButton} from "@angular/material/button";
     MatSlideToggle,
     MatListItem,
     MatActionList,
-    MatButton
+    MatButton,
+    LoaderComponent,
+    LoaderPlaceholderComponent,
+    MatProgressSpinner
   ],
   templateUrl: './user-menu.html',
   styleUrl: './user-menu.scss'

@@ -73,10 +73,7 @@ export class UserService implements ServiceWithState {
       .pipe(
         catchError((error) => throwError(() => {
           this.logout();
-          const e = new Error("Failed to log in", {cause: error});
-
-          this.errorService.handleError(e);
-          return e;
+          return this.errorService.handleError(new Error("Failed to log in"), error);
         })),
         map(u => UserFactory.fromJson(u)),
         tap({
@@ -90,13 +87,10 @@ export class UserService implements ServiceWithState {
     return this.http.get<{url: string}>('api/user/profile-image')
       .pipe(
         catchError(error => throwError(() => {
-          const e = new Error("Failed to load profile image", {cause: error});
-          this.errorService.handleError(e);
-          return e;
+          return this.errorService.handleError(new Error("Failed to load profile image"), error);
         })),
-        map(body => body?.url ?? undefined),
         tap({
-          next: u => this._profileImageUrl.set(u),
+          next: u => this._profileImageUrl.set(u.url),
         })
         // not reflected in service state; non-critical
       )

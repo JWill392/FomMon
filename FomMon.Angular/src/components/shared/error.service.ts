@@ -4,7 +4,7 @@ import {Injectable, ErrorHandler} from '@angular/core';
   providedIn: 'root'
 })
 export class ErrorService implements ErrorHandler {
-  handleError(error: Error | string, cause?: Error): void {
+  handleError(error: Error | string, cause?: Error): Error {
     let fullError : Error
     if (error instanceof Error) {
       fullError = error;
@@ -19,6 +19,16 @@ export class ErrorService implements ErrorHandler {
     }
 
     console.error('ErrorService:', fullError); // TODO add error handling
+    // Log the full cause chain
+    let currentCause = fullError.cause;
+    let depth = 1;
+    while (currentCause) {
+      console.error(`  ${'  '.repeat(depth)}Caused by:`, currentCause);
+      currentCause = currentCause instanceof Error ? currentCause.cause : undefined;
+      depth++;
+    }
+
+    return fullError;
   }
 
   warn(s: string, error?: any) {

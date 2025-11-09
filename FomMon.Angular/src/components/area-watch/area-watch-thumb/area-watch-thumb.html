@@ -1,6 +1,7 @@
 <app-thumbnail-map class="thumb-map"
                    [sourceId]="id()"
-                   [src]="src()"
+                   [src]="thumbnail()?.url"
+                   [paramHash]="thumbnail()?.paramHash"
                    alt="watch thumbnail"
                    [geometry]="geometry()"
                    [height]="128"

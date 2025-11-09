@@ -3,6 +3,7 @@ import {ThumbnailMap, MapThumbnailGeneratedEvent} from "../../map/thumbnail-map/
 import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
 import {AreaWatchService} from "../area-watch.service";
 import {ThemeService} from "../../shared/theme.service";
+import {ThumbnailUrl} from "../area-watch.model";
 
 @Component({
   selector: 'app-area-watch-thumb',
@@ -21,7 +22,7 @@ export class AreaWatchThumb {
 
   private data = computed(() => this.areaWatchService.get(this.id()));
   protected geometry = computed(() => this.data()?.geometry);
-  protected src = computed<string>(() => this.areaWatchService.getThumbnail(this.id()));
+  protected thumbnail = computed<ThumbnailUrl>(() => this.areaWatchService.getThumbnail(this.id(), this.theme()));
 
   protected placeholderSrc = computed(() => `assets/areawatch-thumb-placeholder-${this.theme()}.png`);
   protected theme = computed(() => this.themeService.theme());

@@ -1,10 +1,18 @@
 @if (isAuthenticated()) {
-<img
+<app-loader [loading]="profileImageUrl() === undefined">
+  <img
     [src]="profileImageUrl()"
     alt="User profile image"
     class="user-bubble"
     (click)="openMenu($event)"
 />
+  <app-loader-placeholder>
+    <div class="user-bubble placeholder">
+      <mat-spinner [strokeWidth]="2" />
+    </div>
+  </app-loader-placeholder>
+</app-loader>
+
 <!--  TODO make dialog; close on click outside-->
 <dialog #menu closedby="any" class="menu-dialog">
   <div class="menu">

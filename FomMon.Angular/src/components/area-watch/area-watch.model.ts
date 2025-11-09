@@ -1,7 +1,13 @@
 ﻿import {Geometry} from 'geojson';
 import {LocalState, LocalStateItem} from "../shared/service/local-state";
 import {LayerKind} from "../layer-type/layer-type.model";
+import {Theme} from "../shared/theme.service";
 
+export interface ThumbnailUrl {
+  url: string;
+  paramHash: string;
+  theme: Theme;
+}
 export interface AreaWatch extends LocalStateItem {
   geometry: Geometry;
   id: string;

@@ -52,7 +52,7 @@ public class VersionedEntityObjectStorageService(IImageStorageService imageStora
             catch (Exception e)
             {
                 // clean up failed upload
-                await imageStorageService.TryDeleteImageAsync(objectName, c);
+                await imageStorageService.DeleteImageAsync(objectName, c);
                 throw;
             }
         }

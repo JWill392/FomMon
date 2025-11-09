@@ -9,6 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace FomMon.ApiService.Controllers;
 
+
+
 [ApiController]
 [Route("[controller]")]
 public class AreaWatchController(
@@ -87,22 +89,25 @@ public class AreaWatchController(
 
     [HttpPost("{id:Guid}/thumbnail")]
     [RequestSizeLimit(5 * 1024 * 1024)] // TODO configure max img size centrally
-    public async Task<ActionResult<string>> UploadThumbnailImage(Guid id, [FromQuery] ThumbnailTheme theme, IFormFile file, [FromQuery] string paramHash, CancellationToken c = default)
+    public async Task<ActionResult<ThumbnailUrlDto>> UploadThumbnailImage(Guid id, [FromQuery] ThumbnailTheme theme, IFormFile file, [FromQuery] string paramHash, CancellationToken c = default)
     {
         await using var stream = file.OpenReadStream();
-        var (name, errors) = await service.UploadThumbnailImageAsync(id, currentUser.Id!.Value, theme, stream, file.Length, paramHash, c);
+        var uploadResult = await service.UploadThumbnailImageAsync(id, currentUser.Id!.Value, theme, stream, file.Length, paramHash, c);
+        if (uploadResult.IsFailed) return ToActionResult(uploadResult);
+        
+        var name = uploadResult.Value;
+        
+        var urlResult = await imageStorageService.GetImageUrlAsync(name, 3600, c);
+        if (urlResult.IsFailed) return ToActionResult(urlResult);
 
-        if (errors is not null)
+        var thumbnail = new ThumbnailUrlDto()
         {
-            logger.LogError("Failed to upload thumbnail image: {guid}, {Errors}", id, errors);
-            if (errors.Any(e => e is NotFoundError)) return NotFound(errors.Select(e => e.Message));
-            return BadRequest(new {errors = errors.Select(e => e.Message)});
-        }
-        
-        var url = await imageStorageService.TryGetImageUrlAsync(name, 3600, getParamHash:true, c);
-        if (url is null) return NotFound("Failed to get image url after upload");
-        
-        return Ok(new {ThumbnailImageUrl=url});
+            Name = name,
+            ParamHash = paramHash,
+            Theme = theme,
+            Url = urlResult.Value,
+        };
+        return Ok(thumbnail);
     }
 
     [HttpGet("{id:Guid}/thumbnail")]
@@ -114,10 +119,21 @@ public class AreaWatchController(
 
         if (thumbnailName.IsNullOrEmpty()) return NotFound();
         
-        var url = await imageStorageService.TryGetImageUrlAsync(thumbnailName, 3600, getParamHash:true, c);
-        if (url is null) return NotFound();
+        var urlResult = await imageStorageService.GetImageUrlAsync(thumbnailName, 3600, c);
+        if (urlResult.IsFailed) return ToActionResult(urlResult);
+
+        var tagResult = await imageStorageService.GetParamHashAsync(thumbnailName, c);
+        if (tagResult.IsFailed) return ToActionResult(tagResult);
         
-        return Ok(new { ThumbnailImageUrl=url });
+        var thumbnail = new ThumbnailUrlDto()
+        {
+            Name = thumbnailName,
+            Theme = theme,
+            ParamHash = tagResult.Value,
+            Url = urlResult.Value,
+        };
+        
+        return Ok(thumbnail);
     }
  
     

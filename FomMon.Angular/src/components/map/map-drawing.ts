@@ -8,13 +8,15 @@ import {ErrorService} from "../shared/error.service";
 import {MapLayerService} from "./layer/map-layer.service";
 import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
 
+type DrawState = 'map-preinit' | 'control-added' | 'map-idle' | 'draw-ready' | 'destroyed' ;
+
 @Component({
   selector: 'app-map-drawing',
   imports: [],
   template: '',
   styles: []
 })
-export class MapDrawing implements OnInit {
+export class MapDrawing implements OnInit, OnDestroy {
   private readonly mapStateService = inject(MapStateService);
   private readonly mapLayerService = inject(MapLayerService);
   private readonly errorService = inject(ErrorService);
@@ -28,8 +30,12 @@ export class MapDrawing implements OnInit {
 
   private readonly terradrawGroupId = 'terradraw' as const;
 
+  /** Draw component state; currently just for debugging purposes */
+  protected drawState = signal<DrawState>('map-preinit');
+
   constructor() {
     effect(() => this.handleModeChange())
+
   }
 
   private handleModeChange() {
@@ -46,23 +52,28 @@ export class MapDrawing implements OnInit {
     // this.map = map;
     if (!this.map()) throw new Error('Map not initialized');
 
+
     this.drawControl = new MaplibreTerradrawControl({
       modes: ['polygon', 'select', 'delete-selection', 'render'],
       open: true
     });
     this.map().addControl(this.drawControl, 'top-right');
     this.destroyRef.onDestroy(() => this.map().removeControl(this.drawControl));
+    this.setDrawState('control-added');
+
 
     this.draw = this.drawControl.getTerraDrawInstance();
     if (!this.draw) {
       this.errorService.handleError(new Error('Failed to get terra draw instance'));
-      return undefined;
+      return;
     }
+
 
     // just hide until in draw mode (too slow to add control on entering draw mode)
     this.hideDrawControl();
 
     this.map().once('idle', () => {
+      this.setDrawState('map-idle');
       const drawEnabled = this.draw["_enabled"];
       if (drawEnabled) {
         // 'ready' will never be emitted, and otherwise impossible to know this based on public draw state
@@ -76,12 +87,20 @@ export class MapDrawing implements OnInit {
         // covers all cases, but really loaded & load are (weirdly) totally unrelated concepts
       }
     });
+  }
 
-    return this.draw;
+  public ngOnDestroy() {
+    this.exitDrawMode();
+    this.setDrawState('destroyed');
   }
 
 
+  private setDrawState(state: DrawState) {
+    this.drawState.set(state);
+  }
+
   private onDrawReady() {
+    this.setDrawState('draw-ready');
     const layers = this.drawControl.cleanStyle(this.map().getStyle(), {onlyTerraDrawLayers: true}).layers.map(l => l.id);
 
 

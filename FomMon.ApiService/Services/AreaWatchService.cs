@@ -5,7 +5,6 @@ using FomMon.Data.Models;
 using FomMon.ServiceDefaults;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
-using NetTopologySuite.Algorithm;
 
 namespace FomMon.ApiService.Services;
 
@@ -111,7 +110,7 @@ public sealed class AreaWatchService(
         
         foreach (var thumbnail in GetThumbnailObjectNames(aw))
         {
-            await imageStorageService.TryDeleteImageAsync(thumbnail, c);
+            await imageStorageService.DeleteImageAsync(thumbnail, c);
         }
         
         db.AreaWatches.Remove(aw);

@@ -20,7 +20,7 @@ public class UserController(
 {
 
     [HttpGet()]
-    public async Task<ActionResult<UserDto>> GetById(CancellationToken c = default)
+    public async Task<IActionResult> GetById(CancellationToken c = default)
     {
         var result = await userService.GetAsync(currentUser.Id!.Value, c);
         if (result.IsFailed) return ToActionResult(result);
@@ -41,8 +41,6 @@ public class UserController(
             var result = await userService.UploadProfileImage(currentUser.Id!.Value, imageStream, file.Length, c);
             if (result.IsFailed) return ToActionResult(result);
             
-            // TODO return URL
-            
             return Ok(new { message = "Profile image uploaded successfully", result.Value });
         }
         catch (ArgumentException ex)
@@ -60,8 +58,12 @@ public class UserController(
 
         if (userResult.Value.ProfileImageObjectName.IsNullOrEmpty()) return NotFound();
         
-        var url = await imageStorageService.TryGetImageUrlAsync(userResult.Value.ProfileImageObjectName, 3600, getParamHash:false, c:c); 
-        return Ok(new { url });
+        var urlResult = await imageStorageService.GetImageUrlAsync(userResult.Value.ProfileImageObjectName, 3600, c:c);
+        if (urlResult.IsFailed) return ToActionResult(urlResult);
+        
+        var url = urlResult.Value;
+        
+        return Ok(new {url});
     }
 
     [HttpGet("profile-image/identicon")]

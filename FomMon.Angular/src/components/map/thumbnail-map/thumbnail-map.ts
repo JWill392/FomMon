@@ -54,7 +54,7 @@ export class ThumbnailMap {
 
   /** Optional image source if already saved; otherwise map will generate */
   imgSrcInput = input<string | undefined>(undefined, {alias: "src"});
-  imgParamHashInput = input<string | undefined>(undefined, {alias: "param-hash"});
+  imgParamHashInput = input<string | undefined>(undefined, {alias: "paramHash"});
   imgThemeInput = input.required<Theme>({alias: "theme"});
 
   // OUTPUT
