@@ -2,6 +2,8 @@
 
 This project is in early development. It's a personal project to learn c# + angular web app dev. 
 
+![screenshot.png](screenshot.png)
+
 ## Features
  - Watch specified areas for changes
  - Select from a variety of data sources:
