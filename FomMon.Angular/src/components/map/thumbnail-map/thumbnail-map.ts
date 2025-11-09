@@ -187,4 +187,4 @@ export class ThumbnailMap {
       configurable: true
     });
   }
-})();
+})()

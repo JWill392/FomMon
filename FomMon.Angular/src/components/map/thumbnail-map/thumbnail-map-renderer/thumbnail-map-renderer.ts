@@ -8,7 +8,7 @@ import {
 import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
 import {concatMap, Subject} from "rxjs";
 import {boundingBox} from "../../map-util";
-import {Map as MapLibreMap, StyleSpecification} from "maplibre-gl";
+import {GeoJSONSource, Map as MapLibreMap, StyleSpecification} from "maplibre-gl";
 import {v4 as uuidv4} from "uuid";
 import {MapDisplayService} from "../../map-display.service";
 import {toPng as htmlToPng} from "html-to-image";
@@ -60,6 +60,7 @@ export class ThumbnailMapRenderer implements OnInit {
     };
   })
   protected readonly instanceId = uuidv4();
+  protected readonly sourceId = computed(() => `thumbnail-map-${this.instanceId}`);
   protected thumbnailStyle = computed<StyleSpecification>(() => {
     return this.getThumbnailMapStyle(this.commandThemeOrDefault());
   });
@@ -69,8 +70,13 @@ export class ThumbnailMapRenderer implements OnInit {
     effect(() => {
       const cmd = this.command();
       const state = this.state();
+      const map = this.map();
       // start processing
       if (cmd && state === 'idle') {
+        const source = map.getSource(this.sourceId()) as GeoJSONSource;
+        if (!source) this.errorService.handleError(new Error('Source not found: ' + this.sourceId()));
+
+        source.setData(cmd.request.geometry);
 
         this.setState('map-loading');
       }

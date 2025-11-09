@@ -10,8 +10,7 @@
            (mapLoad)="onMapLoad($event)">
 
     <mgl-geojson-source
-        [id]="`thumbnail-map-${instanceId}`"
-        [data]="command()?.request.geometry"
+        [id]="sourceId()"
     />
 
     <mgl-layer

@@ -7,10 +7,10 @@
   "scripts": {
     "ng": "ng",
     "start": "run-script-os",
-    "start:win32": "ng serve --port %PORT% --configuration development",
-    "start:default": "ng serve --port $PORT --configuration development",
+    "start:win32": "ng serve --port %PORT% --configuration=development",
+    "start:default": "ng serve --port $PORT --configuration=development",
     "build": "ng build",
-    "watch": "ng build --watch --configuration development",
+    "watch": "ng build --watch --configuration=development",
     "test": "ng test",
     "postinstall": "node scripts/download-versatiles-style-assets.js"
   },
