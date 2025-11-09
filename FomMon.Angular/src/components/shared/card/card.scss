@@ -1,6 +1,10 @@
 :host {
   --card-action-color: transparent;
-  background: #f2f4f0;
+  --card-background: var(--mat-sys-surface);
+  --card-color: var(--mat-sys-on-surface);
+
+  background: var(--card-background);
+  color: var(--card-color);
   padding: 5px;
 
   display: flex;
@@ -10,16 +14,20 @@
   transition: background 0.1s ease;
 }
 :host(.item-odd) {
-  background: #fafafa;
+  --card-background: var(--mat-sys-surface-container-low);
 }
 
-:host:hover {
-  background: #e0eadc;
-  --card-action-color: #5a6c52;
+:host:hover { // hovered here
+  --card-background: var(--mat-sys-surface-container-high);
+  --card-action-color: var(--mat-sys-on-surface);
+}
+:host.hovered { // hovered on map
+  --card-background: var(--mat-sys-surface-container-high);
+  --card-action-color: var(--mat-sys-on-surface);
 }
 
 :host.selected {
-  background: #99b88c;
+  --card-background: var(--mat-sys-surface-container-highest);
 }
 
 .action-container {

@@ -1,6 +1,8 @@
-﻿using FomMon.ApiService.Contracts;
+﻿using FluentResults;
+using FomMon.ApiService.Contracts;
 using FomMon.ApiService.Infrastructure;
 using FomMon.ApiService.Services;
+using FomMon.Data.Models;
 using MapsterMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -13,7 +15,7 @@ public class AreaWatchController(
     IAreaWatchService service, 
     IMapper mapper, 
     ICurrentUser currentUser,
-    IObjectStorageService objectStorageService,
+    IImageStorageService imageStorageService,
     ILogger<AreaWatchController> logger) : ControllerBase
 {
 
@@ -70,13 +72,6 @@ public class AreaWatchController(
 
         var watchDtos = mapper.Map<ICollection<AreaWatchDto>>(watches);
 
-        foreach (var dto in watchDtos)
-        {
-            if (dto.ThumbnailImageObjectName.IsNullOrEmpty()) continue;
-            var url = await objectStorageService.GetImageUrlAsync(dto.ThumbnailImageObjectName, 3600, c);
-            dto.ThumbnailImageUrl = url;
-        }
-
         return Ok(watchDtos);
     }
 
@@ -91,34 +86,46 @@ public class AreaWatchController(
     }
 
     [HttpPost("{id:Guid}/thumbnail")]
-    [RequestSizeLimit(5 * 1024 * 1024)] // TODO configure centrally
-    public async Task<ActionResult<string>> UploadThumbnailImage(Guid id, IFormFile file, CancellationToken c = default)
+    [RequestSizeLimit(5 * 1024 * 1024)] // TODO configure max img size centrally
+    public async Task<ActionResult<string>> UploadThumbnailImage(Guid id, [FromQuery] ThumbnailTheme theme, IFormFile file, [FromQuery] string paramHash, CancellationToken c = default)
     {
         await using var stream = file.OpenReadStream();
-        var (name, errors) = await service.UploadThumbnailImage(id, currentUser.Id!.Value, stream, file.Length, c);
+        var (name, errors) = await service.UploadThumbnailImageAsync(id, currentUser.Id!.Value, theme, stream, file.Length, paramHash, c);
 
         if (errors is not null)
         {
             logger.LogError("Failed to upload thumbnail image: {guid}, {Errors}", id, errors);
-            if (errors.Any(e => e is NotFoundError)) return NotFound();
+            if (errors.Any(e => e is NotFoundError)) return NotFound(errors.Select(e => e.Message));
             return BadRequest(new {errors = errors.Select(e => e.Message)});
         }
         
-        var url = await objectStorageService.GetImageUrlAsync(name, 3600, c);
+        var url = await imageStorageService.TryGetImageUrlAsync(name, 3600, getParamHash:true, c);
+        if (url is null) return NotFound("Failed to get image url after upload");
         
-        return Ok(new {ThumbnailImageObjectName=name, ThumbnailImageUrl=url});
+        return Ok(new {ThumbnailImageUrl=url});
     }
 
     [HttpGet("{id:Guid}/thumbnail")]
-    public async Task<ActionResult<string>> GetThumbnailImageUrl(Guid id, CancellationToken c = default)
+    public async Task<ActionResult<string>> TryGetThumbnailImageUrl(Guid id, [FromQuery] ThumbnailTheme theme, CancellationToken c = default)
     {
-        var (areaWatch, errors) = await service.GetByIdAsync(id, currentUser.Id!.Value, c);
-        if (errors is not null) return BadRequest(errors);
+        var result = await service.GetThumbnailImageNameAsync(id, currentUser.Id!.Value, theme, c);
+        if (result.IsFailed) return ToActionResult(result);
+        var thumbnailName = result.Value;
 
-        if (areaWatch.ThumbnailImageObjectName.IsNullOrEmpty()) return NotFound();
+        if (thumbnailName.IsNullOrEmpty()) return NotFound();
         
-        var url = await objectStorageService.GetImageUrlAsync(areaWatch.ThumbnailImageObjectName, 3600, c);
-        return Ok(new { url });
+        var url = await imageStorageService.TryGetImageUrlAsync(thumbnailName, 3600, getParamHash:true, c);
+        if (url is null) return NotFound();
+        
+        return Ok(new { ThumbnailImageUrl=url });
     }
+ 
     
+    private ActionResult ToActionResult<T>(Result<T> result)
+    {
+        if (result.IsSuccess) return Ok(result.Value);
+        if (result.HasError<NotFoundError>(out var e)) return NotFound(e.First().Message);
+        return BadRequest(result.Errors.First().Message);
+    }
+
 }

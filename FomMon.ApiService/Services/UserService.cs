@@ -32,7 +32,8 @@ public interface IUserService
     
     public Task<Result<string>> UploadProfileImage(Guid id, Stream image, long length, CancellationToken c = default);
     public Task<Result<Image<Rgba32>>> GenerateIdenticonAsync(Guid id, CancellationToken c = default);
-    
+
+    public Task<Result<string>> SetProfileImageIdenticonAsync(Guid id, CancellationToken c = default);
 }
 
 public sealed class UserService(AppDbContext db, 
@@ -232,7 +233,7 @@ public sealed class UserService(AppDbContext db,
             }
         }
 
-        var img = new Image<Rgba32>(ProfileWidth, ProfileHeight, backgroundColor: Color.ParseHex("#f3f3f3"));
+        var img = new Image<Rgba32>(ProfileWidth, ProfileHeight, backgroundColor: Color.ParseHex("#ffffff00"));
         var color = Color.ParseHex(colors[Math.Abs(hash % colors.Length)]);
         
         for (int y = 0; y < blockCountY; y++)

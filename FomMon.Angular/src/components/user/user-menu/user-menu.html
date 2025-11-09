@@ -11,12 +11,18 @@
     <div class="menu-header">
       <span>{{ user().displayName }}</span>
     </div>
-    <div class="menu-body">
-      <a class="menu-item" (click)="logout()">Logout</a>
-    </div>
+    <mat-action-list class="menu-body">
+      <mat-list-item  class="menu-item" (click)="toggleDarkMode($event)" >
+        <mat-slide-toggle [checked]="isDarkMode()" (click)="toggleDarkMode($event)">Dark Mode</mat-slide-toggle>
+      </mat-list-item>
+
+      <button mat-list-item class="menu-item" (click)="logout()">Logout</button>
+    </mat-action-list>
   </div>
 </dialog>
 } @else {
-  <a class="action-login" (click)="login()">Login</a>
+  <button matButton="filled" class="action-login" (click)="login()">
+    Login
+  </button>
 <!--  TODO add register button -->
 }

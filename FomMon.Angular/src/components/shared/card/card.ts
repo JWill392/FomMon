@@ -1,4 +1,4 @@
-import {Component, input} from '@angular/core';
+import {Component, computed, ContentChildren, input, QueryList, ViewChildren} from '@angular/core';
 
 @Component({
   selector: 'app-card-label',
@@ -12,17 +12,12 @@ import {Component, input} from '@angular/core';
     align-items: flex-start;
     gap: 10px;
 
-    font-size: 14px;
-    color: #222;
+    font-size: var(--mat-sys-body-medium);
     font-weight: normal;
     overflow: hidden;
   }
 
   .label-title {
-    font-size: 14px;
-    font-weight: normal;
-    color: #1e351e;
-
     width: 100%;
     overflow: hidden;
     text-wrap: nowrap;
@@ -104,5 +99,7 @@ export class CardAction {
 })
 export class Card {
   isOdd = input.required<boolean>();
+  hasActions = computed(() => this.childActions?.length > 0)
 
+  @ContentChildren(CardAction, {descendants: true}) childActions: QueryList<CardAction>;
 }

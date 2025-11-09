@@ -77,7 +77,7 @@ public sealed class AlertService(
             }
         }
 
-        logger.LogDebug("Added {addedCount} alerts to {aw}", addedAlerts.Count, aw);
+        if (addedAlerts.Count > 0) logger.LogDebug("Added {addedCount} alerts to {aw}", addedAlerts.Count, aw);
         await db.AreaWatchAlerts.AddRangeAsync(addedAlerts, c);
         await db.SaveChangesAsync(c);
         

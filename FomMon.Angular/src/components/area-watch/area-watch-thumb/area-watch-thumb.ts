@@ -1,7 +1,8 @@
 import {Component, computed, DestroyRef, inject, input} from '@angular/core';
-import {ThumbnailMap} from "../../map/thumbnail-map/thumbnail-map";
+import {ThumbnailMap, MapThumbnailGeneratedEvent} from "../../map/thumbnail-map/thumbnail-map";
 import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
 import {AreaWatchService} from "../area-watch.service";
+import {ThemeService} from "../../shared/theme.service";
 
 @Component({
   selector: 'app-area-watch-thumb',
@@ -13,18 +14,25 @@ import {AreaWatchService} from "../area-watch.service";
 })
 export class AreaWatchThumb {
   private areaWatchService = inject(AreaWatchService);
+  private themeService = inject(ThemeService);
   private destroyRef = inject(DestroyRef);
 
   id = input.required<string>();
 
   private data = computed(() => this.areaWatchService.get(this.id()));
   protected geometry = computed(() => this.data()?.geometry);
-  protected src = computed(() => this.data()?.thumbnailImageUrl);
+  protected src = computed<string>(() => this.areaWatchService.getThumbnail(this.id()));
 
-  protected async onThumbMapSaved(imageUri: string) {
-    const image : Blob = await (await fetch(imageUri)).blob()
-    this.areaWatchService.uploadThumbnail$(this.id(), image, 'thumbnail.png')
+  protected placeholderSrc = computed(() => `assets/areawatch-thumb-placeholder-${this.theme()}.png`);
+  protected theme = computed(() => this.themeService.theme());
+
+  protected async onThumbMapSaved(event: MapThumbnailGeneratedEvent) {
+    const image : Blob = await (await fetch(event.src)).blob()
+    this.areaWatchService.uploadThumbnail$(this.id(), event.theme, image, 'thumbnail.png', event.paramHash)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe();
   }
+
+
+
 }

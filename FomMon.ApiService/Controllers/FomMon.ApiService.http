@@ -17,7 +17,6 @@ grant_type=password&client_id={{client}}&username={{username}}&password={{passwo
 > {%
     const t = response.body.access_token;
     client.global.set("access_token", t);
-    console.log(t);
 %}
 
 
@@ -51,7 +50,13 @@ Authorization: Bearer {{access_token}}
 
 
 ### AreaWatch Get
+@areaid = 45716522-a61e-4621-aea9-71972c693628
 GET http://localhost:5389/AreaWatch/{{areaid}}
+Authorization: Bearer {{access_token}}
+
+### AreaWatch Get Thumbnail
+@theme = light
+GET http://localhost:5389/AreaWatch/{{areaid}}/thumbnail?theme={{theme}}
 Authorization: Bearer {{access_token}}
 
 ### AW Delete
@@ -93,12 +98,10 @@ Content-Type: application/merge-patch+json
 }
 
 ### Alerts Get for id
-@areaid = 3d10305d-d0c7-45f3-aaa6-64c01cc0d8bb
 GET http://localhost:5389/Alert?areaWatchId={{areaid}}
 Authorization: Bearer {{access_token}}
 
 ### Alerts Get
-//@areaid = 666fa067-6124-41a8-96b2-fef8062f41bc
 GET http://localhost:5389/Alert
 Authorization: Bearer {{access_token}}
 
@@ -115,7 +118,7 @@ Content-Type: application/json
 GET http://localhost:5389/layer
 
 ### Profile Image Post
-POST http://localhost:5389/User/ProfileImage
+POST http://localhost:5389/User/profile-image
 Authorization: Bearer {{access_token}}
 Content-Type: multipart/form-data; boundary=boundary
 
@@ -125,14 +128,14 @@ Content-Disposition: form-data; name="file"; filename="profileImage.png"
 < /home/jackwill/Dropbox/Projects/FomMon/FomMon.Angular/public/assets/user-profile-dummy.png
 --boundary--
 
-### Profile Image delete
-DELETE http://localhost:5389/User/ProfileImage
-Authorization: Bearer {{access_token}}
-
 ### Profile Image Get
-GET http://localhost:5389/User/ProfileImage
+GET http://localhost:5389/User/profile-image
 Authorization: Bearer {{access_token}}
 
-### Profile Identicon Generate
-GET http://localhost:5389/User/ProfileImage/identicon
+### Profile Identicon Generate GET
+GET http://localhost:5389/User/profile-image/identicon
+Authorization: Bearer {{access_token}}
+
+### Profile Identicon Generate POST
+POST http://localhost:5389/User/profile-image/identicon
 Authorization: Bearer {{access_token}}

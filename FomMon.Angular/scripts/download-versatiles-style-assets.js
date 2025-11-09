@@ -10,6 +10,10 @@ const GLYPH_FONTS_DIR = path.join(__dirname, '../public/assets/glyphs');
 const SPRITES_URL = 'https://github.com/versatiles-org/versatiles-style/releases/download/v5.7.0/sprites.tar.gz';
 const SPRITES_DIR = path.join(__dirname, '../public/assets/sprites');
 
+const LOG = console.log.bind(console);
+const ERR = console.error.bind(console);
+
+
 async function downloadAndExtract(url, targetDir, assetName) {
     if (!fs.existsSync(targetDir)) {
         fs.mkdirSync(targetDir, { recursive: true });
@@ -17,12 +21,12 @@ async function downloadAndExtract(url, targetDir, assetName) {
 
     // Check if assets already exist
     if (fs.readdirSync(targetDir).length > 0) {
-        console.log(`Asset '${assetName}' already exists.  Skipping download`);
+        LOG(`Asset '${assetName}' already exists.  Skipping download`);
         return;
     }
 
 
-    console.log(`Downloading ${assetName}...`);
+    LOG(`Downloading ${assetName}...`);
 
     return new Promise((resolve, reject) => {
         https.get(url, (response) => {
@@ -31,9 +35,9 @@ async function downloadAndExtract(url, targetDir, assetName) {
                     .pipe(createGunzip())
                     .pipe(tar.x({cwd: targetDir}))
                     .on('finish', () => {
-                        console.log(`Downloaded ${assetName} successfully! extracting...`);
+                        LOG(`Downloaded ${assetName} successfully! extracting...`);
                         resolve();
-                        console.log(`Extracted ${assetName} successfully!`);
+                        LOG(`Extracted ${assetName} successfully!`);
                     })
                     .on('error', reject);
             }
@@ -55,7 +59,7 @@ async function downloadVersatilesStyleAssets() {
         await downloadAndExtract(GLYPH_FONT_URL, GLYPH_FONTS_DIR, 'glyph fonts');
         await downloadAndExtract(SPRITES_URL, SPRITES_DIR, 'sprites');
     } catch (error) {
-        console.error('Error downloading assets:', error);
+        ERR('Error downloading assets:', error);
         throw error;
     }
 }

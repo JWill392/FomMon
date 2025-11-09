@@ -7,9 +7,9 @@
 .badge {
   list-style: none;
   font-size: 9px;
-  background: #eaffd3;
-  color: #306030;
-  padding: 4px 6px;
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+  padding: 4px 4px;
   border-radius: 4px;
   font-weight: bold;
   text-transform: uppercase;

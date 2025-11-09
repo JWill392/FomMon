@@ -166,7 +166,7 @@ export class AreaWatchDetail implements OnInit {
 
   private onLoadedView() {
     this.flyToSelf();
-    this.mapStateService.select(this.featureId())
+    this.mapStateService.select(this.featureId());
   }
 
   private prepopForm() {
@@ -217,7 +217,7 @@ export class AreaWatchDetail implements OnInit {
           this.notService.pushMessage(`Watch '${result.name}' added`);
         },
         error: error => {
-          console.error('AreaWatch create error', error);
+          this.errorService.handleError('AreaWatch create error', error);
           this.notService.pushMessage("Failed to add watch.  Please try again.");
         }
       });
@@ -280,7 +280,7 @@ export class AreaWatchDetail implements OnInit {
           this.notService.pushMessage(`Watch deleted`);
         },
         error: (e) => {
-          console.error('Failed to delete watch', e);
+          this.errorService.handleError('Failed to delete watch', e);
           this.notService.pushMessage(`Failed to delete watch '${data.name}'`);
         }
       });

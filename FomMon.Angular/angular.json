@@ -32,7 +32,7 @@
             ],
             "styles": [
               "./node_modules/maplibre-gl/dist/maplibre-gl.css",
-              "https://cdn.jsdelivr.net/npm/@watergis/maplibre-gl-terradraw@1.0.1/dist/maplibre-gl-terradraw.css",
+              "./node_modules/@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css",
               "src/styles.scss"
             ]
           },
@@ -95,7 +95,7 @@
             ],
             "styles": [
               "./node_modules/maplibre-gl/dist/maplibre-gl.css",
-              "https://cdn.jsdelivr.net/npm/@watergis/maplibre-gl-terradraw@1.0.1/dist/maplibre-gl-terradraw.css",
+              "./node_modules/@watergis/maplibre-gl-terradraw/dist/maplibre-gl-terradraw.css",
               "src/styles.scss"
             ]
           }

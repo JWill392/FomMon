@@ -1,5 +1,4 @@
 :host {
-  --thumbnail-scale-factor: 0; // set in component
   display: block;
   width: 100%;
   height: 100%;
@@ -12,37 +11,12 @@
   height: 100%;
   object-fit: cover;
   border-radius: 8px;
-}
+  border: 1px solid var(--mat-sys-outline-variant);
 
-
-.thumb-map {
-  width: 100%;
-  height: 100%;
-  visibility: hidden;
-
-  display: block;
-  object-fit: cover;
-  border-radius: 8px;
-  overflow: hidden;
-
-  &.visible {
-    visibility: visible;
+  transition: filter 0.2s ease-in-out;
+  filter: none;
+  &.placeholder {
+    filter: blur(8px);
   }
 }
 
-
-.thumb-map-wrapper {
-  // Render map larger size to get higher zoom level
-  width: calc(100% * var(--thumbnail-scale-factor));
-  height: calc(100% * var(--thumbnail-scale-factor));
-
-  // Scale down to actual thumbnail size
-  transform: scale(calc(1 / var(--thumbnail-scale-factor)));
-  transform-origin: top left;
-
-
-  // Position absolutely so it doesn't affect layout
-  position: absolute;
-  top: 0;
-  left: 0;
-}

@@ -1,4 +1,5 @@
-﻿using FomMon.ApiService.Contracts;
+﻿using FluentResults;
+using FomMon.ApiService.Contracts;
 using FomMon.ApiService.Infrastructure;
 using FomMon.ApiService.Services;
 using FomMon.Data.Models;
@@ -13,7 +14,7 @@ namespace FomMon.ApiService.Controllers;
 [Route("[controller]")]
 public class UserController(
     IUserService userService,
-    IObjectStorageService objectStorageService,
+    IImageStorageService imageStorageService,
     IMapper mapper,
     ICurrentUser currentUser) : ControllerBase
 {
@@ -22,13 +23,8 @@ public class UserController(
     public async Task<ActionResult<UserDto>> GetById(CancellationToken c = default)
     {
         var result = await userService.GetAsync(currentUser.Id!.Value, c);
-        if (result.IsFailed)
-        {
-            if (result.HasError<NotFoundError>())
-                return NotFound();
-            
-            return BadRequest();
-        }
+        if (result.IsFailed) return ToActionResult(result);
+        
         User user = result.Value;
         
         var userDto = mapper.Map<UserDto>(user);
@@ -43,13 +39,7 @@ public class UserController(
         {
             await using var imageStream = file.OpenReadStream();
             var result = await userService.UploadProfileImage(currentUser.Id!.Value, imageStream, file.Length, c);
-            if (result.IsFailed)
-            {
-                if (result.HasError<NotFoundError>())
-                    return NotFound();
-    
-                return BadRequest(new {errors = result.Errors.Select(e => e.Message)});
-            }
+            if (result.IsFailed) return ToActionResult(result);
             
             // TODO return URL
             
@@ -65,26 +55,39 @@ public class UserController(
     [HttpGet("profile-image")]
     public async Task<IActionResult> GetProfileImageUrl(CancellationToken c = default)
     {
-        var (user, errors) = await userService.GetAsync(currentUser.Id!.Value, c);
-        if (errors is not null) return BadRequest(errors);
+        var userResult = await userService.GetAsync(currentUser.Id!.Value, c);
+        if (userResult.IsFailed) return ToActionResult(userResult);
 
-        if (user.ProfileImageObjectName.IsNullOrEmpty()) return NotFound();
+        if (userResult.Value.ProfileImageObjectName.IsNullOrEmpty()) return NotFound();
         
-        var url = await objectStorageService.GetImageUrlAsync(user.ProfileImageObjectName, 3600, c);
+        var url = await imageStorageService.TryGetImageUrlAsync(userResult.Value.ProfileImageObjectName, 3600, getParamHash:false, c:c); 
         return Ok(new { url });
     }
 
     [HttpGet("profile-image/identicon")]
     public async Task<IActionResult> GenerateIdenticon(CancellationToken c = default)
     {
-        var (img, errors) = await userService.GenerateIdenticonAsync(currentUser.Id!.Value, c);
-        if (errors is not null) return BadRequest(errors);
+        var result = await userService.GenerateIdenticonAsync(currentUser.Id!.Value, c);
+        if (result.IsFailed) return ToActionResult(result);
         
-        using var image = img;
         using var imgStream = new MemoryStream();
-        await img.SaveAsWebpAsync(imgStream, c);
+        await result.Value.SaveAsWebpAsync(imgStream, c);
         imgStream.Position = 0;
         return File(imgStream.ToArray(), "image/webp");
+    }
+
+    [HttpPost("profile-image/identicon")]
+    public async Task<IActionResult> SetIdenticon(CancellationToken c = default)
+    {
+        var result = await userService.SetProfileImageIdenticonAsync(currentUser.Id!.Value, c);
+        return ToActionResult(result);
+    }
+
+    private ActionResult ToActionResult<T>(Result<T> result)
+    {
+        if (result.IsSuccess) return Ok(result.Value);
+        if (result.HasError<NotFoundError>(out var e)) return NotFound(e.First().Message);
+        return BadRequest(result.Errors.First().Message);
     }
 }
 

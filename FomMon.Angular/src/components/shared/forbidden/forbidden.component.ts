@@ -10,5 +10,5 @@ import {RouterLink} from "@angular/router";
   styleUrl: './forbidden.component.scss'
 })
 export class ForbiddenComponent {
-
+  // TODO redirect back to source page on login
 }

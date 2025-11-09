@@ -19,7 +19,7 @@
   gap: 10px;
   padding: 5px;
   cursor: pointer;
-  color: #333
+  color: var(--mat-sys-on-surface)
 }
 
 .action-item-icon {
@@ -50,9 +50,7 @@ form {
 }
 
 .chip-form-field-label {
-  color: rgba(0, 0, 0, 0.6);
   font-size: 12px;
-  font-weight: 400;
   margin-bottom: 8px;
   display: block;
 }

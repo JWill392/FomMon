@@ -1,48 +1,53 @@
-
-<!-- Area Watches GeoJSON Source -->
-<mgl-geojson-source
-        [id]=sourceId
-        [data]="features()"
-
+<app-map-layer-group
+    [groupId]="groupId"
+    category="feature"
+    name="Watches"
+    [order]="10"
+    thumbnailImg="assets/layer-preview-areawatch.png"
+    [initiallyVisible]="true"
+    [interactivity]="{select: true, hover: true}"
 >
-  <app-map-layer-group
-      [groupId]="groupId"
-      category="feature"
-      name="Watches"
-      [order]="10"
-      thumbnailImg="assets/layer-preview-areawatch.png"
-      [initiallyVisible]="true"
-      [interactivity]="{select: true, hover: true}"
-    />
 
-  <mgl-layer
+
+  <mgl-geojson-source
+          [id]=sourceId
+  >
+    @for (watch of areaWatches(); track watch.id) {
+      @let feat = asFeatureFields(watch);
+      <mgl-feature
+          [geometry]="feat.geometry"
+          [id]="feat.featureId"
+          [properties]="feat.properties"
+      ></mgl-feature>
+    }
+
+
+  <app-layer
           [source]=sourceId
-          [id]="layerIdFill"
+          [groupId]="groupId"
+          id="area-watch"
           type="fill"
           [paint]="{
-        'fill-color': [
-          'case',
-          ['boolean', ['feature-state', 'selected'], false], '#FFB347',
-          '#3bb2d0'
-        ],
-        'fill-opacity': [
-          'case',
-          ['boolean', ['feature-state', 'hide'], false], 0,
-          ['boolean', ['feature-state', 'hover'], false], 0.5,
-          0.3
-        ]
-      }"
+          'fill-color': [
+            'case',
+            ['boolean', ['feature-state', 'selected'], false], '#FFB347',
+            '#3bb2d0'
+          ],
+          'fill-opacity': [
+            'case',
+            ['boolean', ['feature-state', 'hide'], false], 0,
+            ['boolean', ['feature-state', 'hover'], false], 0.5,
+            0.3
+          ]
+        }"
+  />
 
-          [layout]="mapLayerService.getLayout(layerIdFill)"
-          appMapLayer
-          [groupId]="groupId"
-  ></mgl-layer>
-
-  <mgl-layer
-          [source]=sourceId
-          [id]="layerIdOutline"
-          type="line"
-          [paint]="{
+  <app-layer
+      [groupId]="groupId"
+      [source]=sourceId
+      id="area-watch-outline"
+      type="line"
+      [paint]="{
 
         'line-color': [
           'case',
@@ -57,35 +62,32 @@
           1
         ]
       }"
-          [layout]="mapLayerService.getLayout(layerIdOutline)"
-          appMapLayer
-          [groupId]="groupId"
           [overrideInteractivity]="{select: false, hover: false}"
-  ></mgl-layer>
+  ></app-layer>
 
-  <mgl-layer
-          [source]=sourceId
-          [id]="layerIdLabel"
-          type="symbol"
-          [minzoom]="8"
+  <app-layer
+      [groupId]="groupId"
+      id="area-watch-label"
+      [source]=sourceId
+      type="symbol"
+      [minzoom]="8"
 
-          [paint]="{
-          'text-color': '#3bb2d0',
-          'text-halo-color': '#ffffff',
-          'text-halo-width': 2,
-          'text-opacity': ['case',
-            ['boolean', ['feature-state', 'hide'], false], 0,
-            1
-          ]
+      [paint]="{
+        'text-color': 'rgb(51,51,68)',
+        'text-halo-color': 'rgba(255,255,255,0.8)',
+        'text-halo-width': 2,
+        'text-halo-blur': 1,
+        'text-opacity': ['case',
+          ['boolean', ['feature-state', 'hide'], false], 0,
+          1
+        ]
       }"
-          [layout]="mapLayerService.getLayout(layerIdLabel)"
-          appMapLayer
-          [groupId]="groupId"
-          [overrideInteractivity]="{select: false, hover: false}"
-          [additionalLayout]="{
+      [overrideInteractivity]="{select: false, hover: false}"
+      [layout]="{
         'text-field': ['get', 'name'],
-        'text-font': ['Noto Sans Regular'],
+        'text-font': ['noto_sans_regular'],
         'text-size': 14
       }"
-  ></mgl-layer>
+  />
 </mgl-geojson-source>
+</app-map-layer-group>

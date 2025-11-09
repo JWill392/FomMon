@@ -26,6 +26,9 @@ export class LoaderComponent {
     alias: "error"
   });
 
+  diameter = input<number>(40);
+  strokeWidth = input<number>(4);
+
   isLoadingOrIdle = computed(() => this.isLoadingInput() || this.dependentStateInput().some(s => s.isLoading() || s.isIdle()));
   error = computed(() => this.errorInput() || this.dependentStateInput().find(s => s.isError())?.error());
 

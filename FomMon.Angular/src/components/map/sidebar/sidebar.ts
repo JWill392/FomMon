@@ -15,6 +15,7 @@ import {MapStateService} from "../map-state.service";
 import {getParentRoute, RoutePaths} from "../../../routes/app.routes";
 import {AppConfigService} from "../../../config/app-config.service";
 import {MatIconButton} from "@angular/material/button";
+import {MatActionList, MatListItem} from "@angular/material/list";
 
 @Component({
   selector: 'app-sidebar',
@@ -23,12 +24,19 @@ import {MatIconButton} from "@angular/material/button";
     RouterLink,
     SidebarItem,
     NgIconComponent,
-    MatIconButton
+    MatIconButton,
+    MatActionList,
+    MatListItem
   ],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss',
   providers: [provideIcons({phosphorStack, phosphorBinoculars, phosphorCaretLeft,
-    phosphorTreeEvergreenFill, phosphorX})]
+    phosphorTreeEvergreenFill, phosphorX})],
+  host: {
+    '[style.--nav-width.px]': 'navWidth()',
+    '[style.--content-width.px]': '_contentWidth()',
+    '[style.--animation-duration.ms]': '_animationDurationMs',
+  }
 })
 export class Sidebar implements OnInit {
   private router = inject(Router);
@@ -42,23 +50,15 @@ export class Sidebar implements OnInit {
   protected readonly RoutePaths = RoutePaths;
   protected readonly contentTitle = signal<string>('');
 
-  private readonly localStorageKeyCollapsed = 'sidebar.collapsed';
+  private readonly localStorageKeyCollapsed = {key: 'sidebar.collapsed', version: 1} as const;
 
   navCollapsed = signal<boolean>(false);
   contentClosed = signal<boolean>(true);
 
-  private _sidebarWidth = computed(() => this._navWidth() + this._contentWidth());
-  private _navWidth = computed(() => this.navCollapsed() ? 41 : 110);
-  @HostBinding('style.--nav-width')
-  get cssNavWidth() {return `${this._navWidth()}px`;}
-
-  private _contentWidth = computed(() => this.contentClosed() ? 0 : 250);
-  @HostBinding('style.--content-width')
-  get cssContentWidth() {return `${this._contentWidth()}px`;}
-
-  private readonly _animationDurationMs = 200;
-  @HostBinding('style.--animation-duration')
-  get cssAnimationDuration() {return `${this._animationDurationMs}ms`;}
+  protected sidebarWidth = computed(() => this.navWidth() + this._contentWidth());
+  protected navWidth = computed(() => this.navCollapsed() ? 41 : 110);
+  protected _contentWidth = computed(() => this.contentClosed() ? 0 : 250);
+  protected readonly _animationDurationMs = 200;
 
   constructor() {
     this.router.events.pipe(
@@ -68,7 +68,7 @@ export class Sidebar implements OnInit {
     })
 
     effect(() => {
-      const sidebarWidth = this._sidebarWidth();
+      const sidebarWidth = this.sidebarWidth();
 
       this.mapStateService.padding.update((v) => ({
         ...v,
@@ -80,7 +80,7 @@ export class Sidebar implements OnInit {
 
   ngOnInit(): void {
     this.updateContentVisibility();
-    this.navCollapsed.set(this.localStorageService.get(this.localStorageKeyCollapsed, 1) ?? false);
+    this.navCollapsed.set(this.localStorageService.get(this.localStorageKeyCollapsed) ?? false);
   }
 
 
@@ -96,7 +96,7 @@ export class Sidebar implements OnInit {
 
   protected toggleNav() {
     this.navCollapsed.update(v => !v);
-    this.localStorageService.set(this.localStorageKeyCollapsed, this.navCollapsed(), 1)
+    this.localStorageService.set(this.localStorageKeyCollapsed, this.navCollapsed())
   }
 
   protected onBack($event: PointerEvent) {

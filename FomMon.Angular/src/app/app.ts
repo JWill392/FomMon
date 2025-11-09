@@ -8,15 +8,21 @@ import {UserService} from '../components/user/user.service';
 import {AreaAlertService} from "../components/area-alert/area-alert.service";
 import {ProjectService} from "../components/project/project.service";
 import {AreaWatchService} from "../components/area-watch/area-watch.service";
+import {ThemeService} from "../components/shared/theme.service";
+import {ThumbnailMapRenderer} from "../components/map/thumbnail-map/thumbnail-map-renderer/thumbnail-map-renderer";
+import {ThumbnailMapService} from "../components/map/thumbnail-map/thumbnail-map.service";
 
 @Injectable()
 @Component({
   selector: 'app-root',
-  imports: [CommonModule, RouterOutlet, Snackbar],
+  imports: [CommonModule, RouterOutlet, Snackbar, ThumbnailMapRenderer],
   templateUrl: './app.html',
-  styleUrl: './app.scss',
+  styleUrl: './app.scss'
 })
 export class App {
+  private themeService = inject(ThemeService);
+  private thumbnailMapService = inject(ThumbnailMapService);
+
   private layerService = inject(LayerConfigService)
   private projectService = inject(ProjectService)
 
@@ -27,6 +33,8 @@ export class App {
   private destroyRef = inject(DestroyRef);
 
   constructor() {
+
+
     // get config
     this.layerService.initialize$()
       .pipe(takeUntilDestroyed(this.destroyRef))

@@ -1,7 +1,5 @@
-import {Component, computed, inject, OnInit} from '@angular/core';
-import {GeoJSONSourceComponent, LayerComponent} from "@maplibre/ngx-maplibre-gl";
-import {FeatureCollection} from "geojson";
-import {MapLayerDirective} from "../base-layer-switcher/map-layer.directive";
+import {Component, inject, OnInit} from '@angular/core';
+import {FeatureComponent, GeoJSONSourceComponent} from "@maplibre/ngx-maplibre-gl";
 import {MapLayerService} from "../map-layer.service";
 import {MapLayerGroupComponent} from "../map-layer-group/map-layer-group.component";
 import {AreaWatchLayerService} from "./area-watch-layer.service";
@@ -9,17 +7,19 @@ import {MapRoutingService} from "../../map-routing.service";
 import {Router} from "@angular/router";
 import {AreaWatchService} from "../../../area-watch/area-watch.service";
 import {RoutePaths} from "../../../../routes/app.routes";
+import {AreaWatch} from "../../../area-watch/area-watch.model";
+import {AppLayerComponent} from "../app-layer/app-layer.component";
 
 @Component({
   selector: 'app-area-watch-layer',
   imports: [
     GeoJSONSourceComponent,
-    LayerComponent,
-    MapLayerDirective,
-    MapLayerGroupComponent
+    MapLayerGroupComponent,
+    FeatureComponent,
+    AppLayerComponent
   ],
   templateUrl: './area-watch-layer.html',
-  styleUrl: './area-watch-layer.scss'
+  styles: ['']
 })
 export class AreaWatchLayer implements OnInit {
   protected mapLayerService = inject(MapLayerService);
@@ -30,26 +30,15 @@ export class AreaWatchLayer implements OnInit {
 
   protected readonly sourceId = this.areaWatchLayerService.groupId;
   protected readonly groupId = this.areaWatchLayerService.groupId;
-  readonly layerIdFill = `area-watch`;
-  readonly layerIdOutline = `area-watch-outline`;
-  readonly layerIdLabel = `area-watch-label`;
 
-  data = this.areaWatchService.data;
+  areaWatches = this.areaWatchService.data;
 
-  protected features = computed<FeatureCollection>(() => ({
-    type: 'FeatureCollection',
-    features: (this.data() ?? []).map((p) => {
-      const {geometry, featureId, ...properties} = p;
-      return {
-        type: 'Feature' as const,
-        geometry: geometry,
-        properties: properties,
-        id: featureId,
-      }
-    })
-  }));
+  protected asFeatureFields({geometry, featureId, ...properties}: AreaWatch) {
+    return {geometry, featureId, properties};
+  }
 
   ngOnInit(): void {
+
     this.mapRoutingService.registerLayerRouting(this.areaWatchLayerService.groupId, (featureId) => {
       const aw = this.areaWatchService.getByFeatureId(featureId.id);
       if (!aw) return;

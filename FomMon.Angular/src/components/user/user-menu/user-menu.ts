@@ -1,15 +1,26 @@
 import {Component, ElementRef, inject, OnInit, viewChild} from '@angular/core';
 import { UserService } from "../user.service";
+import {MatSlideToggle} from "@angular/material/slide-toggle";
+import {ThemeService} from "../../shared/theme.service";
+import {MatActionList, MatListItem} from "@angular/material/list";
+import {MatButton} from "@angular/material/button";
 
 @Component({
   selector: 'app-user-menu',
-  imports: [],
+  imports: [
+    MatSlideToggle,
+    MatListItem,
+    MatActionList,
+    MatButton
+  ],
   templateUrl: './user-menu.html',
   styleUrl: './user-menu.scss'
 })
-export class UserMenu implements OnInit {
+export class UserMenu {
   private readonly userService = inject(UserService);
+  private readonly themeService = inject(ThemeService);
 
+  isDarkMode = this.themeService.isDarkMode;
   isAuthenticated = this.userService.state.isReady;
 
   user = this.userService.data;
@@ -17,10 +28,6 @@ export class UserMenu implements OnInit {
 
   dialog = viewChild.required<ElementRef<HTMLDialogElement>>('menu')
   private dialogIsOpen = false;
-
-  ngOnInit() {
-    // this.dialog().nativeElement.close();
-  }
 
   logout() {
     this.userService.logout();
@@ -40,4 +47,8 @@ export class UserMenu implements OnInit {
     });
   }
 
+  protected toggleDarkMode(event: PointerEvent) {
+    this.themeService.setDarkMode(!this.isDarkMode());
+    event.stopPropagation();
+  }
 }

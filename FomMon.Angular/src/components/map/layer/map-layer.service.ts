@@ -38,6 +38,7 @@ export interface LayerInfo {
 }
 export type LayerInfoAdd = Omit<LayerInfo, 'order' | 'subOrder'>;
 
+// TODO manage base layer order.  Labels should go above features.
 
 /**
  * Service for managing map layer visibility.  Introduces concept of layer groups; semantic layers
@@ -60,7 +61,7 @@ export class MapLayerService {
   public readonly layers = this._layers.asReadonly();
 
   private localStorageService = inject(LocalStorageService);
-  private static readonly layerVisibilityKey = 'layerVisibility';
+  private static readonly layerVisibilityKey = {key:'layerVisibility', version:1} as const;
 
   private readonly visDefault : string = "default";
   private readonly visStack : StackMap<string, boolean>
@@ -72,7 +73,8 @@ export class MapLayerService {
 
   constructor() {
     const defaultVisibility = this.localStorageService
-      .get<LayerVisibilitySnapshot>(MapLayerService.layerVisibilityKey, 1) ?? new Map<string, boolean>();
+      .get<LayerVisibilitySnapshot>(MapLayerService.layerVisibilityKey)
+      ?? new Map<string, boolean>();
 
     this.visStack = new StackMap();
     this.visStack.pushMap(this.visDefault);
@@ -131,7 +133,7 @@ export class MapLayerService {
     };
 
     this._layers.update(layers =>
-      MapLayerService._withInserted(layers, added, (a, b) =>
+      MapLayerService._withOrderedInsert(layers, added, (a, b) =>
         a.order - b.order ||
         a.source.localeCompare(b.source) ||
         a.sourceLayer?.localeCompare(b.sourceLayer) ||
@@ -161,11 +163,16 @@ export class MapLayerService {
 
     return this._layers().filter(l => groupIds.includes(l.groupId));
   }
-  getLayer(id: string) {
+  getLayer(id: string) : LayerInfo | undefined {
     return this._layers().find(l => l.id === id);
   }
-  getLayout(id: string) {
-    return this.getLayer(id)?.layout;
+  getLayout(id: string) : LayerSpecification['layout']  {
+    const layer = this.getLayer(id);
+    if (!layer) {
+      return {};
+    }
+
+    return layer.layout;
   }
 
 
@@ -176,7 +183,7 @@ export class MapLayerService {
   }
 
   /** Non-mutable sorted insert */
-  private static _withInserted<T>(list: T[], item: T, compare: (a: T, b: T) => number) : T[] {
+  private static _withOrderedInsert<T>(list: T[], item: T, compare: (a: T, b: T) => number) : T[] {
     const index = list.findIndex(l => compare(l, item) > 0);
     if (index === -1) {
       return [...list, item];
@@ -231,7 +238,7 @@ export class MapLayerService {
 
     if (changedSnapshot === this.visDefault) {
       const visDefaultValue = this.visStack.getAllIn(this.visDefault)
-      this.localStorageService.set(MapLayerService.layerVisibilityKey, visDefaultValue, 1);
+      this.localStorageService.set(MapLayerService.layerVisibilityKey, visDefaultValue);
     }
   }
 

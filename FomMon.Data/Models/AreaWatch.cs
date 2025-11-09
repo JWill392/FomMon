@@ -8,6 +8,12 @@ using NodaTime;
 
 namespace FomMon.Data.Models;
 
+public enum ThumbnailTheme
+{
+    Light,
+    Dark
+}
+
 [Index(nameof(UserId))]
 [DebuggerDisplay("{ToString()}")]
 public sealed class AreaWatch : IVersioned
@@ -27,8 +33,7 @@ public sealed class AreaWatch : IVersioned
 
     public Instant EvaluatedDate { get; set;}
     
-    [MaxLength(255)]
-    public string ThumbnailImageObjectName { get; set; } = string.Empty;
+    
     public User User { get; set; } = null!; // navigation property
     
     /// <summary>

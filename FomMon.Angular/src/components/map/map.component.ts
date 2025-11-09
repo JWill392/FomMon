@@ -1,4 +1,5 @@
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component, effect,
   inject,
@@ -24,6 +25,8 @@ import {AppConfigService} from "../../config/app-config.service";
 import {MapInteraction} from "./map-interaction";
 import {MapDrawing} from "./map-drawing";
 import {MapDisplayService} from "./map-display.service";
+import {AppMapService} from "./app-map.service";
+import {AreaWatchService} from "../area-watch/area-watch.service";
 
 @Component({
   selector: 'app-ngx-map',
@@ -48,6 +51,8 @@ export class AppMapComponent {
   private layerConfigService = inject(LayerConfigService);
   private userService = inject(UserService);
   private areaAlertService = inject(AreaAlertService);
+  private mapService = inject(AppMapService);
+  private areaWatchService = inject(AreaWatchService);
 
   protected appConfig = inject(AppConfigService);
   protected mapLayerService = inject(MapLayerService);
@@ -58,7 +63,8 @@ export class AppMapComponent {
   protected mapInteraction = viewChild(MapInteraction);
 
   protected domainLayers = this.layerConfigService.data;
-  readonly isAuthenticated = this.userService.state.isReady;
+  protected readonly isAuthenticated = this.userService.state.isReady;
+  protected readonly isAreaWatchReady = this.areaWatchService.state.isReady;
 
 
   constructor() {
@@ -99,15 +105,19 @@ export class AppMapComponent {
 
       const layerOrder = untracked(() => this.mapLayerService.layers()); // ignore visibility changes etc
 
-      // move all layers to top; reset order to match mapLayerService.layers()
-      for (const layer of layerOrder) {
-        this.map().moveLayer(layer.id);
-      }
+      // async to avoid effect loops
+      queueMicrotask(() => {
+        // move all layers to top; reset order to match mapLayerService.layers()
+        for (const layer of layerOrder) {
+          this.map().moveLayer(layer.id);
+        }
+      })
     })
   }
 
   onMapLoad(map: MapLibreMap) {
     this.map.set(map)
+    this.mapService.register(map);
   }
 
 

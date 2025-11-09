@@ -4,6 +4,9 @@ import {ErrorService} from "./error.service";
 type Serializable = string | number | boolean | null | undefined |
   Map<any, any> | Serializable[] | { [key: string]: Serializable };
 
+export type LocalKey = {key: string, version: number}
+export type LocalKeyNoVersion = Omit<LocalKey, 'version'>
+
 interface StorageWrapper<T extends Serializable> {
   version: number;
   data: T;
@@ -17,52 +20,46 @@ export class LocalStorageService {
   private errorService = inject(ErrorService)
   private static readonly baseKey = 'fommon.';
 
-  set<T extends Serializable>(key: string, value: T, version: number): void {
-    try {
-      const wrapper: StorageWrapper<T> = {
-        version: version,
-        data: value,
-        timestamp: Date.now(),
-      };
+  set<T extends Serializable>(localKey: LocalKey, value: T): boolean {
+    this._validateLocalKey(localKey);
 
-      const jsonValue = value instanceof Map
-        ? JSON.stringify(wrapper, this.mapReplacer)
-        : JSON.stringify(wrapper);
+    const wrapper: StorageWrapper<T> = {
+      version: localKey.version,
+      data: value,
+      timestamp: Date.now(),
+    };
 
-      localStorage.setItem(LocalStorageService.baseKey + key, jsonValue);
+    const jsonValue = value instanceof Map
+      ? JSON.stringify(wrapper, this.mapReplacer)
+      : JSON.stringify(wrapper);
 
-    } catch (error) {
-      this.errorService.handleError(new Error('Error saving to local storage', {cause: error}))
-    }
+    return this._setItem(localKey.key, jsonValue);
   }
 
-  get<T extends Serializable>(key: string, expectedVersion: number): T | null {
+  get<T extends Serializable>(localKey: LocalKey): T | null {
+    this._validateLocalKey(localKey);
+
+    const value = this._getItem(localKey.key);
+    if (!value) return null;
+
+    let wrapper: StorageWrapper<T>;
     try {
-      const value = localStorage.getItem(LocalStorageService.baseKey + key);
-      if (!value) return null;
-
-      const wrapper: StorageWrapper<T> = JSON.parse(value, this.reviver.bind(this));
-
-      if (wrapper?.version !== expectedVersion) {
-        this.errorService.warn(`Version mismatch for ${key}: expected ${expectedVersion}, got ${wrapper?.version}`);
-        this.remove(key)
-      }
-
-      return wrapper.data;
-
+      wrapper = JSON.parse(value, this.reviver.bind(this));
     } catch (error) {
-      this.errorService.handleError(new Error('Error getting from local storage', {cause: error}))
+      this.errorService.warn(`Error parsing local storage value for ${localKey.key}`, error);
       return null;
     }
+
+    if (wrapper?.version !== localKey.version) {
+      this.errorService.warn(`Version mismatch for ${localKey.key}: expected ${localKey.version}, got ${wrapper?.version}.`);
+      return null;
+    }
+
+    return wrapper.data;
   }
 
-
-  remove(key: string): void {
-    try {
-      localStorage.removeItem(key);
-    } catch (error) {
-      this.errorService.handleError(new Error('Error removing from local storage', {cause: error}))
-    }
+  remove(localKey: LocalKeyNoVersion): boolean {
+    return this._removeItem(localKey.key);
   }
 
   private mapReplacer<K, V>(_: string, value: Map<K, V>): any {
@@ -83,5 +80,40 @@ export class LocalStorageService {
   }
   private mapReviver<K, V>(value: any): Map<K, V> {
     return new Map(value.value);
+  }
+
+
+
+
+  private asFullKey(key: string) {
+    return LocalStorageService.baseKey + key;
+  }
+  private _getItem(key: string) {
+    return localStorage.getItem(this.asFullKey(key));
+  }
+  private _setItem(key: string, value: string) : boolean {
+    try {
+      localStorage.setItem(this.asFullKey(key), value);
+      return true;
+    } catch (error) {
+      this.errorService.handleError(new Error('Error adding item to local storage', {cause: error}))
+      return false;
+    }
+  }
+  private _removeItem(key: string) : boolean {
+    try {
+      localStorage.removeItem(this.asFullKey(key));
+      return true;
+    } catch (error) {
+      this.errorService.handleError(new Error('Error removing from local storage', {cause: error}))
+      return false;
+    }
+  }
+
+
+  private _validateLocalKey(localKey: LocalKey) {
+    if (!localKey) throw new Error('localKey is required');
+    if (!localKey.key) throw new Error('localKey must have key property');
+    if (!localKey.version || typeof localKey.version !== "number") throw new Error('localKey must have numeric version property');
   }
 }

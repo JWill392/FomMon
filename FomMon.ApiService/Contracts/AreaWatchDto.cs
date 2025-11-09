@@ -15,6 +15,4 @@ public record AreaWatchDto
     
     public required List<LayerKind> Layers { get; init; }
     
-    public string ThumbnailImageObjectName { get; init; } = string.Empty;
-    public string ThumbnailImageUrl { get; set;  } = string.Empty;
 }

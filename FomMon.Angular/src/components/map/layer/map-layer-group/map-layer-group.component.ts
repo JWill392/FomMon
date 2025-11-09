@@ -18,6 +18,7 @@ export class MapLayerGroupComponent implements OnInit, OnDestroy {
   thumbnailImg = input.required<string>();
   initiallyVisible = input<boolean>(false);
 
+  // TODO why is this even on the group level, given we usually only want it on fill layer
   interactivity = input({
     select: false,
     hover: false,

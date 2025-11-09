@@ -1,0 +1,27 @@
+<div class="thumb-map-wrapper">
+  <mgl-map class="thumb-map"
+           [attributionControl]="false"
+           [style]="thumbnailStyle()"
+
+           [transformRequest]="mapDisplayService.transformLocalUrl"
+           [interactive]="false"
+           [fitBounds]="bounds()?.bbox"
+           [fitBoundsOptions]="bounds()?.options"
+           (mapLoad)="onMapLoad($event)">
+
+    <mgl-geojson-source
+        [id]="`thumbnail-map-${instanceId}`"
+        [data]="command()?.request.geometry"
+    />
+
+    <mgl-layer
+        [source]="`thumbnail-map-${instanceId}`"
+        [id]="`thumbnail-map-fill-${instanceId}`"
+        type="fill"
+        [paint]="{
+            'fill-color': command()?.request.fillColor ?? '#000',
+            'fill-opacity': 0.4
+          }"
+    ></mgl-layer>
+  </mgl-map>
+</div>

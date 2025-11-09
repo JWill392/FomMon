@@ -7,16 +7,24 @@ import {MapLayerService} from "../../map/layer/map-layer.service";
 import {RoutePaths} from "../../../routes/app.routes";
 import {LoaderComponent} from "../../shared/loader/loader.component";
 import {AreaWatchLayerService} from "../../map/layer/area-watch-layer/area-watch-layer.service";
+import {MatActionList, MatList, MatListItem} from "@angular/material/list";
+import {NgIcon, provideIcons} from "@ng-icons/core";
+import {phosphorPlus} from "@ng-icons/phosphor-icons/regular";
 
 @Component({
   selector: 'app-area-watch-list',
   imports: [
     AreaWatchCard,
     RouterLink,
-    LoaderComponent
+    LoaderComponent,
+    MatActionList,
+    MatListItem,
+    NgIcon,
+    MatList
   ],
   templateUrl: './area-watch-list.html',
-  styleUrl: './area-watch-list.scss'
+  styleUrl: './area-watch-list.scss',
+  providers: [provideIcons({phosphorPlus})],
 })
 export class AreaWatchList implements OnInit {
   awService = inject(AreaWatchService);
@@ -25,8 +33,6 @@ export class AreaWatchList implements OnInit {
   private readonly groupId = this.areaWatchLayerService.groupId;
   destroyRef = inject(DestroyRef);
 
-
-  // TODO should ensure areawatch layer is visible when open
   ngOnInit(): void {
     this.awService.initialize$()
       .pipe(takeUntilDestroyed(this.destroyRef))

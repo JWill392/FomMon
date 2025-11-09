@@ -19,7 +19,7 @@ export interface MapCardEvent {
   selector: 'app-map-card',
   imports: [],
   templateUrl: '../../shared/card/card.html',
-  styleUrls: ['../../shared/card/card.scss', './map-card.scss'],
+  styleUrls: ['../../shared/card/card.scss',],
   host: {
     '(click)': 'select($event)',
     '(mouseenter)': 'onMouseEnter($event)',
@@ -121,6 +121,10 @@ export class MapCard extends Card {
 
   private scrollIntoViewIfNeeded() {
     if (this.isInViewport) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
     this.elementRef.nativeElement.scrollIntoView({
       behavior: 'smooth',
       block: 'start'

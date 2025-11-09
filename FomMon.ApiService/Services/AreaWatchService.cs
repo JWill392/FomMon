@@ -5,8 +5,10 @@ using FomMon.Data.Models;
 using FomMon.ServiceDefaults;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.Algorithm;
 
 namespace FomMon.ApiService.Services;
+
 
 public interface IAreaWatchService
 {
@@ -18,15 +20,16 @@ public interface IAreaWatchService
     
     Task<Result> DeleteAsync(Guid id, Guid userId, CancellationToken c = default);
     
-    public Task<Result<string>> UploadThumbnailImage(Guid id, Guid userId, Stream image, long length, CancellationToken c = default);
+    public Task<Result<string>> UploadThumbnailImageAsync(Guid id, Guid userId, ThumbnailTheme theme, Stream image, long length, string paramHash, CancellationToken c = default);
+    public Task<Result<string>> GetThumbnailImageNameAsync(Guid id, Guid userId, ThumbnailTheme theme, CancellationToken c = default);
 }
 
 public sealed class AreaWatchService(
     AppDbContext db, 
     IClockService clock, 
     IMapper mapper,
-    IObjectStorageService objectStorageService,
-    IEntityObjectStorageService entityObjectStorageService) : IAreaWatchService
+    ILogger<AreaWatchService> logger,
+    IImageStorageService imageStorageService) : IAreaWatchService
 {
 
     public async Task<Result<AreaWatch>> CreateAsync(CreateAreaWatchRequest dto, Guid userId, CancellationToken c = default)
@@ -61,25 +64,36 @@ public sealed class AreaWatchService(
         if (errors is not null) return Result.Fail(errors);
 
         var geometryChanged = dto.Geometry is not null && !dto.Geometry.EqualsTopologically(original.Geometry);
+        var layersChanged = dto.Layers is not null && !dto.Layers.SequenceEqual(original.Layers);
         
+        mapper.From(dto).AdaptTo(original); // see mapping config in dto
 
-        var changed = mapper.From(dto).AdaptTo(original); // see mapping config in dto
-
-        if (geometryChanged)
+        if (geometryChanged || layersChanged)
         {
-            {
-                // TODO recalc watches
-                if (string.IsNullOrEmpty(changed.ThumbnailImageObjectName) && !string.IsNullOrEmpty(original.ThumbnailImageObjectName))
-                {
-                    await objectStorageService.DeleteImageAsync(original.ThumbnailImageObjectName, c);
-                    original.ThumbnailImageObjectName = string.Empty;
-                }
-            }
+            
+            // TODO update alerts
+            // no op needed on thumbnail; it's stored with hash of geometry so users will know it's outdated if geom changed.
+            
         }
+            
 
         await db.SaveChangesAsync(c);
         return Result.Ok(original);
     }
+
+    public async Task<Result<string>> GetThumbnailImageNameAsync(Guid id, Guid userId, ThumbnailTheme theme, CancellationToken c = default)
+    {
+        var (aw, errors) = await GetByIdAsync(id, userId, c);
+        if (errors is not null) return Result.Fail(errors);
+        
+        return Result.Ok(GetThumbnailObjectName(aw, theme));
+    }
+    private ThumbnailTheme[] GetThemes() => [ThumbnailTheme.Light, ThumbnailTheme.Dark];
+    private string GetThumbnailObjectName(AreaWatch aw, ThumbnailTheme theme)
+    {
+        return $"area-watch-thumb-{aw.Id}-{theme}.png";
+    }
+    private string[] GetThumbnailObjectNames(AreaWatch aw) => GetThemes().Select(t => GetThumbnailObjectName(aw, t)).ToArray();
 
     public async Task<Result<ICollection<AreaWatch>>> ListAsync(Guid userId, CancellationToken c = default)
     {
@@ -95,7 +109,10 @@ public sealed class AreaWatchService(
         var (aw, errors) = await GetByIdAsync(id, userId, c);
         if (errors is not null) return Result.Fail(errors);
         
-        await objectStorageService.DeleteImageAsync(aw.ThumbnailImageObjectName, c);
+        foreach (var thumbnail in GetThumbnailObjectNames(aw))
+        {
+            await imageStorageService.TryDeleteImageAsync(thumbnail, c);
+        }
         
         db.AreaWatches.Remove(aw);
         
@@ -103,14 +120,14 @@ public sealed class AreaWatchService(
         return Result.Ok();
     }
 
-    public async Task<Result<string>> UploadThumbnailImage(Guid id, Guid userId, Stream image, long length, CancellationToken c = default)
+    public async Task<Result<string>> UploadThumbnailImageAsync(Guid id, Guid userId, ThumbnailTheme theme, Stream image, long length, string paramHash, CancellationToken c = default)
     {
         var (aw, errors) = await GetByIdAsync(id, userId, c);
         if (errors is not null) return Result.Fail(errors);
-            
-        return await entityObjectStorageService.UploadImageAsync(aw, 
-            a => a.ThumbnailImageObjectName, 
-            a => $"area-watch-thumb-{a.Id}.png", 
-            image, length, c);
+        
+        var objectName = GetThumbnailObjectName(aw, theme);
+        
+        var uploadResult = await imageStorageService.UploadImageAsync(objectName, image, length, paramHash, c);
+        return uploadResult.ToResult(objectName);
     }
 }

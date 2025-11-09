@@ -23,22 +23,25 @@
 
 
 .action-item {
-  color: #333;
+  color: var(--mat-sys-on-surface);
+  background: var(--mat-sys-surface);
   text-decoration: none;
   cursor: pointer;
   /*padding: 5px;*/
 
 }
 .action-item:hover {
-  color: #5a6c52;
+  color: var(--mat-sys-on-surface-bright);
+  background: var(--mat-sys-surface-bright);
 }
 .action-item:active {
-  color: #111;
+  color: var(--mat-sys-on-surface-variant);
+  background: var(--mat-sys-surface-variant);
 }
 
 .action-item-router-active {
-  color: #222;
-  background: #99b88c;
+  color: var(--mat-sys-on-primary-container);
+  background: var(--mat-sys-primary-container);
   font-weight: bold;
 }
 

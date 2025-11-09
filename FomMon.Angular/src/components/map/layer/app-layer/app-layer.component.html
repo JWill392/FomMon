@@ -1,0 +1,29 @@
+
+<mgl-layer
+    [id]="id()"
+    [type]="type()"
+    [source]="source()"
+    [metadata]="metadata()"
+    [sourceLayer]="sourceLayer()"
+    [filter]="filter()"
+    [layout]="serviceLayout()"
+    [paint]="paintLoose()"
+    [before]="before()"
+    [minzoom]="minzoom()"
+    [maxzoom]="maxzoom()"
+    (layerClick)="onClick($event); layerClick.emit($event)"
+    (layerDblClick)="layerDblClick.emit($event)"
+    (layerMouseDown)="layerMouseDown.emit($event)"
+    (layerMouseUp)="layerMouseUp.emit($event)"
+    (layerMouseEnter)="layerMouseEnter.emit($event)"
+    (layerMouseLeave)="onMouseLeave($event); layerMouseLeave.emit($event)"
+    (layerMouseMove)="onMouseMove($event); layerMouseMove.emit($event)"
+    (layerMouseOver)="layerMouseOver.emit($event)"
+    (layerMouseOut)="layerMouseOut.emit($event)"
+    (layerContextMenu)="layerContextMenu.emit($event)"
+    (layerTouchStart)="layerTouchStart.emit($event)"
+    (layerTouchEnd)="layerTouchEnd.emit($event)"
+    (layerTouchCancel)="layerTouchCancel.emit($event)"
+>
+  <ng-content />
+</mgl-layer>

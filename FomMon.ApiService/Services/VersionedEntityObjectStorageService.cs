@@ -16,7 +16,7 @@ public interface IEntityObjectStorageService
 /// <summary>
 /// Uploads an image to object storage and updates the entity with the object name.
 /// </summary>
-public class VersionedEntityObjectStorageService(IObjectStorageService objectStorageService, AppDbContext db) : IEntityObjectStorageService
+public class VersionedEntityObjectStorageService(IImageStorageService imageStorageService, AppDbContext db) : IEntityObjectStorageService
 {
     public async Task<Result<string>> UploadImageAsync<T>(T entity, 
         Expression<Func<T, string>> propertyExpression,
@@ -40,7 +40,7 @@ public class VersionedEntityObjectStorageService(IObjectStorageService objectSto
             propertyInfo.SetValue(entity, objectName);
         }
         
-        var uploadResult = await objectStorageService.UploadImageAsync(objectName, imageStream, length, c);
+        var uploadResult = await imageStorageService.UploadImageAsync(objectName, imageStream, length, c:c);
         if (uploadResult.IsFailed) return Result.Fail(uploadResult.Errors);
 
         if (addNewObject)
@@ -52,7 +52,7 @@ public class VersionedEntityObjectStorageService(IObjectStorageService objectSto
             catch (Exception e)
             {
                 // clean up failed upload
-                await objectStorageService.DeleteImageAsync(objectName, c);
+                await imageStorageService.TryDeleteImageAsync(objectName, c);
                 throw;
             }
         }

@@ -5,7 +5,6 @@
         <ng-icon class="header-logo-icon" name="phosphorTreeEvergreenFill" />
         <label class="header-logo-text" [class.collapsed]="navCollapsed()">{{config.get().app.title}}</label>
       </header>
-      <hr/>
       <section class="actions">
         <app-sidebar-item
             title="Layers"
@@ -24,21 +23,24 @@
         }
       </section>
     </div>
-    <div class="bottom-container">
-      <div class="action nav-collapse-button" (click)="toggleNav()" [class.collapsed]="navCollapsed()">
-        <ng-icon name="phosphorCaretLeft" aria-label="Toggle Collapse" aria-hidden="true" />
-      </div>
-    </div>
+
+
+    <mat-action-list class="bottom-container">
+      <button mat-list-item class="action nav-collapse-button" (click)="toggleNav()" [class.collapsed]="navCollapsed()">
+        <ng-icon matListItemIcon name="phosphorCaretLeft" aria-label="Toggle Collapse" aria-hidden="true" />
+      </button>
+    </mat-action-list>
   </nav>
+
   <section class="content" [class.closed]="contentClosed()">
     <header class="content-header">
       <button matIconButton class="action back-button" (click)="onBack($event)">
         <ng-icon name="phosphorCaretLeft" aria-label="Back" aria-hidden="true" />
       </button>
       <h2 class="action content-title">{{contentTitle()}}</h2>
-      <div class="action close-button" [routerLink]="RoutePaths.map">
+      <button matIconButton class="action close-button" [routerLink]="RoutePaths.map">
         <ng-icon name="phosphorX" aria-label="Close" aria-hidden="true" />
-      </div>
+      </button>
     </header>
     <div class="content-body">
       <router-outlet />

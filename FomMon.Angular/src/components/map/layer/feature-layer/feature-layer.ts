@@ -1,22 +1,23 @@
 import {Component, computed, inject, input} from '@angular/core';
-import {LayerComponent, VectorSourceComponent} from "@maplibre/ngx-maplibre-gl";
+import {VectorSourceComponent} from "@maplibre/ngx-maplibre-gl";
 import {LayerType} from "../../../layer-type/layer-type.model";
-import {MapLayerDirective} from "../base-layer-switcher/map-layer.directive";
 import {MapLayerService} from "../map-layer.service";
 import {MapLayerGroupComponent} from "../map-layer-group/map-layer-group.component";
 import {LayerConfigService} from "../../../layer-type/layer-config.service";
+import {AppLayerComponent} from "../app-layer/app-layer.component";
 
 @Component({
   selector: 'app-feature-layer',
   imports: [
-    LayerComponent,
     VectorSourceComponent,
-    MapLayerDirective,
-    MapLayerGroupComponent
+    MapLayerGroupComponent,
+    AppLayerComponent
   ],
   templateUrl: './feature-layer.html',
-  styleUrl: './feature-layer.scss'
+  styles: ['']
 })
+
+// TODO make features composite source; seems faster
 export class FeatureLayer {
   protected layerConfigService = inject(LayerConfigService);
   protected mapLayerService = inject(MapLayerService);

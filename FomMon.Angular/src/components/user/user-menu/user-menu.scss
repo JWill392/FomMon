@@ -8,8 +8,8 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: #f3f3f3;
-  border: #5a6c52 2px solid;
+  background: var(--mat-sys-surface);
+  border: var(--mat-sys-outline) 2px solid;
 
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
 }
@@ -22,7 +22,7 @@
   right: 0;
   width: 200px;
 
-  background: #f3f3f3;
+  background: var(--mat-sys-surface);
   border-radius: 5px;
   border: none;
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
@@ -46,49 +46,13 @@ dialog.menu::backdrop {
   padding: 10px;
   text-align: center;
   font-weight: bold;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
   border-radius: 5px 5px 0 0;
   font-size: 14px;
-  color: #333;
-  background: #d6e9c6;
+  color: var(--mat-sys-on-primary-container);
+  background: var(--mat-sys-primary-container);
 }
 .menu-body {
   /*padding: 10px 0;*/
   overflow-y: auto;
-}
-
-.menu-item {
-  display: block;
-  padding: 10px;
-  cursor: pointer;
-  font-size: 14px;
-  color: #333;
-
-  transition: background-color 0.1s ease-in-out;
-}
-.menu-item:hover {
-  background-color: #e0e0e0;
-}
-.menu-item:active {
-  background-color: #ccc;
-}
-
-
-
-.action-login {
-  display: block;
-  background: #dff0d8;
-  border: #99b88c 2px solid;
-  border-radius: 5px;
-  padding: 6px 15px;
-  font-size: 16px;
-  font-weight: bold;
-
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
-}
-.action-login:hover {
-  background: #5a6c52;
-  border-color: transparent;
-  color: #DDD;
-  cursor: pointer;
 }

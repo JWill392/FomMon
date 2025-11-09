@@ -1,6 +1,11 @@
 <app-thumbnail-map class="thumb-map"
+                   [sourceId]="id()"
                    [src]="src()"
                    alt="watch thumbnail"
                    [geometry]="geometry()"
+                   [height]="128"
+                   [width]="128"
+                   [theme]="theme()"
                    fillColor="#3bb2d0"
-                   (mapSaved)="onThumbMapSaved($event)" />
+                   [placeholderSrc]="placeholderSrc()"
+                   (generated)="onThumbMapSaved($event)" />
