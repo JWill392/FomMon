@@ -3,7 +3,6 @@ import {Card} from "../../shared/card/card";
 import {MapStateService} from "../map-state.service";
 import {FeatureIdentifier} from "maplibre-gl";
 import {fidEquals} from "../map-util";
-import {Geometry} from "geojson";
 import {InViewportDirective} from "../../shared/in-viewport.directive";
 
 export type MapCardEventSource = 'map' | 'card';
@@ -39,7 +38,6 @@ export class MapCard extends Card {
   private destroyRef = inject(DestroyRef);
 
   readonly featureId = input.required<FeatureIdentifier>();
-  readonly geometry = input.required<Geometry>();
 
   readonly isSelected = signal<boolean>(false);
   readonly isHovered = signal<boolean>(false);

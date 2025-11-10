@@ -23,7 +23,6 @@
 
     <div class="action-container">
       <mat-action-list role="list" aria-label="Actions">
-        <mat-label>Actions</mat-label>
         <button mat-list-item class="action-item" [disabled]="this.localState() !== 'added'"  (click)="navigateDelete($event)">
           <ng-icon matListItemIcon class="action-item-icon" name="phosphorTrash" />
           <p>Delete</p>

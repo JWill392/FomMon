@@ -48,6 +48,7 @@ export class AreaWatchService implements ServiceWithState {
       for (const aw of data) {
         // TODO change to resource to avoid duplicate requests
         this._downloadThumbnailCached$(aw.id, theme)
+
           .subscribe();
       }
     })
