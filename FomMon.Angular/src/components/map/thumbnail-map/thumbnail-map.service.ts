@@ -40,6 +40,7 @@ export class ThumbnailMapService {
 
   generate(request: GenerateThumbnailCommand) : Observable<GeneratedThumbnail> {
     // if (!this.renderer) throw new Error('ThumbnailMapService not registered');
+    ThumbnailMapService.validateCommand(request);
     const response$ = new Subject<GeneratedThumbnail>();
     const task = {
       request,
@@ -61,5 +62,13 @@ export class ThumbnailMapService {
       turfBooleanEqual(a.geometry, b.geometry) &&
       a.width === b.width &&
       a.height === b.height;
+  }
+
+  public static validateCommand(request: GenerateThumbnailCommand) {
+    if (!request.geometry) throw new Error('No geometry provided');
+    if (!request.width) throw new Error('No width provided');
+    if (!request.height) throw new Error('No height provided');
+    if (!request.theme) throw new Error('No theme provided');
+    if (!request.fillColor) throw new Error('No fillColor provided');
   }
 }

@@ -120,16 +120,17 @@ export class ThumbnailMap {
       const channel = this.imgChannel();
       const command = this.generateCommand();
 
+      const isGenerating = !!inProgressCommand;
       const shouldGenerate = (channel === 'last' || channel === 'placeholder');
-      if (!shouldGenerate) return
+      const hasCommandChanged = !ThumbnailMapService.commandEquals(command, inProgressCommand)
 
-      if (ThumbnailMapService.commandEquals(command, inProgressCommand)) return;
-
-      if (this.generate$) {
+      if (isGenerating && (!shouldGenerate || hasCommandChanged)) {
         // cancel in-progress request
         this.generate$?.unsubscribe();
-        this.generate$ = undefined;
+        clearCommand();
       }
+
+      if (!shouldGenerate) return;
 
       inProgressCommand = command;
       this.generate$ = this.thumbnailMapService.generate(command)
@@ -143,19 +144,21 @@ export class ThumbnailMap {
             };
             this.generatedImg.set(img);
             this.generated.emit(img);
-            this.generate$ = undefined;
-            inProgressCommand = undefined;
+            clearCommand();
           },
           error: err => {
             this.error.set(err);
             this.errorService.handleError(`Failed to generate thumbnail`, err);
-            this.generate$ = undefined;
-            inProgressCommand = undefined;
+            clearCommand();
           }
         });
-
     })
+    const clearCommand = () => {
+      this.generate$ = undefined;
+      inProgressCommand = undefined;
+    }
   }
+
 
 
   /** Gets a reasonbly stable hash for caching purposes */

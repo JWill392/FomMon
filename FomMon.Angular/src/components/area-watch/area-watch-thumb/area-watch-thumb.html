@@ -1,12 +1,14 @@
-<app-thumbnail-map class="thumb-map"
-                   [sourceId]="id()"
-                   [src]="thumbnail()?.url"
-                   [paramHash]="thumbnail()?.paramHash"
-                   alt="watch thumbnail"
-                   [geometry]="geometry()"
-                   [height]="128"
-                   [width]="128"
-                   [theme]="theme()"
-                   fillColor="#3bb2d0"
-                   [placeholderSrc]="placeholderSrc()"
-                   (generated)="onThumbMapSaved($event)" />
+<app-loader [dependentStates]="[areaWatchService.state]">
+  <app-thumbnail-map class="thumb-map"
+                     [sourceId]="id()"
+                     [src]="thumbnail()?.url"
+                     [paramHash]="thumbnail()?.paramHash"
+                     alt="watch thumbnail"
+                     [geometry]="geometry()"
+                     [height]="128"
+                     [width]="128"
+                     [theme]="theme()"
+                     fillColor="#3bb2d0"
+                     [placeholderSrc]="placeholderSrc()"
+                     (generated)="onThumbMapSaved($event)" />
+</app-loader>

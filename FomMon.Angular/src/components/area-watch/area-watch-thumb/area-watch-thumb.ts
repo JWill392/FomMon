@@ -4,17 +4,19 @@ import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
 import {AreaWatchService} from "../area-watch.service";
 import {ThemeService} from "../../shared/theme.service";
 import {ThumbnailUrl} from "../area-watch.model";
+import {LoaderComponent} from "../../shared/loader/loader.component";
 
 @Component({
   selector: 'app-area-watch-thumb',
   imports: [
-    ThumbnailMap
+    ThumbnailMap,
+    LoaderComponent
   ],
   templateUrl: './area-watch-thumb.html',
   styleUrl: './area-watch-thumb.scss'
 })
 export class AreaWatchThumb {
-  private areaWatchService = inject(AreaWatchService);
+  protected areaWatchService = inject(AreaWatchService);
   private themeService = inject(ThemeService);
   private destroyRef = inject(DestroyRef);
 
