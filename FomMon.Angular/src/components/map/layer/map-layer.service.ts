@@ -3,7 +3,7 @@ import {LayerSpecification} from "maplibre-gl";
 import {LocalStorageService} from "../../shared/local-storage.service";
 import {StackMap} from "../../../datastructures/stack-map";
 
-export type LayerCategory = "base"|"feature"|"internal";
+export type LayerCategory = "feature"|"internal";
 
 export type LayerVisibilitySnapshot = Map<string, boolean>;
 export interface LayerInteractivity {
@@ -38,7 +38,6 @@ export interface LayerInfo {
 }
 export type LayerInfoAdd = Omit<LayerInfo, 'order' | 'subOrder'>;
 
-// TODO manage base layer order.  Labels should go above features.
 
 /**
  * Service for managing map layer visibility.  Introduces concept of layer groups; semantic layers
@@ -54,7 +53,6 @@ export class MapLayerService {
   private _groupsBySource = computed(() => new Map(this._groups().map(g => [this._toSourceKey(g.source, g.sourceLayer), g])));
   private _groupsByCategory = computed(() => Map.groupBy(this._groups(), g => g.category));
 
-  public readonly baseGroups = computed(() => this._groupsByCategory().get('base') ?? []);
   public readonly featureGroups = computed(() => this._groupsByCategory().get('feature') ?? []);
 
   private _layers = signal<LayerInfo[]>([]);
@@ -147,11 +145,6 @@ export class MapLayerService {
       this._removeGroup(group);
     }
   }
-  selectBaseLayer(groupId: string): void {
-    this._groups().filter(g => g.category === 'base')
-      .forEach(g => this.setVisibility(g.id, g.id === groupId));
-  }
-
 
   getGroup(id: string) : LayerGroup | undefined {
     return this._groupsById().get(id)

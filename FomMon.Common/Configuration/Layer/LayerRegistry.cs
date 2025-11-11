@@ -15,7 +15,12 @@ public static class LayerRegistry
     public static readonly string DefaultSridString = "EPSG:4326";
     public static readonly string GeometryColumn = "geometry";
     
-    internal static readonly bool Initialized = false;
+    internal static readonly bool Initialized;
+
+    private static LayerColumnConfig[] _wfsColumns = [
+        new ("gml_id", Visibility.Hidden),
+        new ("objectid", Visibility.Hidden)
+    ];
 
     static LayerRegistry()
     {
@@ -33,7 +38,12 @@ public static class LayerRegistry
                 TileSource: "fom_cutblock",
                 Color: "#A5124D",
                 GeometryType: "POLYGON",
-                Attribution: "Forest Operations Map NRS BC"
+                Attribution: "Forest Operations Map NRS BC",
+                Columns: [
+                    new("name"),
+                    new("fom_c_sysid", Visibility.Hidden),
+                    .._wfsColumns
+                ] 
             ),
             new(
                 Kind: LayerKind.From("FomRoad"),
@@ -47,7 +57,12 @@ public static class LayerRegistry
                 TileSource: "fom_road",
                 Color: "#7691BC",
                 GeometryType: "LINESTRING",
-                Attribution: "Forest Operations Map NRS BC"
+                Attribution: "Forest Operations Map NRS BC",
+                Columns: [
+                    new("name"),
+                    new("fom_c_sysid", Visibility.Hidden),
+                    .._wfsColumns
+                ] 
             ),
             new(
                 Kind: LayerKind.From("FomRetention"),
@@ -61,7 +76,12 @@ public static class LayerRegistry
                 TileSource: "fom_retention",
                 Color: "#80D39B",
                 GeometryType: "POLYGON",
-                Attribution: "Forest Operations Map NRS BC"
+                Attribution: "Forest Operations Map NRS BC",
+                Columns: [
+                    new("name"),
+                    new("fom_c_sysid", Visibility.Hidden),
+                    .._wfsColumns
+                ] 
             ),
             new(
                 Kind: LayerKind.From("FireCurrent"),
@@ -75,7 +95,12 @@ public static class LayerRegistry
                 TileSource: "fire_current",
                 Color: "#ED7527",
                 GeometryType: "POLYGON",
-                Attribution: "BC Wildfire Service"
+                Attribution: "BC Wildfire Service",
+                Columns: [
+                    new("fire_number", Decode:"fire"),
+                    new("version_number", Visibility.Hidden),
+                    .._wfsColumns
+                ] 
             ),
         ];
         ByKind = All.ToDictionary(k=>k.Kind);

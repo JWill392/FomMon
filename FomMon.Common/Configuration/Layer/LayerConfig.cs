@@ -2,6 +2,19 @@ using FomMon.Common.Shared;
 
 namespace FomMon.Common.Configuration.Layer;
 
+public enum Visibility
+{
+    Visible,
+    Hidden,
+}
+public sealed record LayerColumnConfig(
+    string Name,
+    Visibility Visibility = Visibility.Visible,
+    string Decode = ""
+)
+{
+}
+
 public sealed record LayerConfig(
     LayerKind Kind,
     string Name,
@@ -14,7 +27,8 @@ public sealed record LayerConfig(
     string TileSource,
     string Color,
     string GeometryType,
-    string Attribution)
+    string Attribution,
+    LayerColumnConfig[] Columns)
 {
     
     /// <summary>

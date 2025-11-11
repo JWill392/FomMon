@@ -72,7 +72,6 @@ export class UserService implements ServiceWithState {
     return this.http.get<User>('api/user')
       .pipe(
         catchError((error) => throwError(() => {
-          this.logout();
           return this.errorService.handleError(new Error("Failed to log in"), error);
         })),
         map(u => UserFactory.fromJson(u)),

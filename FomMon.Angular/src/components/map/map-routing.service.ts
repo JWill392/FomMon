@@ -47,7 +47,10 @@ export class MapRoutingService {
     const navigationDestination = cfg.handler(featureId);
     if (!navigationDestination) return;
 
-    this.router.navigate(navigationDestination.commands, navigationDestination.extras);
+    this.router.navigate(navigationDestination.commands, {
+      ...navigationDestination.extras,
+      preserveFragment: true
+    });
   }
 
 }

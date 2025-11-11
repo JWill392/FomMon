@@ -11,8 +11,10 @@ public record LayerDto(
     string Color,
     string GeometryType,
     string Attribution,
-    string SourceIdColumn
+    string SourceIdColumn,
+    LayerColumnConfig[] Columns
     )
 {
+    
     
 }

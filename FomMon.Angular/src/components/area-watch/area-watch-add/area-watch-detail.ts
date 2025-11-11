@@ -220,7 +220,7 @@ export class AreaWatchDetail implements OnInit {
     const aw = this.areaWatchService.get(addDto.id);
     const fid = this.areaWatchService.toFeatureIdentifier(aw); // after add, fid is available
     this.mapStateService.select(fid);
-    this.router.navigate([RoutePaths.areaWatchView({id: addDto.id})]);
+    this.router.navigate([RoutePaths.areaWatchView({id: addDto.id})], {preserveFragment: true});
     return true;
   }
 
@@ -247,7 +247,7 @@ export class AreaWatchDetail implements OnInit {
         }
       });
 
-    this.router.navigate([RoutePaths.areaWatchView({id: patchDto.id})]);
+    this.router.navigate([RoutePaths.areaWatchView({id: patchDto.id})], {preserveFragment: true});
     return true;
   }
 
@@ -256,7 +256,7 @@ export class AreaWatchDetail implements OnInit {
     event.stopPropagation();
 
     if (this.localState() !== LocalState.added) return;
-    this.router.navigate([RoutePaths.areaWatchEdit({id: this.id()!})]);
+    this.router.navigate([RoutePaths.areaWatchEdit({id: this.id()!})], {preserveFragment: true});
   }
 
 
@@ -281,7 +281,7 @@ export class AreaWatchDetail implements OnInit {
           this.notService.pushMessage(`Failed to delete watch '${data.name}'`);
         }
       });
-    this.router.navigate([RoutePaths.areaWatchList]);
+    this.router.navigate([RoutePaths.areaWatchList], {preserveFragment: true});
   }
 
   protected onCancelEdit() {
@@ -289,7 +289,7 @@ export class AreaWatchDetail implements OnInit {
       // TODO generic router back?
       this.location.back();
     } else if (this.mode() === 'edit') {
-      this.router.navigate([RoutePaths.areaWatchView({id: this.id()!})]);
+      this.router.navigate([RoutePaths.areaWatchView({id: this.id()!})], {preserveFragment: true});
     }
   }
 
@@ -303,9 +303,11 @@ export class AreaWatchDetail implements OnInit {
 }
 
 function areaValidatorFactory(options: {maxAreaHa: number}) {
+  const M2_IN_HA = 10000 as const;
+
   return (control: FormControl<Geometry | null>): ValidationErrors => {
     if (!control.value) return null;
-    const areaHa = turfAreaM2(control.value) / 10000;
+    const areaHa = turfAreaM2(control.value) / M2_IN_HA;
     if (areaHa > options.maxAreaHa) {
       return {
         area: {

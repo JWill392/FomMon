@@ -1,0 +1,33 @@
+@use '@angular/material' as mat;
+
+:host {
+  @include mat.table-overrides((
+    row-item-outline-width: 0,
+  ));
+  @include mat.form-field-overrides((
+          outlined-disabled-input-text-color: var(--mat-sys-on-surface),
+          outlined-disabled-label-text-color: var(--mat-sys-on-surface),
+  ));
+}
+
+.placeholder {
+  font-style: italic;
+  text-align: center;
+  padding: 10px;
+
+}
+
+.filter-field {
+  padding: 8px 10px;
+  width: 100%;
+}
+
+.mat-column-field {
+  //display: flex;
+  padding: 8px 10px;
+  width: 100%;
+}
+
+.property-field {
+  width: 100%;
+}

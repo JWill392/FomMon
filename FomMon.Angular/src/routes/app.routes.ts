@@ -43,6 +43,7 @@ export const routes: Routes = [
     component: AppMapComponent,
     title: "Map",
     children: [
+      // authenticated
       {
         path: asRoutePop(RoutePaths.areaWatchList, map),
         component: AreaWatchList,
@@ -64,15 +65,16 @@ export const routes: Routes = [
         title: "Watch",
         ...routeAuth({mode: 'edit' as const}),
       },
+
+
+      // no auth
       { path: asRoutePop(RoutePaths.featureView, map),
         component: FeatureDetail,
         title: featureDetailTitleResolver, // TODO calc to feature-layer name
-        ...routeAuth({mode: 'view' as const}),
       },
       { path: asRoutePop(RoutePaths.layers, map),
         component: LayerList,
         title: "Layers",
-        // unauthenticated
       },
       { path: '**', redirectTo: '', pathMatch: 'full'},
     ]
