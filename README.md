@@ -4,7 +4,12 @@ A simple GIS app for watching areas of interest for changes.  Integrates with Br
 
 This project is in early development. It's a personal project to learn c# + angular development. Many design choices were made to learn libraries, and are not necessarily pragmatic. 
 
-![Screenshot of web app](screenshot.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="screenshot.png">
+  <source media="(prefers-color-scheme: light)" srcset="screenshot.png">
+  <img alt="Shows a black logo in light color mode and a white one in dark color mode." src=screenshot.png>
+</picture>
+
 
 ## Features
  - Watch specified areas for changes
