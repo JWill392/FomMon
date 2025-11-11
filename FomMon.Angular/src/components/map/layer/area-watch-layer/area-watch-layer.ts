@@ -2,33 +2,30 @@ import {Component, computed, inject, OnInit} from '@angular/core';
 import {GeoJSONSourceComponent} from "@maplibre/ngx-maplibre-gl";
 import {MapLayerService} from "../map-layer.service";
 import {MapLayerGroupComponent} from "../map-layer-group/map-layer-group.component";
-import {AreaWatchLayerService} from "./area-watch-layer.service";
 import {MapRoutingService} from "../../map-routing.service";
-import {Router} from "@angular/router";
 import {AreaWatchService} from "../../../area-watch/area-watch.service";
 import {RoutePaths} from "../../../../routes/app.routes";
-import {AppLayerComponent} from "../app-layer/app-layer.component";
+import {MapLayerComponent} from "../app-layer/map-layer.component";
 import {FeatureCollection} from "geojson";
+import {isState} from "../map-style-util";
 
 @Component({
   selector: 'app-area-watch-layer',
   imports: [
     GeoJSONSourceComponent,
     MapLayerGroupComponent,
-    AppLayerComponent
+    MapLayerComponent
   ],
   templateUrl: './area-watch-layer.html',
   styles: ['']
 })
 export class AreaWatchLayer implements OnInit {
   protected mapLayerService = inject(MapLayerService);
-  protected areaWatchLayerService = inject(AreaWatchLayerService);
   private areaWatchService = inject(AreaWatchService);
   private mapRoutingService = inject(MapRoutingService);
-  private router = inject(Router);
 
-  protected readonly sourceId = this.areaWatchLayerService.groupId;
-  protected readonly groupId = this.areaWatchLayerService.groupId;
+  protected readonly sourceId = this.areaWatchService.sourceId;
+  protected readonly groupId = this.areaWatchService.groupId;
 
   protected readonly featureCollection = computed<FeatureCollection>(() => ({
     type: 'FeatureCollection',
@@ -43,13 +40,17 @@ export class AreaWatchLayer implements OnInit {
     })
   }));
 
+  protected readonly selectedColor = '#FFB347';
+  protected readonly color = '#3bb2d0';
+  protected readonly isState = isState;
+
   ngOnInit(): void {
-
-    this.mapRoutingService.registerLayerRouting(this.areaWatchLayerService.groupId, (featureId) => {
+    this.mapRoutingService.registerSelectRouting(this.areaWatchService.groupId, (featureId) => {
       const aw = this.areaWatchService.getByFeatureId(featureId.id);
-      if (!aw) return;
+      if (!aw) return undefined;
 
-      this.router.navigate([RoutePaths.areaWatchView({id: aw.id})]);
+      return { commands: [RoutePaths.areaWatchView({id: aw.id})] };
     });
   }
+
 }

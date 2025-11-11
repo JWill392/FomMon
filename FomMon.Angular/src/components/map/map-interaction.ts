@@ -58,22 +58,26 @@ export class MapInteraction implements OnInit {
   }
 
 
-  handleMapClick(e: MapMouseEvent) {
+  onClick(e: MapMouseEvent) {
+    this.clearSelectionOnEmptyClick(e);
+  }
+
+  private clearSelectionOnEmptyClick(e: MapMouseEvent) {
     if (this.mapStateService.mode() !== 'select') return;
     if (e.defaultPrevented) return;
-
 
     const features = this.map().queryRenderedFeatures(e.point);
     if (features && features.length > 0) {
       const hasInteractiveFeature = features.some(feature => {
         const group = this.mapLayerService.getGroupBySource(feature.source, feature.sourceLayer);
-        return group?.interactivity?.select === true;
+        const layers = this.mapLayerService.layers().filter(l => l.groupId === group?.id);
+
+        return layers.some(l => l.interactivity?.select);
       });
       if (hasInteractiveFeature) return;
     }
     this.mapStateService.clearSelection();
   }
-
 
   private executeFlyTo(command: FlyToCommand): void {
     if (!command.geometry) return;

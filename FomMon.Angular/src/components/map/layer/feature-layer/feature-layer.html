@@ -1,14 +1,13 @@
-  <app-map-layer-group
+<app-map-layer-group
       [groupId]="groupId()"
       category="feature"
       [name]="layer().name"
       [order]="5"
       [thumbnailImg]="'assets/layer-preview-osm-base.png'"
       [initiallyVisible]="true"
-      [interactivity]="{select: true, hover: true}"
   >
   <mgl-vector-source
-          [id]="layer().kind"
+          [id]="layer().source"
           [tiles]="[url()]"
           [attribution]="layer().attribution"
           [promoteId]="layer().sourceIdColumn"
@@ -19,20 +18,22 @@
               [id]="layer().tileSource"
               [groupId]="groupId()"
               type="fill"
-              [source]="layer().kind"
+              [interactivity]="{select: true, hover: true}"
+              [source]="layer().source"
               [sourceLayer]="layer().tileSource"
               [paint]="{
               'fill-color': [
                 'case',
-                ['boolean', ['feature-state', 'selected'], false], '#FFB347',
-                ['boolean', ['feature-state', 'alert'], false], '#f54a00',
+                isState('selected'), '#FFB347',
+                isState('alert'), '#f54a00',
                 layer().color
               ],
               'fill-opacity': [
                 'case',
-                ['boolean', ['feature-state', 'hide'], false], 0,
-                ['boolean', ['feature-state', 'hover'], false], 0.7,
-                0.5
+                isState('hide'), 0,
+                isState('selected'), 0.7,
+                isState('hover'), 0.5,
+                0.2
               ]
             }"
       />
@@ -42,28 +43,29 @@
           [groupId]="groupId()"
           [id]="layer().tileSource + '-outline'"
           type="line"
-          [source]="layer().kind"
+          [source]="layer().source"
           [sourceLayer]="layer().tileSource"
           [paint]="{
-          'line-color': [
-            'case',
-            ['boolean', ['feature-state', 'selected'], false], '#F58F00',
-            ['boolean', ['feature-state', 'alert'], false], '#f54a00',
-            layer().color
-          ],
-          'line-width': [
-            'case',
-            ['boolean', ['feature-state', 'selected'], false], 3,
-            ['boolean', ['feature-state', 'hover'], false], 2,
-            1
-          ],
-          'line-opacity': [
-            'case',
-            ['boolean', ['feature-state', 'hide'], false], 0,
-            0.8
-          ]
-      }"
-          [overrideInteractivity]="{select: false, hover: false}"
+            'line-color': [
+              'case',
+              isState('selected'), '#F58F00',
+              isState('alert'), '#f54a00',
+              layer().color
+            ],
+            'line-width': [
+              'case',
+              isState('selected'), 3,
+              isState('hover'), 2,
+              1
+            ],
+            'line-opacity': [
+              'case',
+              isState('hide'), 0,
+              0.3
+            ]
+          }"
+          [minzoom]="6"
+
 
       />
     } @else if (layer().geometryType === 'LINESTRING') {
@@ -73,27 +75,30 @@
         [groupId]="groupId()"
         [id]="layer().tileSource + '-line'"
         type="line"
-        [source]="layer().kind"
+        [interactivity]="{select: true, hover: true}"
+        [source]="layer().source"
         [sourceLayer]="layer().tileSource"
         [minzoom]="8"
         [paint]="{
       'line-color': [
           'case',
-          ['boolean', ['feature-state', 'selected'], false], '#F58F00',
-          ['boolean', ['feature-state', 'alert'], false], '#f54a00',
+          isState('selected'), '#F58F00',
+          isState('alert'), '#f54a00',
           layer().color
         ],
       'line-width': [
         'case',
-        ['boolean', ['feature-state', 'selected'], false], 3,
-        ['boolean', ['feature-state', 'hover'], false], 2,
+        isState('selected'), 3,
+        isState('hover'), 2,
         2
       ],
       'line-dasharray': [2, 0.5],
       'line-opacity': [
         'case',
-        ['boolean', ['feature-state', 'hide'], false], 0,
-        0.8
+        isState('hide'), 0,
+        isState('selected'), 1,
+        isState('hover'), 0.8,
+        0.5
       ]
 
     }"

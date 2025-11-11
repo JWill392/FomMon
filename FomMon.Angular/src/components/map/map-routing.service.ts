@@ -1,39 +1,53 @@
 import {effect, inject, Injectable} from "@angular/core";
 import {MapSelection, MapStateService} from "./map-state.service";
 import {FeatureIdentifier} from "maplibre-gl";
-import {fidEquals} from "./map-util";
+import {NavigationExtras, Router} from "@angular/router";
+
+export interface RouteNavigationParams {
+  commands: readonly any[],
+  extras?: NavigationExtras,
+}
+export type MapRouteHandler = (featureId: FeatureIdentifier) => RouteNavigationParams | undefined;
+export interface MapRouteOptions {
+  closeOnDeselect: boolean // TODO do this
+}
 
 @Injectable({ providedIn: 'root'})
 export class MapRoutingService {
   private mapStateService = inject(MapStateService);
+  private router = inject(Router);
 
-  private routingHandlers = new Map<string, (featureId: FeatureIdentifier) => void>();
+  private handlerConfig = new Map<string, { handler: MapRouteHandler, options: MapRouteOptions }>();
+
+
 
 
   constructor() {
-    let lastSelection: MapSelection | null = null;
     effect(() => {
-      const selection = this.mapStateService.selected(); // TODO wrong; should still route if deselect and reselect same feature.  key is not if already open.
-      const changed = !fidEquals(lastSelection?.featureId, selection?.featureId);
-      if (!selection || !changed) return;
+      const selection = this.mapStateService.selected();
+      if (!selection) return;
 
       // TODO close detail panel if opened by map router, and if not edit mode
       this.handleSelection(selection);
-      lastSelection = selection;
     })
   }
 
-  registerLayerRouting(layerGroupId: string, handler: (featureId: FeatureIdentifier) => void) {
-    this.routingHandlers.set(layerGroupId, handler);
+  registerSelectRouting(layerGroupId: string, handler: MapRouteHandler, options: MapRouteOptions = {closeOnDeselect: true}) {
+    this.handlerConfig.set(layerGroupId, {handler, options});
   }
 
-  private handleSelection(selection: MapSelection) {
+
+
+  private handleSelection(selection: MapSelection | undefined) {
     const {layerGroupId, featureId} = selection;
 
-    const handler = this.routingHandlers.get(layerGroupId);
-    if (!handler) return;
+    const cfg = this.handlerConfig.get(layerGroupId);
+    if (!cfg) return;
 
-    handler(featureId);
+    const navigationDestination = cfg.handler(featureId);
+    if (!navigationDestination) return;
+
+    this.router.navigate(navigationDestination.commands, navigationDestination.extras);
   }
 
 }

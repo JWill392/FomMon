@@ -6,7 +6,6 @@ import {
 } from '@angular/core';
 import {AreaWatchService} from '../area-watch.service';
 import {LayerConfigService} from '../../layer-type/layer-config.service';
-import {AreaWatchLayerService} from "../../map/layer/area-watch-layer/area-watch-layer.service";
 import {CardLabel, CardThumb} from "../../shared/card/card";
 import {MapCard} from "../../map/map-card/map-card";
 import {FeatureIdentifier} from "maplibre-gl";
@@ -29,10 +28,9 @@ import {AreaWatchThumb} from "../area-watch-thumb/area-watch-thumb";
 export class AreaWatchCard {
   layerService = inject(LayerConfigService);
   private areaWatchService = inject(AreaWatchService);
-  private areaWatchLayerService = inject(AreaWatchLayerService);
 
   isOdd = input.required<boolean>();
-  featureId = computed<FeatureIdentifier>(() => this.areaWatchLayerService.toFeatureIdentifier(this.id()));
+  featureId = computed<FeatureIdentifier>(() => this.areaWatchService.toFeatureIdentifier(this.data()));
   id = input.required<string>();
   data = computed(() => this.areaWatchService.get(this.id()));
 

@@ -1,4 +1,4 @@
-import {effect, inject, Injectable, signal} from '@angular/core';
+import {effect, inject, Injectable, signal, untracked} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {AreaWatch, AreaWatchAdd, AreaWatchDto, ThumbnailUrl} from './area-watch.model';
 import {catchError, map, tap} from 'rxjs/operators';
@@ -10,6 +10,7 @@ import {LoadState, ServiceWithState} from "../shared/service/service-state";
 import {LocalState} from "../shared/service/local-state";
 import {Theme, ThemeService} from "../shared/theme.service";
 import {ErrorService} from "../shared/error.service";
+import {FeatureIdentifier} from "maplibre-gl";
 
 @Injectable({providedIn: 'root'})
 export class AreaWatchService implements ServiceWithState {
@@ -26,9 +27,14 @@ export class AreaWatchService implements ServiceWithState {
 
   private readonly _thumbnailCache = signal(new Map<string, Map<Theme, ThumbnailUrl>>());
 
+  // MAP LAYER interop
   private featureToId = new Map<number, string>();
   private idToFeature = new Map<string, number>();
   private nextFeatureId = 1;
+
+  readonly groupId = 'area-watches';
+  readonly sourceId = this.groupId;
+  readonly sourceLayer: string = undefined; // only for vector layers
 
   public constructor() {
     effect(() => {
@@ -43,14 +49,14 @@ export class AreaWatchService implements ServiceWithState {
 
     effect(() => {
       const theme = this.themeService.theme();
-      const data = this._data();
+      const data = untracked(this._data);
 
       for (const aw of data) {
         // TODO change to resource to avoid duplicate requests
         this._downloadThumbnailCached$(aw.id, theme)
-
           .subscribe();
       }
+
     })
   }
 
@@ -105,6 +111,13 @@ export class AreaWatchService implements ServiceWithState {
     this.idToFeature.set(id, fid);
 
     return fid;
+  }
+  public toFeatureIdentifier(aw: AreaWatch) : FeatureIdentifier | null {
+    return {
+      source: this.sourceId,
+      sourceLayer: this.sourceLayer,
+      id: aw.featureId
+    };
   }
 
 
@@ -259,6 +272,8 @@ export class AreaWatchService implements ServiceWithState {
         })
       )
   }
+
+
 
   public getByFeatureId(fid : number | string) {
     return this._data().find(a => a.featureId === fid);

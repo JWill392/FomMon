@@ -18,12 +18,6 @@ export class MapLayerGroupComponent implements OnInit, OnDestroy {
   thumbnailImg = input.required<string>();
   initiallyVisible = input<boolean>(false);
 
-  // TODO why is this even on the group level, given we usually only want it on fill layer
-  interactivity = input({
-    select: false,
-    hover: false,
-  });
-
   ngOnInit(): void {
     this.mapLayerService.addGroup({
       id: this.groupId(),
@@ -32,7 +26,6 @@ export class MapLayerGroupComponent implements OnInit, OnDestroy {
       thumbnailImg: this.thumbnailImg(),
       visible: this.initiallyVisible(),
       category: this.category(),
-      interactivity: this.interactivity(),
     });
   }
 

@@ -11,7 +11,7 @@ export interface MapSelection {
   featureId: FeatureIdentifier; // TODO refactor so groupid === source + sourceLayer? equality is annoying though.
 }
 
-export type MapMode = 'select' | 'draw'; // TODO map mode
+export type MapMode = 'select' | 'draw';
 
 export interface FlyToCommand {
   geometry: Geometry
@@ -141,7 +141,7 @@ export class MapStateService {
     return this._hovered().some(s => fidEquals(s.featureId, id));
   }
 
-  private isSelected(id: FeatureIdentifier | null) : boolean {
+  public isSelected(id: FeatureIdentifier | null) : boolean {
     if (id === null) return false;
     return fidEquals(this._selected()?.featureId, id);
   }

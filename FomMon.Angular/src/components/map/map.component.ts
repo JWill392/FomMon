@@ -1,10 +1,4 @@
-import {
-  afterNextRender,
-  ChangeDetectionStrategy,
-  Component, effect,
-  inject,
-  signal, untracked, viewChild,
-} from '@angular/core';
+import {ChangeDetectionStrategy, Component, effect, inject, signal, untracked, viewChild,} from '@angular/core';
 import {
   ControlComponent,
   MapComponent as MglMapComponent,
@@ -83,7 +77,8 @@ export class AppMapComponent {
 
       onCleanup(() => {
         for (const fid of alertFids) {
-          map.setFeatureState(fid, {alert: false});
+          if (!this.map()?.isSourceLoaded(fid.source)) continue;
+          this.map().setFeatureState(fid, {alert: false});
         }
       })
     });

@@ -110,7 +110,6 @@ export class MapDrawing implements OnInit, OnDestroy {
       name: "TerraDraw",
       order: 100,
       visible: true,
-      interactivity: {select: false, hover: false},
       category: "internal",
       thumbnailImg: "",
     });

@@ -5,6 +5,7 @@ namespace FomMon.Common.Configuration.Layer;
 public sealed record LayerConfig(
     LayerKind Kind,
     string Name,
+    string FeatureName,
     string Description,
     string TableName, 
     string SourceIdColumn,

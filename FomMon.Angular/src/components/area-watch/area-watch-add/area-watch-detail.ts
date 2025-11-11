@@ -8,16 +8,14 @@ import {LayerKind} from "../../layer-type/layer-type.model";
 import {DrawCommand, MapStateService} from "../../map/map-state.service";
 import {Geometry, Polygon} from "geojson";
 import {Router} from "@angular/router";
-import {AreaWatchLayerService} from "../../map/layer/area-watch-layer/area-watch-layer.service";
 import {ErrorService} from "../../shared/error.service";
 import {area as turfAreaM2} from "@turf/area"
-import {DecimalPipe} from "@angular/common";
+import {DecimalPipe, Location} from "@angular/common";
 import {NgIcon, provideIcons} from "@ng-icons/core";
 import {phosphorBinoculars, phosphorPencil, phosphorTrash} from "@ng-icons/phosphor-icons/regular";
 import {LocalState} from "../../shared/service/local-state";
 import {RoutePaths} from "../../../routes/app.routes";
-import {Location} from "@angular/common";
-import {MatError, MatFormField, MatHint, MatLabel} from "@angular/material/select";
+import {MatError, MatFormField, MatLabel} from "@angular/material/select";
 import {MatInput} from "@angular/material/input";
 import {MatChip, MatChipListbox, MatChipOption, MatChipSet} from "@angular/material/chips";
 import {MatButton, MatIconButton} from "@angular/material/button";
@@ -44,8 +42,7 @@ type Mode = 'none' | 'add' | 'view' | 'edit';
     MatActionList,
     MatListItem,
     MatError,
-    LoaderComponent,
-    MatHint
+    LoaderComponent
   ],
   templateUrl: './area-watch-detail.html',
   styleUrl: './area-watch-detail.scss',
@@ -57,7 +54,6 @@ export class AreaWatchDetail implements OnInit {
   protected layerService = inject(LayerConfigService);
   protected areaWatchService = inject(AreaWatchService);
   private mapStateService = inject(MapStateService);
-  private areaWatchLayerService = inject(AreaWatchLayerService);
   private mapLayerService = inject(MapLayerService);
   private notService = inject(NotificationService);
   private errorService = inject(ErrorService);
@@ -70,7 +66,7 @@ export class AreaWatchDetail implements OnInit {
 
   protected data = computed(() => this.id() ? this.areaWatchService.get(this.id()) : undefined);
   protected localState = computed(() => this.data()?.localState ?? 'none')
-  private featureId = computed(() => this.id() ? this.areaWatchLayerService.toFeatureIdentifier(this.id()) : undefined);
+  private featureId = computed(() => this.id() ? this.areaWatchService.toFeatureIdentifier(this.data()) : undefined);
 
   private readonly layerVisSnapshot = 'AreaWatchDetail' as const
 
@@ -116,7 +112,7 @@ export class AreaWatchDetail implements OnInit {
 
   ngOnInit(): void {
     this.mapLayerService.pushVisibilitySnapshot(this.layerVisSnapshot);
-    this.mapLayerService.setVisibility(this.areaWatchLayerService.groupId, true, this.layerVisSnapshot);
+    this.mapLayerService.setVisibility(this.areaWatchService.groupId, true, this.layerVisSnapshot);
     this.destroyRef.onDestroy(() => this.mapLayerService.popVisibilitySnapshot(this.layerVisSnapshot));
 
 
@@ -221,7 +217,9 @@ export class AreaWatchDetail implements OnInit {
         }
       });
 
-    this.areaWatchLayerService.select(addDto.id);
+    const aw = this.areaWatchService.get(addDto.id);
+    const fid = this.areaWatchService.toFeatureIdentifier(aw); // after add, fid is available
+    this.mapStateService.select(fid);
     this.router.navigate([RoutePaths.areaWatchView({id: addDto.id})]);
     return true;
   }

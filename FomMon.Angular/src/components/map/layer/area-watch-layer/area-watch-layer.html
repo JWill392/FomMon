@@ -5,7 +5,6 @@
     [order]="10"
     thumbnailImg="assets/layer-preview-areawatch.png"
     [initiallyVisible]="true"
-    [interactivity]="{select: true, hover: true}"
 >
 
 
@@ -20,17 +19,18 @@
           [groupId]="groupId"
           id="area-watch"
           type="fill"
+          [interactivity]="{select: true, hover: true}"
           [paint]="{
           'fill-color': [
             'case',
-            ['boolean', ['feature-state', 'selected'], false], '#FFB347',
-            '#3bb2d0'
+            isState('selected'), selectedColor,
+            color
           ],
           'fill-opacity': [
             'case',
-            ['boolean', ['feature-state', 'hide'], false], 0,
-            ['boolean', ['feature-state', 'hover'], false], 0.5,
-            0.3
+            isState('hide'), 0,
+            isState('hover'), 0.5,
+            0.2
           ]
         }"
   />
@@ -44,18 +44,17 @@
 
         'line-color': [
           'case',
-          ['boolean', ['feature-state', 'selected'], false], '#FFB347',
-          '#3bb2d0'
+          isState('selected'), selectedColor,
+          color
         ],
         'line-width': [
           'case',
-          ['boolean', ['feature-state', 'hide'], false], 0,
-          ['boolean', ['feature-state', 'selected'], false], 3,
-          ['boolean', ['feature-state', 'hover'], false], 2,
-          1
+          isState('hide'), 0,
+          isState('selected'), 3,
+          isState('hover'), 2,
+          0.5
         ]
       }"
-          [overrideInteractivity]="{select: false, hover: false}"
   ></app-layer>
 
   <app-layer
@@ -71,11 +70,10 @@
         'text-halo-width': 2,
         'text-halo-blur': 1,
         'text-opacity': ['case',
-          ['boolean', ['feature-state', 'hide'], false], 0,
+          isState('hide'), 0,
           1
         ]
       }"
-      [overrideInteractivity]="{select: false, hover: false}"
       [layout]="{
         'text-field': ['get', 'name'],
         'text-font': ['noto_sans_regular'],

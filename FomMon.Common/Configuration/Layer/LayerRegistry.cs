@@ -24,6 +24,7 @@ public static class LayerRegistry
             new(
                 Kind: LayerKind.From("FomCutblock"),
                 Name: "Cutblocks",
+                FeatureName: "Cutblock",
                 Description: "FOM Cutblocks",
                 TableName: "fom_cutblock",
                 SourceIdColumn: "objectid",
@@ -37,6 +38,7 @@ public static class LayerRegistry
             new(
                 Kind: LayerKind.From("FomRoad"),
                 Name: "Roads",
+                FeatureName: "Road",
                 Description: "FOM Roads",
                 TableName: "fom_road",
                 SourceIdColumn: "objectid",
@@ -50,6 +52,7 @@ public static class LayerRegistry
             new(
                 Kind: LayerKind.From("FomRetention"),
                 Name: "Retention",
+                FeatureName: "Retention",
                 Description: "FOM Retention",
                 TableName: "fom_retention",
                 SourceIdColumn: "objectid",
@@ -63,6 +66,7 @@ public static class LayerRegistry
             new(
                 Kind: LayerKind.From("FireCurrent"),
                 Name: "Current Wildfires",
+                FeatureName: "Wildfire",
                 Description: "Perimiters of current wildfires in BC.",
                 TableName: "fire_current",
                 SourceIdColumn: "objectid",

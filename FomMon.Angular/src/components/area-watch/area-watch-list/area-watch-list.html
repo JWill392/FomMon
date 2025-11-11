@@ -4,8 +4,8 @@
 
   </header>
     <mat-list aria-label="Watches" class="list">
-      <app-loader [dependentStates]="[this.awService.state]">
-        @for (aw of awService.data(); track aw.id) {
+      <app-loader [dependentStates]="[this.areaWatchService.state]">
+        @for (aw of areaWatchService.data(); track aw.id) {
           <app-area-watch-card [id]="aw.id" [isOdd]="$odd" />
         } @empty {
           <p class="empty">Add a watch to monitor an area</p>

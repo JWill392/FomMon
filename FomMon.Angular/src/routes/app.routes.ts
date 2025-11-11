@@ -1,4 +1,4 @@
-import {Routes} from '@angular/router';
+import {Data, Route, Routes} from '@angular/router';
 import {HomeComponent} from "../components/home/home";
 import {AppMapComponent} from '../components/map/map.component';
 import {AreaWatchList} from '../components/area-watch/area-watch-list/area-watch-list';
@@ -8,19 +8,23 @@ import {NotFoundComponent} from "../components/shared/not-found/not-found.compon
 import {canActivateAuthRole} from "../guards/auth-role.guard";
 import {LayerList} from "../components/map/layer/layer-list/layer-list";
 import {MenuLayout} from "../components/shared/menu-layout/menu-layout";
+import {FeatureDetail, featureDetailTitleResolver} from "../components/feature/feature-detail/feature-detail";
+import {LayerKind} from "../components/layer-type/layer-type.model";
 
 
-type PathFunction = (params: Record<string, string>) => string;
+type PathFunction = (params: any) => string;
 export const RoutePaths = {
   map: '/map',
   areaWatchList: '/map/area-watch',
   areaWatchAdd:  '/map/area-watch/add',
-  areaWatchEdit: ((params: {id: string}) => `/map/area-watch/${params.id}/edit`) as PathFunction,
-  areaWatchView: ((params: {id: string}) => `/map/area-watch/${params.id}`) as PathFunction,
+  areaWatchEdit: ((params: {id: string}) => `/map/area-watch/${params.id}/edit`),
+  areaWatchView: ((params: {id: string}) => `/map/area-watch/${params.id}`),
+  featureView: ((params: {kind: LayerKind, id: string}) => `/map/features/${params.kind}/${params.id}`),
   layers: '/map/layers',
   home: '/home',
   forbidden: '/forbidden',
 }
+
 
 export function getParentRoute(path: string) : string {
   if (!path) return path;
@@ -35,58 +39,66 @@ export function getParentRoute(path: string) : string {
 
 let map = RoutePaths.map;
 export const routes: Routes = [
-  { path: asDummy(RoutePaths.map),
+  { path: asRoute(RoutePaths.map),
     component: AppMapComponent,
     title: "Map",
     children: [
       {
-        path: asDummyPop(RoutePaths.areaWatchList, map),
+        path: asRoutePop(RoutePaths.areaWatchList, map),
         component: AreaWatchList,
         title: "Watches",
-        canActivate: [canActivateAuthRole],
-        data: {role: 'spa-user'},
+        ...routeAuth(),
       },
-      { path: asDummyPop(RoutePaths.areaWatchAdd, map),
+      { path: asRoutePop(RoutePaths.areaWatchAdd, map),
         component: AreaWatchDetail,
         title: "Add Watch",
-        canActivate: [canActivateAuthRole],
-        data: {role: 'spa-user', mode: 'add' as const}
+        ...routeAuth({mode: 'add' as const}),
       },
-      { path: asDummyPop(RoutePaths.areaWatchView, map),
+      { path: asRoutePop(RoutePaths.areaWatchView, map),
         component: AreaWatchDetail,
         title: "Watch",
-        canActivate: [canActivateAuthRole],
-        data: {role: 'spa-user', mode: 'view' as const},
-        runGuardsAndResolvers: 'always'
+        ...routeAuth({mode: 'view' as const}),
       },
-      { path: asDummyPop(RoutePaths.areaWatchEdit, map),
+      { path: asRoutePop(RoutePaths.areaWatchEdit, map),
         component: AreaWatchDetail,
         title: "Watch",
-        canActivate: [canActivateAuthRole],
-        data: {role: 'spa-user', mode: 'edit' as const},
-        runGuardsAndResolvers: 'always'
+        ...routeAuth({mode: 'edit' as const}),
       },
-      { path: asDummyPop(RoutePaths.layers, map),
-        // unauthenticated
+      { path: asRoutePop(RoutePaths.featureView, map),
+        component: FeatureDetail,
+        title: featureDetailTitleResolver, // TODO calc to feature-layer name
+        ...routeAuth({mode: 'view' as const}),
+      },
+      { path: asRoutePop(RoutePaths.layers, map),
         component: LayerList,
         title: "Layers",
-      }
+        // unauthenticated
+      },
+      { path: '**', redirectTo: '', pathMatch: 'full'},
     ]
   },
   { path: '',
     component: MenuLayout,
     children: [
-      { path: '', redirectTo: asDummy(RoutePaths.home), pathMatch: 'full'},
-      { path: asDummy(RoutePaths.home), component: HomeComponent},
+      { path: '', redirectTo: asRoute(RoutePaths.home), pathMatch: 'full'},
+      { path: asRoute(RoutePaths.home), component: HomeComponent},
 
-      { path: asDummy(RoutePaths.forbidden), component: ForbiddenComponent },
+      { path: asRoute(RoutePaths.forbidden), component: ForbiddenComponent },
       { path: '**', component: NotFoundComponent }
     ]},
 ];
 
+function routeAuth(data?: Data) : Partial<Route> {
+    return {
+      canActivate: [canActivateAuthRole],
+      data: {role: 'spa-user', ...data},
+      runGuardsAndResolvers: 'always'
+    }
+  }
+
 
 /** Converts a path or func to an angular route path. */
-function asDummy(path: string | PathFunction) : string {
+function asRoute(path: string | Function) : string {
   let ret: string;
   if (typeof path === 'function') {
     const dummyParams = new Proxy({}, {
@@ -117,6 +129,6 @@ function popRoot(path: string, root: string) : string {
 }
 
 
-function asDummyPop(path: string | PathFunction, pop: string) : string {
-  return popRoot(asDummy(path), pop);
+function asRoutePop(path: string | PathFunction, pop: string) : string {
+  return popRoot(asRoute(path), pop);
 }

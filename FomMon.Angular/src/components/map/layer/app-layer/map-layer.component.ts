@@ -1,21 +1,18 @@
+import {ChangeDetectionStrategy, Component, computed, DestroyRef, inject, input, output,} from '@angular/core';
+import type {EventData} from '@maplibre/ngx-maplibre-gl';
+import {LayerComponent,} from '@maplibre/ngx-maplibre-gl';
 import {
-  Component,
-  ChangeDetectionStrategy,
-  input,
-  output, inject, Signal, computed,
-} from '@angular/core';
-import {
-  LayerComponent,
-} from '@maplibre/ngx-maplibre-gl';
-import {
-  LayerSpecification,
+  FeatureIdentifier,
   FilterSpecification,
+  LayerSpecification,
+  MapGeoJSONFeature,
   MapLayerMouseEvent,
-  MapLayerTouchEvent, MapMouseEvent, MapGeoJSONFeature, FeatureIdentifier,
+  MapLayerTouchEvent,
+  MapMouseEvent,
 } from 'maplibre-gl';
-import type { EventData } from '@maplibre/ngx-maplibre-gl';
-import {LayerGroup, LayerInteractivity, MapLayerService} from "../map-layer.service";
+import {LayerInteractivity, MapLayerService} from "../map-layer.service";
 import {MapStateService} from "../../map-state.service";
+import {MapFeatureService} from "../../../feature/map-feature.service";
 
 /**
  * Wrapper component for mgl-layer that registers with MapLayerService
@@ -26,23 +23,19 @@ import {MapStateService} from "../../map-state.service";
   selector: 'app-layer',
   standalone: true,
   imports: [LayerComponent],
-  templateUrl: './app-layer.component.html',
+  templateUrl: './map-layer.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppLayerComponent {
+export class MapLayerComponent {
   protected mapLayerService = inject(MapLayerService);
   private mapStateService = inject(MapStateService);
+  private mapFeatureService = inject(MapFeatureService);
+  private destroyRef = inject(DestroyRef);
 
   groupId = input.required<string>();
 
-  /** Override group interactivity setting. Recommended for borders and labels,
-   * as tiny features tend to break mouseenter/leave events. */
-  overrideInteractivity = input<LayerInteractivity | undefined>();
+  interactivity = input<LayerInteractivity | undefined>();
 
-  private group: Signal<LayerGroup> = computed(() => this.mapLayerService.getGroup(this.groupId()));
-  private interactivity: Signal<LayerInteractivity> = computed(() =>
-    this.overrideInteractivity() ?? this.group()?.interactivity ?? {select: false, hover: false}
-  );
   protected serviceLayout = computed(() => this.mapLayerService.getLayout(this.id()));
 
   /** LayerComponent inputs **/
@@ -57,7 +50,6 @@ export class AppLayerComponent {
   readonly filter = input<FilterSpecification>();
   readonly layoutInput = input<LayerSpecification['layout']>({}, {alias: 'layout'});
   readonly paintInput = input<LayerSpecification['paint']>({}, {alias: 'paint'});
-  protected paintLoose = computed<any>(() => this.paintInput()); // workaround ngx-maplibre outdated maplibre types
 
   readonly before = input<string>();
   readonly minzoom = input<LayerSpecification['minzoom']>();
@@ -79,6 +71,8 @@ export class AppLayerComponent {
   readonly layerTouchCancel = output<MapLayerTouchEvent & EventData>();
 
 
+  protected paintLoose = computed<any>(() => this.paintInput()); // workaround ngx-maplibre outdated maplibre types
+
   ngOnInit(): void {
     this.mapLayerService.addLayer({
       id: this.id(),
@@ -86,6 +80,7 @@ export class AppLayerComponent {
       layout: this.layoutInput(),
       source: this.source(),
       sourceLayer: this.sourceLayer(),
+      interactivity: this.interactivity(),
     });
   }
 
@@ -93,16 +88,34 @@ export class AppLayerComponent {
     this.mapLayerService.removeLayer(this.id());
   }
 
-  onClick(e: MapMouseEvent & {features?: MapGeoJSONFeature[]} & EventData) {
-    if (!this.interactivity().select) return;
-    if (this.mapStateService.mode() !== 'select') return;
-    if (e.features && e.features.length > 0) {
-      const clickId = this.getIdentifier(e.features[0]);
-      if (!clickId) return;
+  constructor() {
+  }
 
-      this.mapStateService.toggleSelect(clickId);
+  onClick(e: MapMouseEvent & {features?: MapGeoJSONFeature[]} & EventData) {
+    this.selectAndCacheOnFeatureClick(e);
+  }
+
+  private selectAndCacheOnFeatureClick(e: MapMouseEvent & { features?: MapGeoJSONFeature[] } & EventData) {
+    if (!this.interactivity()?.select) return;
+    if (this.mapStateService.mode() !== 'select') return;
+    if (!e.features?.length) {
+      return;
+    }
+
+    const feature = e.features[0];
+    const id = this.getIdentifier(feature);
+
+    const isSelected = this.mapStateService.isSelected(id);
+    if (isSelected) {
+      this.mapStateService.unselect(id);
     } else {
-      this.mapStateService.clearSelection();
+      const appFeature = this.mapFeatureService.asAppFeature(feature);
+
+      // cache clicked feature data -- needed b/c MapLibre Vector layers can't reliably retrieve by ID (must be in viewport)
+      this.mapFeatureService.addCache(appFeature); // cache should be cleared by component using data
+      this.destroyRef.onDestroy(() => this.mapFeatureService.removeCache(appFeature));
+
+      this.mapStateService.select(id);
     }
 
     e.preventDefault();
@@ -111,7 +124,7 @@ export class AppLayerComponent {
   onMouseLeave(_: MapMouseEvent & {features?: MapGeoJSONFeature[]} & EventData) {
     if (this.mapStateService.mode() !== 'select') return;
 
-    if (this.interactivity().hover) {
+    if (this.interactivity()?.hover) {
       if (this.hoveredFeatureId) {
         this.mapStateService.removeHover(this.hoveredFeatureId);
         this.hoveredFeatureId = null;
@@ -121,20 +134,21 @@ export class AppLayerComponent {
 
   private hoveredFeatureId: FeatureIdentifier | null = null;
   onMouseMove(e: MapMouseEvent & {features?: MapGeoJSONFeature[]} & EventData) {
-    if (!this.interactivity().hover) return;
+    if (!this.interactivity()?.hover) return;
     if (this.mapStateService.mode() !== 'select') return;
-    const current: FeatureIdentifier | null = this.getIdentifier(e.features?.[0]);
 
-    if (!this.identifierEquals(this.hoveredFeatureId, current)) {
+    const feature = e.features?.[0];
+    const id = feature ? this.getIdentifier(feature) : null;
+
+    if (!this.identifierEquals(this.hoveredFeatureId, id)) {
       if (this.hoveredFeatureId) this.mapStateService.removeHover(this.hoveredFeatureId);
-      if (current) this.mapStateService.addHover(current);
+      if (id) this.mapStateService.addHover(id);
     }
 
-    this.hoveredFeatureId = current;
+    this.hoveredFeatureId = id;
   }
 
-  private getIdentifier(f: MapGeoJSONFeature): FeatureIdentifier | null {
-    if (!f) return null;
+  private getIdentifier(f: MapGeoJSONFeature): FeatureIdentifier {
     return {
       source: f.source,
       sourceLayer: f.sourceLayer,

@@ -20,8 +20,6 @@ export interface LayerGroup {
 
   source: string;
   sourceLayer?: string;
-
-  interactivity: LayerInteractivity
 }
 export type LayerGroupAdd = Omit<LayerGroup, 'source' | 'sourceLayer'>;
 
@@ -35,6 +33,8 @@ export interface LayerInfo {
 
   source: string;
   sourceLayer: string | undefined;
+
+  interactivity?: LayerInteractivity;
 }
 export type LayerInfoAdd = Omit<LayerInfo, 'order' | 'subOrder'>;
 

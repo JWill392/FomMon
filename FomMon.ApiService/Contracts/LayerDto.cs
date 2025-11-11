@@ -5,6 +5,7 @@ namespace FomMon.ApiService.Contracts;
 public record LayerDto(
     LayerKind Kind,
     string Name,
+    string FeatureName,
     string Description,
     string TileSource,
     string Color,
