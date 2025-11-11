@@ -20,6 +20,9 @@ public class AreaWatchController(
     IImageStorageService imageStorageService,
     ILogger<AreaWatchController> logger) : ControllerBase
 {
+    /* Expire thumbnail image access URL periodically.  Obviously not actually sensitive data,
+     but just learning S3 best practices for e.g., private photos */
+    private const int ThumbnailUrlExpirySeconds = 60 * 60; // 1 hour
 
     [HttpPost]
     public async Task<ActionResult<AreaWatchDto>> Create([FromBody] CreateAreaWatchRequest dto, CancellationToken c = default)
@@ -97,7 +100,7 @@ public class AreaWatchController(
         
         var name = uploadResult.Value;
         
-        var urlResult = await imageStorageService.GetImageUrlAsync(name, 3600, c);
+        var urlResult = await imageStorageService.GetImageUrlAsync(name, ThumbnailUrlExpirySeconds, c);
         if (urlResult.IsFailed) return ToActionResult(urlResult);
 
         var thumbnail = new ThumbnailUrlDto()
@@ -119,7 +122,7 @@ public class AreaWatchController(
 
         if (thumbnailName.IsNullOrEmpty()) return NotFound();
         
-        var urlResult = await imageStorageService.GetImageUrlAsync(thumbnailName, 3600, c);
+        var urlResult = await imageStorageService.GetImageUrlAsync(thumbnailName, ThumbnailUrlExpirySeconds, c);
         if (urlResult.IsFailed) return ToActionResult(urlResult);
 
         var tagResult = await imageStorageService.GetParamHashAsync(thumbnailName, c);

@@ -1,8 +1,8 @@
 <app-loader [dependentStates]="[areaWatchService.state]">
   <app-thumbnail-map class="thumb-map"
                      [sourceId]="id()"
-                     [src]="thumbnail()?.url"
-                     [paramHash]="thumbnail()?.paramHash"
+                     [src]="thumbnailUrl()?.url"
+                     [paramHash]="thumbnailUrl()?.paramHash"
                      alt="watch thumbnail"
                      [geometry]="geometry()"
                      [height]="128"
@@ -10,5 +10,8 @@
                      [theme]="theme()"
                      fillColor="#3bb2d0"
                      [placeholderSrc]="placeholderSrc()"
-                     (generated)="onThumbMapSaved($event)" />
+                     (generated)="onThumbMapSaved($event)"
+                     (imgLoadError)="onImgLoadError($event)"
+                     [forceGenerate]="isThumbnailRequestInProgress() ? false : undefined"
+  />
 </app-loader>

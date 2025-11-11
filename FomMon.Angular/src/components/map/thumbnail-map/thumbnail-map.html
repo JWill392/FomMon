@@ -2,4 +2,5 @@
      [src]="imgCurrent().src"
      [alt]="alt()"
      [class.placeholder]="imgChannel() === 'placeholder'"
+     (error)="imgChannel() === 'input' ? imgLoadError.emit($event) : null"
 />

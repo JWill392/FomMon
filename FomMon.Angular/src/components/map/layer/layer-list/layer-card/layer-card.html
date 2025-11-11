@@ -1,5 +1,5 @@
 <app-card [isOdd]="isOdd()" (click)="toggleVisibility()" [class.layer-invisible]="layerGroup().visible === false">
-  <app-card-thumb [src]="layerGroup().thumbnailImg" [alt]="layerGroup.name" />
+  <app-card-thumb [src]="layerGroup().thumbnailImg" [alt]="layerGroup().name" />
 
   <app-card-label [title]="layerGroup().name"/>
 

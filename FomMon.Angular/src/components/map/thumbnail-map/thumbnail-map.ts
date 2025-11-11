@@ -1,13 +1,4 @@
-import {
-  Component,
-  computed,
-  DestroyRef,
-  effect,
-  inject,
-  input,
-  output,
-  signal
-} from '@angular/core';
+import {Component, computed, DestroyRef, effect, inject, input, output, signal} from '@angular/core';
 import {Geometry} from "geojson";
 import {ErrorService} from "../../shared/error.service";
 import {Theme, ThemeService} from "../../shared/theme.service";
@@ -23,6 +14,8 @@ export interface MapThumbnail {
   paramHash:string,
   theme:Theme
 }
+
+type ImgChannel = 'input' | 'generated' | 'last' | 'placeholder';
 
 /**
  * Generates a map thumbnail image of provided geometry.
@@ -52,6 +45,13 @@ export class ThumbnailMap {
 
   geometryHash = computed(() => this.getStableHash(this.geometry()));
 
+  /* Force generation of thumbnail even if cached image is available.
+   * If undefined, will only generate if cached image is not available.
+   * If true, will always generate.
+   * If false, will never generate.
+   * Default: undefined (only generate if cached image is not available) */
+  forceGenerate = input<boolean | undefined>(undefined);
+
   /** Optional image source if already saved; otherwise map will generate */
   imgSrcInput = input<string | undefined>(undefined, {alias: "src"});
   imgParamHashInput = input<string | undefined>(undefined, {alias: "paramHash"});
@@ -59,6 +59,7 @@ export class ThumbnailMap {
 
   // OUTPUT
   generated = output<MapThumbnailGeneratedEvent>();
+  imgLoadError = output<ErrorEvent>();
 
   // IMAGE CHANNELS
   private inputImg =  computed<MapThumbnail>(() => ({
@@ -69,7 +70,7 @@ export class ThumbnailMap {
   private lastImg = signal<MapThumbnail | undefined>(undefined);
   private generatedImg = signal<MapThumbnail | undefined>(undefined);
 
-  protected readonly imgChannel = computed<'input' | 'generated' | 'last' | 'placeholder'>(() => {
+  protected readonly imgChannel = computed<ImgChannel>(() => {
     if (this.isImageValidForThemeAndGeometry(this.inputImg())) return 'input';
     if (this.isImageValidForThemeAndGeometry(this.generatedImg())) return 'generated';
     if (this.isImageValidForTheme(this.lastImg())) return 'last';
@@ -102,6 +103,7 @@ export class ThumbnailMap {
 
   protected readonly error = signal<Error | undefined>(undefined); // TODO use error
 
+
   private generateCommand = computed<GenerateThumbnailCommand>(() => ({
     sourceId: this.sourceId(),
     geometry: this.geometry(),
@@ -119,9 +121,14 @@ export class ThumbnailMap {
     effect(() => {
       const channel = this.imgChannel();
       const command = this.generateCommand();
+      const forceGenerate = this.forceGenerate();
 
       const isGenerating = !!inProgressCommand;
-      const shouldGenerate = (channel === 'last' || channel === 'placeholder');
+      const shouldGenerate = forceGenerate !== false && (
+        channel === 'last' ||
+        channel === 'placeholder' ||
+        (forceGenerate && channel === 'input')
+      );
       const hasCommandChanged = !ThumbnailMapService.commandEquals(command, inProgressCommand)
 
       if (isGenerating && (!shouldGenerate || hasCommandChanged)) {

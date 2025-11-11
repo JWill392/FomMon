@@ -148,12 +148,16 @@ export class AreaWatchService implements ServiceWithState {
 
 
 
-  private _clearThumbnailCache(id: string) {
+  private _clearThumbnailCache(id: string, theme?: Theme) {
     if (!this._thumbnailCache().has(id)) return;
 
     this._thumbnailCache.update(thumbnails => {
       const newThumbnails = new Map(thumbnails);
-      newThumbnails.delete(id)
+      if (theme) {
+        newThumbnails.get(id)?.delete(theme);
+      } else {
+        newThumbnails.delete(id)
+      }
       return newThumbnails;
     });
   }
@@ -163,6 +167,11 @@ export class AreaWatchService implements ServiceWithState {
     if (!themeMap) return undefined;
 
     return themeMap.get(theme)
+  }
+  refreshThumbnail(id: string, theme: Theme) {
+    this._clearThumbnailCache(id, theme);
+    this._downloadThumbnailCached$(id, theme) // TODO change to resource
+      .subscribe();
   }
   private _downloadThumbnailCached$(id: string, theme: Theme) : Observable<ThumbnailUrl> {
     const cache = this.getThumbnail(id);
