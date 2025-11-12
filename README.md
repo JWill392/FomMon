@@ -7,7 +7,7 @@ This project is in early development. It's a personal project to learn c# + angu
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="screenshot-dark.png">
   <source media="(prefers-color-scheme: light)" srcset="screenshot-light.png">
-  <img alt="Shows a black logo in light color mode and a white one in dark color mode." src=screenshot-light.png>
+  <img alt="A screenshot of the application showing a map with areas watched for changes" src=screenshot-light.png>
 </picture>
 
 
@@ -16,10 +16,10 @@ This project is in early development. It's a personal project to learn c# + angu
  - Select from a variety of data sources:
    - Planned logging cutblocks (Forest Operations Map)
    - Current and historical wildfires
+   - Open Street Map (OSM) (Base map + feature monitoring)
    - (more to come; BC Geographic Warehouse layers trivial to add)
 
 ## Roadmap
- - Self-hosted OSM for topo tiles & monitoring features
  - Activity feed view
  - Email notifications
  - Quick-add watches with sane presets
@@ -37,6 +37,7 @@ This project is in early development. It's a personal project to learn c# + angu
      - Entity Framework Core
      - Hangfire background jobs
    - PostgreSQL database + PostGIS
+     - ogr2pgsql + themepark for downloading OSM data
    - MapLibre Martin Tileserver
    - Keycloak authentication
    - MinIO object storage
@@ -45,6 +46,7 @@ This project is in early development. It's a personal project to learn c# + angu
    - Typescript
    - Angular 20
    - MapLibre GL JS
+     - Shortbread schema + Versatiles styles
 
 ## License
 Distributed under the GNU GPLv3.  See LICENSE.txt for more information.
