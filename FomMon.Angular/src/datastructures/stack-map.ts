@@ -53,14 +53,14 @@ export class StackMap<K, V> {
   }
 
   hasIn(name: string, key: K) : boolean {
-    return this._getMap(name).has(key);
+    return this._getMap(name)?.has(key) ?? false;
   }
 
   get(key: K) : V | undefined {
-    return this._getFrom(key).value;
+    return this._getFrom(key)?.value;
   }
   getFrom(key: K, name: string) : V | undefined {
-    return this._getFrom(key, name).value;
+    return this._getFrom(key, name)?.value;
   }
   private _getFrom(key: K, name?: string) : {value: V, name: string} | undefined {
     const top = name ? this.nameToIndex.get(name)! : this.mapStack.length - 1;

@@ -24,6 +24,8 @@ export const RoutePaths = {
   home: '/home',
   forbidden: '/forbidden',
 }
+// TODO should probably refactor to provide route params separated, not stringified.
+//  I think this is making runGuardsAndResolvers: 'always' necessary.
 
 
 export function getParentRoute(path: string) : string {
@@ -108,10 +110,8 @@ function asRoute(path: string | Function) : string {
     });
 
     ret = (path as PathFunction)(dummyParams);
-  } else if (typeof path === 'string') {
-    ret = path;
   } else {
-    throw new Error('Invalid path');
+    ret = path;
   }
 
   if (ret.startsWith('/')) {

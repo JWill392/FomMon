@@ -1,14 +1,10 @@
-import {Component, computed, effect, HostBinding, inject, OnInit, signal} from '@angular/core';
+import {Component, computed, effect, inject, OnInit, signal} from '@angular/core';
 import {ActivatedRoute, NavigationEnd, Router, RouterLink, RouterOutlet} from "@angular/router";
 import {filter} from "rxjs";
 import {UserService} from "../../user/user.service";
 import {SidebarItem} from "./sidebar-item/sidebar-item";
 import {NgIconComponent, provideIcons} from "@ng-icons/core";
-import {
-  phosphorBinoculars,
-  phosphorCaretLeft,
-  phosphorStack, phosphorX
-} from "@ng-icons/phosphor-icons/regular";
+import {phosphorBinoculars, phosphorCaretLeft, phosphorStack, phosphorX} from "@ng-icons/phosphor-icons/regular";
 import {phosphorTreeEvergreenFill} from "@ng-icons/phosphor-icons/fill";
 import {LocalStorageService} from "../../shared/local-storage.service";
 import {MapStateService} from "../map-state.service";
@@ -91,7 +87,7 @@ export class Sidebar implements OnInit {
     let leaf = this.activatedRoute;
     while (leaf.firstChild) leaf = leaf.firstChild;
 
-    this.contentTitle.set(hasActiveChild ? leaf.snapshot.title : '');
+    this.contentTitle.set(hasActiveChild ? leaf.snapshot.title ?? '' : '');
   }
 
   protected toggleNav() {

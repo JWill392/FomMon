@@ -22,7 +22,6 @@ export class LayerConfigService implements ServiceWithState {
   readonly data = this._data.asReadonly();
 
   private readonly byKind = computed(() => Object.fromEntries(this.data()?.map(l => [l.kind, l])));
-  readonly kinds = computed(() =>  this.data()?.map(l => l.kind));
 
   initialize$(): Observable<never> {
     let loadUrl = '/api/layer';

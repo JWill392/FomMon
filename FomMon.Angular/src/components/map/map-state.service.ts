@@ -2,7 +2,7 @@ import {inject, Injectable, signal} from "@angular/core";
 import {MapLayerService} from "./layer/map-layer.service";
 import {ErrorService} from "../shared/error.service";
 import {finalize, Observable, ReplaySubject, Subject} from "rxjs";
-import {Geometry, Point, Polygon, LineString} from "geojson";
+import {Geometry, LineString, Point, Polygon} from "geojson";
 import {FeatureIdentifier} from 'maplibre-gl';
 import {fidEquals} from "./map-util";
 
@@ -60,7 +60,7 @@ export class MapStateService {
   readonly flyToCommand$ = this._flyToCommand$.asObservable();
 
   startDrawMode(drawCommand: DrawCommand): Observable<Geometry> {
-    if (this._mode() === 'draw') return this._drawResult$.asObservable();
+    if (this._mode() === 'draw') return this._drawResult$!.asObservable();
 
     this.setMode('draw');
     this._drawCommand$.next(drawCommand);
@@ -113,7 +113,7 @@ export class MapStateService {
     this._selected.set(mapSelection);
   }
   unselect(id: FeatureIdentifier): void {
-    if (!fidEquals(this._selected().featureId, id)) return;
+    if (!fidEquals(this._selected()?.featureId, id)) return;
     this.clearSelection();
   }
   clearSelection(): void {

@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using FomMon.ApiService.Contracts;
 using FomMon.Data.Contexts;
 using FomMon.Data.Models;
 using FomMon.ServiceDefaults;
@@ -15,21 +16,19 @@ public interface IFeatureService
     public Task<List<FeatureReference>> GetIntersectingAsync(LayerKind kind, Geometry geometry,
         CancellationToken c = default);
 
+    public Task<FeatureDto?> GetDtoAsync(LayerKind kind, int sourceFeatureId, CancellationToken c = default);
 }
-
-
-
 
 public sealed class FeatureService(
     AppDbContext db, 
     IClockService clock) : IFeatureService
 {
     private record FeatureSourceRecord(
-        string SourceFeatureId, 
+        int Id, 
         Geometry Geometry, 
-        JsonDocument? AttributesSnapshot) : IDisposable
+        JsonDocument Properties) : IDisposable
     {
-        public void Dispose() => AttributesSnapshot?.Dispose();
+        public void Dispose() => Properties?.Dispose();
     }
     
     public async Task<List<FeatureReference>> GetIntersectingAsync(
@@ -37,22 +36,14 @@ public sealed class FeatureService(
         Geometry geometry,
         CancellationToken c = default)
     {
-        var layerCfg = LayerRegistry.Get(kind);
 
         // find intersections
         var features = await db.Database
 #pragma warning disable EF1002
             .SqlQueryRaw<FeatureSourceRecord>(
-                $"""
-                SELECT cast({layerCfg.SourceIdColumn} as text) as source_feature_id
-                     , {LayerRegistry.GeometryColumn} as geometry
-                     , row_to_json(t) as attributes_snapshot
-                FROM {LayerRegistry.Schema}.{layerCfg.TableName} as t
-                WHERE ST_Intersects({LayerRegistry.GeometryColumn}, @geom)
-                """, 
+                GenerateSelectFeature(kind, $"WHERE ST_Intersects({LayerRegistry.GeometryColumn}, @geom)"), 
                 new NpgsqlParameter("kind", kind.ToString()),
-                new NpgsqlParameter("geom", geometry)
-                    {NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Geometry}
+                new NpgsqlParameter("geom", geometry) {NpgsqlDbType = NpgsqlTypes.NpgsqlDbType.Geometry}
             ) 
 #pragma warning restore EF1002
             .ToListAsync(c);
@@ -71,6 +62,45 @@ public sealed class FeatureService(
         return refs;
     }
 
+    public async Task<FeatureDto?> GetDtoAsync(LayerKind kind, int sourceFeatureId, CancellationToken c = default)
+    {
+        var layerCfg = LayerRegistry.Get(kind);
+
+        // find intersections
+        var features = await db.Database
+#pragma warning disable EF1002
+            .SqlQueryRaw<FeatureSourceRecord>(
+                GenerateSelectFeature(kind, $"WHERE {layerCfg.SourceIdColumn} = @sourceFeatureId"), 
+                new NpgsqlParameter("kind", kind.ToString()),
+                new NpgsqlParameter("sourceFeatureId", sourceFeatureId)
+            ) 
+#pragma warning restore EF1002
+            .ToListAsync(c);
+        
+        var feat = features.FirstOrDefault();
+        if (feat is null) return null;
+
+        var dto = new FeatureDto(
+            Id: feat.Id, 
+            Kind: kind, 
+            Geometry: feat.Geometry,
+            Properties: feat.Properties.WithRemovedProperties(LayerRegistry.GeometryColumn, layerCfg.SourceIdColumn));
+        feat.Dispose();
+
+        return dto;
+    }
+
+    private string GenerateSelectFeature(LayerKind kind, string where)
+    {
+        var layerCfg = LayerRegistry.Get(kind);
+        return $"""
+                SELECT cast({layerCfg.SourceIdColumn} as integer) as id
+                     , {LayerRegistry.GeometryColumn} as geometry
+                     , row_to_json(t) as properties
+                FROM {LayerRegistry.Schema}.{layerCfg.TableName} as t
+                {where}
+                """;
+    }
     
     /// <summary>
     /// Copy interesting feature from 'warehouse' layers into stable application table; FeatureReference
@@ -84,7 +114,7 @@ public sealed class FeatureService(
         var existing = await db.FeatureReferences
             .FirstOrDefaultAsync(f => 
                 f.LayerKind == kind && 
-                f.SourceFeatureId == featureSource.SourceFeatureId, c);
+                f.SourceFeatureId == featureSource.Id, c);
     
         if (existing != null)
         {
@@ -98,12 +128,13 @@ public sealed class FeatureService(
         }
 
 
+        var layerCfg = LayerRegistry.Get(kind);
         var newRef = new FeatureReference() 
         {
             LayerKind = kind,
-            SourceFeatureId = featureSource.SourceFeatureId,
+            SourceFeatureId = featureSource.Id,
             Geometry = featureSource.Geometry,
-            AttributesSnapshot = featureSource.AttributesSnapshot?.WithRemovedProperty(LayerRegistry.GeometryColumn),
+            Properties = featureSource.Properties?.WithRemovedProperties(LayerRegistry.GeometryColumn, layerCfg.SourceIdColumn),
             FirstSeenAt = clock.Now,
             LastSeenAt = clock.Now
         };
@@ -114,7 +145,7 @@ public sealed class FeatureService(
         return newRef;
     }
     
-    public async Task ReconcileAsync(LayerKind kind, CancellationToken c) // TODO reconcileasync as task
+    public async Task ReconcileAsync(LayerKind kind, CancellationToken c) // TODO reconcileasync as job
     {
         var layerCfg = LayerRegistry.Get(kind);
     
@@ -127,12 +158,13 @@ public sealed class FeatureService(
         foreach (var featureRef in existingRefs)
         {
             var exists = await db.Database
-                .SqlQuery<int>(
+                .SqlQueryRaw<int>(
                     $"""
                      SELECT 1 
-                     FROM {layerCfg.TableName} 
-                     WHERE {layerCfg.SourceIdColumn} = {featureRef.SourceFeatureId}
-                     """)
+                     FROM {LayerRegistry.Schema}.{layerCfg.TableName} 
+                     WHERE {layerCfg.SourceIdColumn} = @sourceFeatureId
+                     """,
+                    new NpgsqlParameter("sourceFeatureId", featureRef.SourceFeatureId))
                 .AnyAsync(c);
         
             if (!exists)

@@ -38,7 +38,7 @@ export class MapRoutingService {
 
 
 
-  private handleSelection(selection: MapSelection | undefined) {
+  private handleSelection(selection: MapSelection) {
     const {layerGroupId, featureId} = selection;
 
     const cfg = this.handlerConfig.get(layerGroupId);
@@ -47,9 +47,12 @@ export class MapRoutingService {
     const navigationDestination = cfg.handler(featureId);
     if (!navigationDestination) return;
 
+    // TODO don't route if already here.
+
     this.router.navigate(navigationDestination.commands, {
       ...navigationDestination.extras,
-      preserveFragment: true
+      preserveFragment: true,
+
     });
   }
 

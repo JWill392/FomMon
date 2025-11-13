@@ -64,9 +64,9 @@ export class AreaWatchDetail implements OnInit {
   mode = input.required<Mode>();
   id = input<string>();
 
-  protected data = computed(() => this.id() ? this.areaWatchService.get(this.id()) : undefined);
+  protected data = computed(() => this.id() ? this.areaWatchService.get(this.id()!) : undefined);
   protected localState = computed(() => this.data()?.localState ?? 'none')
-  private featureId = computed(() => this.id() ? this.areaWatchService.toFeatureIdentifier(this.data()) : undefined);
+  private featureId = computed(() => this.id() ? this.areaWatchService.toFeatureIdentifier(this.data()!) : undefined);
 
   private readonly layerVisSnapshot = 'AreaWatchDetail' as const
 
@@ -152,7 +152,7 @@ export class AreaWatchDetail implements OnInit {
 
     this.startDrawMode({
       id: this.featureId(),
-      geometry: this.data().geometry as Polygon,
+      geometry: this.data()!.geometry as Polygon,
       mode: 'polygon'
     })
 
@@ -161,7 +161,7 @@ export class AreaWatchDetail implements OnInit {
 
   private onLoadedView() {
     this.flyToSelf();
-    this.mapStateService.select(this.featureId());
+    this.mapStateService.select(this.featureId()!);
   }
 
   private prepopForm() {
@@ -200,9 +200,9 @@ export class AreaWatchDetail implements OnInit {
     if (this.form.invalid) return false;
 
     const addDto = this.areaWatchService.createId({
-      name: this.form.value.name,
-      layers: this.form.value.layers,
-      geometry: this.form.value.geometry,
+      name: this.form.value.name!,
+      layers: this.form.value.layers!,
+      geometry: this.form.value.geometry!,
     });
 
     this.areaWatchService.add$(addDto)
@@ -218,9 +218,11 @@ export class AreaWatchDetail implements OnInit {
       });
 
     const aw = this.areaWatchService.get(addDto.id);
-    const fid = this.areaWatchService.toFeatureIdentifier(aw); // after add, fid is available
-    this.mapStateService.select(fid);
-    this.router.navigate([RoutePaths.areaWatchView({id: addDto.id})], {preserveFragment: true});
+    if (aw) {
+      const fid = this.areaWatchService.toFeatureIdentifier(aw); // after add, fid is available
+      this.mapStateService.select(fid);
+      this.router.navigate([RoutePaths.areaWatchView({id: addDto.id})], {preserveFragment: true});
+    }
     return true;
   }
 
@@ -231,9 +233,9 @@ export class AreaWatchDetail implements OnInit {
 
     const patchDto = {
       id: this.id()!,
-      name: this.form.value.name,
-      layers: this.form.value.layers,
-      geometry: this.form.value.geometry,
+      name: this.form.value.name ?? undefined,
+      layers: this.form.value.layers ?? undefined,
+      geometry: this.form.value.geometry ?? undefined,
     };
 
     this.areaWatchService.patch$(patchDto)
@@ -268,6 +270,7 @@ export class AreaWatchDetail implements OnInit {
 
   private delete() {
     const data = this.data()
+    if (!data) return;
     if (this.localState() !== LocalState.added) return;
 
     this.areaWatchService.delete$(data)
@@ -297,7 +300,7 @@ export class AreaWatchDetail implements OnInit {
   flyToSelf(): void {
     if (!this.data()) return;
     this.mapStateService.flyTo({
-      geometry: this.data().geometry
+      geometry: this.data()!.geometry
     })
   }
 }
@@ -306,7 +309,7 @@ function areaValidatorFactory(options: {maxAreaHa: number}) {
   const M2_IN_HA = 10000 as const;
 
   return (control: FormControl<Geometry | null>): ValidationErrors => {
-    if (!control.value) return null;
+    if (!control.value) return {};
     const areaHa = turfAreaM2(control.value) / M2_IN_HA;
     if (areaHa > options.maxAreaHa) {
       return {
@@ -317,6 +320,6 @@ function areaValidatorFactory(options: {maxAreaHa: number}) {
         }
       }
     }
-    return null;
+    return {};
   }
 }

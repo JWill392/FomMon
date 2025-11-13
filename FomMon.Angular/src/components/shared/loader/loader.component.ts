@@ -1,4 +1,4 @@
-import {Component, computed, contentChild, input} from '@angular/core';
+import {Component, computed, contentChild, input, ResourceRef} from '@angular/core';
 import {MatProgressSpinner} from "@angular/material/progress-spinner";
 import {ServiceState} from "../service/service-state";
 
@@ -19,7 +19,9 @@ export class LoaderPlaceholderComponent {
 })
 export class LoaderComponent {
   dependentStateInput = input<ServiceState[]>([], {alias: "dependentStates"});
+  dependentResourceInput = input<(ResourceRef<any> | undefined)[]>([], {alias: "dependentResources"});
   isLoadingInput = input<boolean>(false, {alias: "loading"});
+
 
   errorInput = input(undefined, {
     transform: (v: Error) => v?.message,
@@ -29,10 +31,14 @@ export class LoaderComponent {
   diameter = input<number>(40);
   strokeWidth = input<number>(4);
 
-  isLoadingOrIdle = computed(() => this.isLoadingInput() || this.dependentStateInput().some(s => s.isLoading() || s.isIdle()));
+  isLoadingOrIdle = computed(() => this.isLoadingInput() ||
+    this.dependentStateInput().some(s => s.isLoading() || s.isIdle()) ||
+    this.dependentResourceInput().some(r => !r || r.isLoading()));
+
   error = computed(() => this.errorInput() || this.dependentStateInput().find(s => s.isError())?.error());
 
   placeholderContent = contentChild(LoaderPlaceholderComponent);
   hasPlaceholder = computed(() => !!this.placeholderContent());
+
 
 }

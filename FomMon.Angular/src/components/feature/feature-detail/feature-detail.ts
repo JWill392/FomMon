@@ -1,4 +1,4 @@
-import {Component, computed, effect, inject, input, OnDestroy, OnInit} from '@angular/core';
+import {Component, computed, effect, inject, input, OnDestroy, OnInit, signal, untracked} from '@angular/core';
 import {LayerKind} from "../../layer-type/layer-type.model";
 import {LayerConfigService} from "../../layer-type/layer-config.service";
 import {
@@ -13,18 +13,25 @@ import {
 } from "@angular/material/table";
 import {ResolveFn} from "@angular/router";
 import {MapFeatureService} from "../map-feature.service";
-import {MapStateService} from "../../map/map-state.service";
 import {FeatureIdentifier} from "maplibre-gl";
 import {MatFormField, MatLabel} from "@angular/material/form-field";
 import {MatInput} from "@angular/material/input";
 import {CdkTextareaAutosize} from "@angular/cdk/text-field";
+import {LoaderComponent} from "../../shared/loader/loader.component";
+import {AppFeature} from "../feature.model";
 
 export const featureDetailTitleResolver: ResolveFn<string> = (route) => {
+
   const layerConfigService = inject(LayerConfigService);
   const kind = route.params['kind'] as LayerKind;
-  // TODO falls back to kind before LayerConfigService is initialized; not reactive
+  const layer = layerConfigService.get(kind);
+  if (!layer) {
+    // TODO falls back to kind before LayerConfigService is initialized; not reactive
+    console.warn('Layer config not available during title resolver - feature-detail');
+    return kind;
+  }
 
-  return `${layerConfigService.get(kind)?.featureName ?? kind}`;
+  return `${layer.featureName}`;
 }
 
 @Component({
@@ -40,7 +47,8 @@ export const featureDetailTitleResolver: ResolveFn<string> = (route) => {
     MatLabel,
     MatInput,
     MatNoDataRow,
-    CdkTextareaAutosize
+    CdkTextareaAutosize,
+    LoaderComponent
   ],
   templateUrl: './feature-detail.html',
   styleUrl: './feature-detail.scss'
@@ -48,31 +56,29 @@ export const featureDetailTitleResolver: ResolveFn<string> = (route) => {
 export class FeatureDetail implements OnInit, OnDestroy {
   private readonly layerConfigService = inject(LayerConfigService);
   private readonly mapFeatureService = inject(MapFeatureService);
-  private readonly mapStateService = inject(MapStateService);
 
-  kind = input.required<LayerKind>();
+  kindStringInput = input.required<string>({alias: 'kind'});
+  kind = computed(() => this.kindStringInput() as LayerKind);
   idStringInput = input.required<string>({alias: 'id'});
-  id = computed(() => {
-    const idString = this.idStringInput();
-    if (typeof idString === 'number') return idString;
-    return parseInt(idString);
-  });
+  id = computed(() => parseInt(this.idStringInput()));
 
   protected layer = computed(() => this.layerConfigService.get(this.kind()));
-  protected fid = computed<FeatureIdentifier>(() => {
+  protected fid = computed<FeatureIdentifier | undefined>(() => {
     if (!this.layer()) return undefined;
     return {
-      source: this.layer().source,
-      sourceLayer: this.layer().sourceLayer,
+      source: this.layer()!.source,
+      sourceLayer: this.layer()!.sourceLayer,
       id: this.id()
     };
   });
-  protected appFeature = computed(() => this.mapFeatureService.get(this.fid()))
+
+  protected appFeature = signal<AppFeature | undefined>(undefined);
+
 
   protected properties = computed(() => {
     const layer = this.layer();
     const properties = this.appFeature()?.properties;
-    if (!properties) return [];
+    if (!layer || !properties) return [];
 
     const configCols = layer.columns.map(c => ({
       ...c,
@@ -96,24 +102,27 @@ export class FeatureDetail implements OnInit, OnDestroy {
 
   constructor() {
 
-    effect(() => {
+    effect((onCleanup) => {
       const fid = this.fid();
       if (!fid) return;
 
-      this.mapStateService.select(fid);
+      const sub = this.mapFeatureService.get$(fid)
+        .subscribe({
+          next: (feature) => untracked(() => this.appFeature.set(feature))
+        })
+      onCleanup(() => {
+        sub.unsubscribe();
+        this.mapFeatureService.removeCache(fid);
+      })
     })
   }
 
   ngOnInit(): void {
-    // TODO get geometry and properties from service if not set
-
-    if (!this.appFeature()) {
-      console.error('Feature not cached; retrieval not implemented');
-    }
   }
 
   ngOnDestroy() {
-    this.mapFeatureService.removeCache(this.appFeature());
+    const feat = this.appFeature();
+    if (feat) this.mapFeatureService.removeCache(feat);
   }
 
 

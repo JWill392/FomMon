@@ -1,4 +1,4 @@
-import {computed, DOCUMENT, effect, inject, Injectable, Renderer2, signal} from "@angular/core";
+import {computed, DOCUMENT, effect, inject, Injectable, signal} from "@angular/core";
 import {LocalStorageService} from "./local-storage.service";
 
 export type Theme = 'light' | 'dark'
@@ -14,25 +14,21 @@ export class ThemeService {
 
   private darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-  private prefersDarkMode = signal(this.darkModeQuery.matches);
-  private hasSetDarkMode = signal<boolean | undefined>(undefined);
+  private browserPrefersDarkMode = signal(this.darkModeQuery.matches);
+  private overrideDarkMode = signal<boolean | undefined>(undefined);
 
 
   theme = computed<Theme>(() => {
-    const isDark = this.hasSetDarkMode() ?? this.prefersDarkMode();
+    const isDark = this.overrideDarkMode() ?? this.browserPrefersDarkMode();
     return isDark ? 'dark' : 'light';
   });
   isDarkMode = computed(() => this.theme() === 'dark')
 
   constructor() {
-    this.darkModeQuery.addEventListener('change', (e) => this.prefersDarkMode.set(e.matches));
+    this.darkModeQuery.addEventListener('change', (e) => this.browserPrefersDarkMode.set(e.matches));
 
-    this.hasSetDarkMode.set(this.localStorageService.get(this.localStore_setDarkMode));
+    this.overrideDarkMode.set(this.localStorageService.get<boolean>(this.localStore_setDarkMode));
 
-    effect(() => {
-      const hasSetDarkTheme = this.hasSetDarkMode();
-      this.localStorageService.set(this.localStore_setDarkMode, hasSetDarkTheme);
-    })
 
     effect(() => {
       const theme = this.theme();
@@ -51,11 +47,12 @@ export class ThemeService {
     })
   }
 
-  get allThemes() {
-    return ['light', 'dark'] as const;
-  }
-
   setDarkMode(isDark: boolean | undefined) {
-    this.hasSetDarkMode.set(isDark);
+    this.overrideDarkMode.set(isDark);
+    if (isDark === undefined) {
+      this.localStorageService.remove(this.localStore_setDarkMode);
+    } else {
+      this.localStorageService.set(this.localStore_setDarkMode, isDark);
+    }
   }
 }

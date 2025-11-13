@@ -1,20 +1,22 @@
-<app-map-card
-    [isOdd]="isOdd()"
-    [featureId]="featureId()"
-    [routerLink]="[RoutePaths.areaWatchView({id: id()})]"
-    [scrollIntoView]="{hover: true}"
->
-  <app-card-thumb>
-    <app-area-watch-thumb [id]="id()" />
-  </app-card-thumb>
+<app-loader [loading]="!data()" [dependentStates]="[areaWatchService.state]">
+  <app-map-card
+      [isOdd]="isOdd()"
+      [featureId]="featureId()!"
+      [routerLink]="[RoutePaths.areaWatchView({id: id()})]"
+      [scrollIntoView]="{hover: true}"
+  >
+    <app-card-thumb>
+      <app-area-watch-thumb [id]="id()" />
+    </app-card-thumb>
 
-  <app-card-label [title]="data().name">
-    <ul class="layers">
-      @if (layerService.state.isReady()) {
-        @for (l of data()?.layers; track l) {
-          <li class="badge">{{ layerService.get(l)?.name }}</li>
+    <app-card-label [title]="data()!.name">
+      <ul class="layers">
+        @if (layerService.state.isReady()) {
+          @for (l of data()?.layers; track l) {
+            <li class="badge">{{ layerService.get(l)?.name }}</li>
+          }
         }
-      }
-    </ul>
-  </app-card-label>
-</app-map-card>
+      </ul>
+    </app-card-label>
+  </app-map-card>
+</app-loader>

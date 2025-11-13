@@ -8,6 +8,7 @@ import {tap} from "rxjs/operators";
 import {LocalState} from "../shared/service/local-state";
 import {UserService} from "../user/user.service";
 import {LayerConfigService} from "../layer-type/layer-config.service";
+import {FeatureIdentifier} from "maplibre-gl";
 
 
 @Injectable({providedIn: 'root'})
@@ -50,13 +51,14 @@ export class AreaAlertService implements ServiceWithState {
 
   }
 
-  getFeatureId(alert: AreaAlert) {
+  getFeatureId(alert: AreaAlert) : FeatureIdentifier {
     const kind = alert.featureReference.layerKind;
     const layer = this.layerConfigService.get(kind);
+    if (!layer) {throw new Error(`No layer config for ${kind}`)}
     return {
+      id: alert.featureReference.sourceFeatureId,
       source: kind,
       sourceLayer: layer.tileSource,
-      id: alert.featureReference.sourceFeatureId
     };
   }
 }

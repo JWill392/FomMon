@@ -7,14 +7,15 @@ import {AreaWatchService} from "../../../area-watch/area-watch.service";
 import {RoutePaths} from "../../../../routes/app.routes";
 import {MapLayerComponent} from "../app-layer/map-layer.component";
 import {FeatureCollection} from "geojson";
-import {isState} from "../map-style-util";
+import {MapStyleIsStatePipe} from "../map-style-util";
 
 @Component({
   selector: 'app-area-watch-layer',
   imports: [
     GeoJSONSourceComponent,
     MapLayerGroupComponent,
-    MapLayerComponent
+    MapLayerComponent,
+    MapStyleIsStatePipe
   ],
   templateUrl: './area-watch-layer.html',
   styles: ['']
@@ -42,10 +43,10 @@ export class AreaWatchLayer implements OnInit {
 
   protected readonly selectedColor = '#FFB347';
   protected readonly color = '#3bb2d0';
-  protected readonly isState = isState;
 
   ngOnInit(): void {
     this.mapRoutingService.registerSelectRouting(this.areaWatchService.groupId, (featureId) => {
+      if (!featureId.id) return undefined;
       const aw = this.areaWatchService.getByFeatureId(featureId.id);
       if (!aw) return undefined;
 

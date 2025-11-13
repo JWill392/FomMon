@@ -44,7 +44,7 @@ export class MapLayerComponent {
   readonly type = input.required<LayerSpecification['type']>();
 
   // Optional inputs
-  readonly source = input<string>();
+  readonly source = input.required<string>();
   readonly metadata = input<LayerSpecification['metadata']>();
   readonly sourceLayer = input<string>();
   readonly filter = input<FilterSpecification>();

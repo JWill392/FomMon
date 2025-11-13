@@ -77,8 +77,8 @@ export class AppMapComponent {
 
       onCleanup(() => {
         for (const fid of alertFids) {
-          if (!this.map()?.isSourceLoaded(fid.source)) continue;
-          this.map().setFeatureState(fid, {alert: false});
+          if (!map.isSourceLoaded(fid.source)) continue;
+          map.setFeatureState(fid, {alert: false});
         }
       })
     });
@@ -96,7 +96,8 @@ export class AppMapComponent {
     // handle layer order change
     effect(() => {
       this.mapLayerService.layerOrderSignature();
-      if (!this.map()) return;
+      const map = this.map();
+      if (!map) return;
 
       const layerOrder = untracked(() => this.mapLayerService.layers()); // ignore visibility changes etc
 
@@ -104,7 +105,7 @@ export class AppMapComponent {
       queueMicrotask(() => {
         // move all layers to top; reset order to match mapLayerService.layers()
         for (const layer of layerOrder) {
-          this.map().moveLayer(layer.id);
+          map.moveLayer(layer.id);
         }
       })
     })

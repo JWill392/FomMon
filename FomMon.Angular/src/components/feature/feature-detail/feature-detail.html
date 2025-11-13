@@ -1,25 +1,23 @@
-@if (!!appFeature()) {
-<mat-form-field class="filter-field" subscriptSizing="dynamic" appearance="fill">
-  <mat-label>Filter</mat-label>
-  <input matInput (keyup)="applyFilter($event)" #input>
-</mat-form-field>
+<app-loader [loading]="!appFeature()">
+  <mat-form-field class="filter-field" subscriptSizing="dynamic" appearance="fill">
+    <mat-label>Filter</mat-label>
+    <input matInput (keyup)="applyFilter($event)" #input>
+  </mat-form-field>
 
-<table mat-table [dataSource]="dataSource()">
-  <ng-container matColumnDef="field">
-    <td mat-cell *matCellDef="let property">
-      <mat-form-field subscriptSizing="dynamic" class="property-field">
-        <mat-label>{{property.decode}}</mat-label>
-        <textarea [cdkTextareaAutosize]="true" matInput [value]="property.value" readonly [disabled]="true"></textarea>
-      </mat-form-field>
-    </td>
-  </ng-container>
-  <tr mat-row *matRowDef="let row; columns: ['field'];"></tr>
+  <table mat-table [dataSource]="dataSource()">
+    <ng-container matColumnDef="field">
+      <td mat-cell *matCellDef="let property">
+        <mat-form-field subscriptSizing="dynamic" class="property-field">
+          <mat-label>{{property.decode}}</mat-label>
+          <textarea [cdkTextareaAutosize]="true" matInput [value]="property.value" readonly [disabled]="true"></textarea>
+        </mat-form-field>
+      </td>
+    </ng-container>
+    <tr mat-row *matRowDef="let row; columns: ['field'];"></tr>
 
 
-  <tr class="mat-row" *matNoDataRow>
-    <td class="mat-cell" colspan="4">No fields matching the filter "{{input.value}}"</td>
-  </tr>
-</table>
-} @else {
-  <p class="placeholder">No feature selected</p>
-}
+    <tr class="mat-row" *matNoDataRow>
+      <td class="mat-cell" colspan="4">No fields matching the filter "{{input.value}}"</td>
+    </tr>
+  </table>
+</app-loader>

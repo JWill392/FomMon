@@ -139,3 +139,9 @@ Authorization: Bearer {{access_token}}
 ### Profile Identicon Generate POST
 POST http://localhost:5389/User/profile-image/identicon
 Authorization: Bearer {{access_token}}
+
+### Feature GET
+@fid = 4871199
+@feature_kind = FomCutblock
+GET http://localhost:5389/Feature/{{fid}}?kind={{feature_kind}}
+Authorization: Bearer {{access_token}}

@@ -13,8 +13,7 @@ import {HttpClient, HttpErrorResponse} from "@angular/common/http";
     ThumbnailMap,
     LoaderComponent
   ],
-  templateUrl: './area-watch-thumb.html',
-  styleUrl: './area-watch-thumb.scss'
+  templateUrl: './area-watch-thumb.html'
 })
 export class AreaWatchThumb {
   protected areaWatchService = inject(AreaWatchService);
@@ -26,7 +25,7 @@ export class AreaWatchThumb {
 
   private data = computed(() => this.areaWatchService.get(this.id()));
   protected geometry = computed(() => this.data()?.geometry);
-  protected thumbnailUrl = computed<ThumbnailUrl>(() => this.areaWatchService.getThumbnail(this.id(), this.theme()));
+  protected thumbnailUrl = computed<ThumbnailUrl | undefined>(() => this.areaWatchService.getThumbnail(this.id(), this.theme()));
 
   protected placeholderSrc = computed(() => `assets/areawatch-thumb-placeholder-${this.theme()}.png`);
   protected theme = computed(() => this.themeService.theme());

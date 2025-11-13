@@ -18,7 +18,7 @@
         [id]="`thumbnail-map-fill-${instanceId}`"
         type="fill"
         [paint]="{
-            'fill-color': command()?.request.fillColor ?? '#000',
+            'fill-color': command()?.request?.fillColor ?? '#000',
             'fill-opacity': 0.4
           }"
     ></mgl-layer>

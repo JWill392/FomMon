@@ -5,12 +5,11 @@ import {ignoreElements, tap} from 'rxjs/operators';
 import {LoadState, ServiceState} from "./service-state";
 
 
-
 export class ServiceLoadState implements ServiceState {
   private _dependencies: ServiceState[];
 
   private _value = signal<LoadState>(LoadState.idle);
-  value = computed<LoadState>(() => ServiceLoadState.maxState([...this._dependencies.map(s=>s.value()), this._value()]));
+  value = computed<LoadState>(() => ServiceLoadState.maxState([...this._dependencies.map(s=>s.value()), this._value()])!);
 
   private _error = signal<Error | null>(null);
   error = this._error.asReadonly();
@@ -64,7 +63,7 @@ export class ServiceLoadState implements ServiceState {
   }
 
 
-  private static maxState(states: LoadState[]) : LoadState {
+  private static maxState(states: LoadState[]) : LoadState | undefined {
     if (states.length === 0) {
       return undefined;
     }

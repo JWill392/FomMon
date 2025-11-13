@@ -49,42 +49,43 @@ export class MapDrawing implements OnInit, OnDestroy {
 
 
   public ngOnInit() {
-    // this.map = map;
-    if (!this.map()) throw new Error('Map not initialized');
+    const map = this.map();
+    if (!map) throw new Error('Map not initialized');
 
 
     this.drawControl = new MaplibreTerradrawControl({
       modes: ['polygon', 'select', 'delete-selection', 'render'],
       open: true
     });
-    this.map().addControl(this.drawControl, 'top-right');
-    this.destroyRef.onDestroy(() => this.map().removeControl(this.drawControl));
+    map.addControl(this.drawControl, 'top-right');
+    this.destroyRef.onDestroy(() => { if (this.drawControl) map.removeControl(this.drawControl) });
     this.setDrawState('control-added');
 
 
-    this.draw = this.drawControl.getTerraDrawInstance();
-    if (!this.draw) {
+    const draw = this.drawControl.getTerraDrawInstance();
+    if (!draw) {
       this.errorService.handleError(new Error('Failed to get terra draw instance'));
       return;
     }
 
-
     // just hide until in draw mode (too slow to add control on entering draw mode)
     this.hideDrawControl();
 
-    this.map().once('idle', () => {
+    map.once('idle', () => {
       this.setDrawState('map-idle');
-      const drawEnabled = this.draw["_enabled"];
+      const drawEnabled = draw["_enabled"];
       if (drawEnabled) {
         // 'ready' will never be emitted, and otherwise impossible to know this based on public draw state
         this.onDrawReady();
       } else {
         const onReady = this.onDrawReady.bind(this)
-        this.draw.on('ready', onReady)
-        this.destroyRef.onDestroy(() => {this.draw.off('ready', onReady)})
+        draw.on('ready', onReady)
+        this.destroyRef.onDestroy(() => {draw.off('ready', onReady)})
 
-        this.draw.start(); // not called reliably by terradraw control because it assumes map.loaded and map.once('load')
+        draw.start(); // not called reliably by terradraw control because it assumes map.loaded and map.once('load')
         // covers all cases, but really loaded & load are (weirdly) totally unrelated concepts
+
+        this.draw = draw;
       }
     });
   }
@@ -101,7 +102,8 @@ export class MapDrawing implements OnInit, OnDestroy {
 
   private onDrawReady() {
     this.setDrawState('draw-ready');
-    const layers = this.drawControl.cleanStyle(this.map().getStyle(), {onlyTerraDrawLayers: true}).layers.map(l => l.id);
+    const drawControl = this.drawControl!;
+    const layers = drawControl.cleanStyle(this.map().getStyle(), {onlyTerraDrawLayers: true}).layers.map(l => l.id);
 
 
   // register layers for ordering
@@ -117,7 +119,7 @@ export class MapDrawing implements OnInit, OnDestroy {
       this.mapLayerService.addLayer({
         id: lid,
         groupId: this.terradrawGroupId,
-        layout: null,
+        layout: {},
         source: "",
         sourceLayer: "",
       });
@@ -134,6 +136,7 @@ export class MapDrawing implements OnInit, OnDestroy {
   private enterDrawMode(command: DrawCommand) : void {
     if (this.currentDrawCommand()) return;
     if (!this.map) return;
+    if (!this.draw) return;
 
     this.currentDrawCommand.set(command);
 
@@ -154,7 +157,7 @@ export class MapDrawing implements OnInit, OnDestroy {
 
       // hide redundant real feature geometry
       if (command.id) {
-        var timeout = setTimeout(() => this.mapStateService.hide(command.id), 100);
+        const timeout = setTimeout(() => this.mapStateService.hide(command.id!), 100);
         this.destroyRef.onDestroy(() => clearTimeout(timeout))
 
       }
@@ -165,10 +168,12 @@ export class MapDrawing implements OnInit, OnDestroy {
 
 
     this.draw.on('finish', (id: any) => {
+      if (!this.draw) return;
       const feature = this.draw.getSnapshotFeature(id);
+      const drawResult$ = this.mapStateService.drawResult$;
 
-      if (feature?.geometry) {
-        this.mapStateService.drawResult$.next(feature.geometry);
+      if (feature?.geometry && drawResult$) {
+        drawResult$.next(feature.geometry);
         this.draw.setMode('select');
       }
     });
@@ -176,16 +181,17 @@ export class MapDrawing implements OnInit, OnDestroy {
   private exitDrawMode() {
     if (!this.currentDrawCommand()) return;
     if (!this.map) return;
+    const drawForId = this.currentDrawCommand()!.id
 
-    if (this.currentDrawCommand().id) {
-      this.mapStateService.unhide(this.currentDrawCommand().id);
+    if (drawForId) {
+      this.mapStateService.unhide(drawForId);
     }
 
     this.hideDrawControl()
-    this.draw.clear();
+    this.draw?.clear();
 
 
-    this.draw.setMode('render');
+    this.draw?.setMode('render');
     this.currentDrawCommand.set(undefined);
   }
 

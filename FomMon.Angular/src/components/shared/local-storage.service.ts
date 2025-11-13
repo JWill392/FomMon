@@ -1,7 +1,7 @@
-import {inject, Injectable } from '@angular/core';
+import {inject, Injectable} from '@angular/core';
 import {ErrorService} from "./error.service";
 
-type Serializable = string | number | boolean | null | undefined |
+type Serializable = string | number | boolean |
   Map<any, any> | Serializable[] | { [key: string]: Serializable };
 
 export type LocalKey = {key: string, version: number}
@@ -36,23 +36,23 @@ export class LocalStorageService {
     return this._setItem(localKey.key, jsonValue);
   }
 
-  get<T extends Serializable>(localKey: LocalKey): T | null {
+  get<T extends Serializable>(localKey: LocalKey): T | undefined {
     this._validateLocalKey(localKey);
 
     const value = this._getItem(localKey.key);
-    if (!value) return null;
+    if (value === undefined) return undefined;
 
     let wrapper: StorageWrapper<T>;
     try {
       wrapper = JSON.parse(value, this.reviver.bind(this));
     } catch (error) {
       this.errorService.warn(`Error parsing local storage value for ${localKey.key}`, error);
-      return null;
+      return undefined;
     }
 
     if (wrapper?.version !== localKey.version) {
       this.errorService.warn(`Version mismatch for ${localKey.key}: expected ${localKey.version}, got ${wrapper?.version}.`);
-      return null;
+      return undefined;
     }
 
     return wrapper.data;
@@ -88,8 +88,8 @@ export class LocalStorageService {
   private asFullKey(key: string) {
     return LocalStorageService.baseKey + key;
   }
-  private _getItem(key: string) {
-    return localStorage.getItem(this.asFullKey(key));
+  private _getItem(key: string) : string | undefined {
+    return localStorage.getItem(this.asFullKey(key)) ?? undefined;
   }
   private _setItem(key: string, value: string) : boolean {
     try {

@@ -17,8 +17,10 @@ public class FeatureReference : IDisposable
     [Required]
     public required LayerKind LayerKind { get; set; }
     
-    [MaxLength(100)]
-    public string SourceFeatureId { get; set; } = null!; // Value from the layer's source ID column
+    /// <summary>
+    /// Value from the layer's source ID column
+    /// </summary>
+    public int SourceFeatureId { get; set; } 
 
     // Application audit
     public Instant FirstSeenAt { get; set; }
@@ -32,7 +34,10 @@ public class FeatureReference : IDisposable
     public required Geometry Geometry { get; set; }
     
     
-    public JsonDocument? AttributesSnapshot { get; set; } // JSON
+    /// <summary>
+    /// Snapshot of properties - non geometry columns in source table
+    /// </summary>
+    public JsonDocument? Properties { get; set; }
 
-    public void Dispose() => AttributesSnapshot?.Dispose();
+    public void Dispose() => Properties?.Dispose();
 }

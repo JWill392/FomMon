@@ -62,11 +62,19 @@ export class ThumbnailMap {
   imgLoadError = output<ErrorEvent>();
 
   // IMAGE CHANNELS
-  private inputImg =  computed<MapThumbnail>(() => ({
-    src: this.imgSrcInput(),
-    paramHash: this.imgParamHashInput(),
-    theme: this.imgThemeInput()
-  }))
+  private inputImg =  computed<MapThumbnail | undefined>(() => {
+    const src = this.imgSrcInput();
+    const paramHash = this.imgParamHashInput();
+    const theme = this.imgThemeInput();
+
+    if (!src || !paramHash || !theme) return undefined;
+
+    return {
+      src,
+      paramHash,
+      theme
+    }
+  })
   private lastImg = signal<MapThumbnail | undefined>(undefined);
   private generatedImg = signal<MapThumbnail | undefined>(undefined);
 
@@ -76,11 +84,12 @@ export class ThumbnailMap {
     if (this.isImageValidForTheme(this.lastImg())) return 'last';
     return 'placeholder';
   });
+  // TODO cleanup; kind of a redundant mess
   protected readonly imgCurrent = computed<MapThumbnail>(() => {
     switch (this.imgChannel()) {
-      case 'input': return this.inputImg();
-      case 'generated': return this.generatedImg();
-      case 'last': return this.lastImg();
+      case 'input': return this.inputImg()!;
+      case 'generated': return this.generatedImg()!;
+      case 'last': return this.lastImg()!;
       case 'placeholder':
         return {
           src: this.placeholderSrc(),
@@ -91,15 +100,6 @@ export class ThumbnailMap {
         throw new Error(`Unknown imgChannel: ${this.imgChannel()}`);
     }
   });
-  private isImageValidForThemeAndGeometry(channel?: MapThumbnail) {
-    return this.isImageValidForTheme(channel) &&
-      channel.paramHash === this.geometryHash();
-  }
-  private isImageValidForTheme(channel?: MapThumbnail) {
-    return channel &&
-      channel.src &&
-      channel.theme === this.themeService.theme();
-  }
 
   protected readonly error = signal<Error | undefined>(undefined); // TODO use error
 
@@ -168,6 +168,15 @@ export class ThumbnailMap {
 
 
 
+  private isImageValidForThemeAndGeometry(channel?: MapThumbnail) : boolean {
+    return channel !== undefined &&
+      channel.theme === this.themeService.theme() &&
+      channel.paramHash === this.geometryHash();
+  }
+  private isImageValidForTheme(channel?: MapThumbnail) : boolean  {
+    return channel !== undefined &&
+      channel.theme === this.themeService.theme();
+  }
   /** Gets a reasonbly stable hash for caching purposes */
   private getStableHash(geom : Geometry) {
     if (!geom) return '';

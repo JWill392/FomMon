@@ -6,7 +6,7 @@ import {Map as MapLibreMap} from "maplibre-gl";
 })
 export class AppMapService {
 
-  private _map = signal<MapLibreMap>(undefined)
+  private _map = signal<MapLibreMap | undefined>(undefined)
   public map = this._map.asReadonly();
 
   register(map: MapLibreMap) {

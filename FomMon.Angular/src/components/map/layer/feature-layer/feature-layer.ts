@@ -7,14 +7,15 @@ import {LayerConfigService} from "../../../layer-type/layer-config.service";
 import {MapLayerComponent} from "../app-layer/map-layer.component";
 import {RoutePaths} from "../../../../routes/app.routes";
 import {MapRoutingService} from "../../map-routing.service";
-import {isState} from "../map-style-util";
+import {MapStyleIsStatePipe} from "../map-style-util";
 
 @Component({
   selector: 'app-feature-layer',
   imports: [
     VectorSourceComponent,
     MapLayerGroupComponent,
-    MapLayerComponent
+    MapLayerComponent,
+    MapStyleIsStatePipe
   ],
   templateUrl: './feature-layer.html',
   styles: ['']
@@ -33,10 +34,8 @@ export class FeatureLayer implements OnInit {
 
   ngOnInit(): void {
     this.mapRoutingService.registerSelectRouting(this.groupId(), (featureId) => {
+      if (!featureId.id) return undefined; // feature missing id; shouldn't happen
       return { commands: [RoutePaths.featureView({kind: this.layer().kind, id: featureId.id.toString()})] };
     });
   }
-
-
-  protected readonly isState = isState;
 }

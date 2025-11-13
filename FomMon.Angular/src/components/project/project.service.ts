@@ -14,7 +14,7 @@ export class ProjectService implements ServiceWithState {
   private _state = new ServiceLoadState();
   readonly state = this._state.asReadonly();
 
-  private _data = signal<Project[] | undefined>(undefined);
+  private _data = signal<Project[]>([]);
   readonly data = this._data.asReadonly();
 
   public initialize$() : Observable<never> {

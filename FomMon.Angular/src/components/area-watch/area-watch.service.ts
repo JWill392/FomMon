@@ -12,6 +12,8 @@ import {Theme, ThemeService} from "../shared/theme.service";
 import {ErrorService} from "../shared/error.service";
 import {FeatureIdentifier} from "maplibre-gl";
 
+export type AreaWatchPatch = Partial<AreaWatch> & {id: string};
+
 @Injectable({providedIn: 'root'})
 export class AreaWatchService implements ServiceWithState {
   private themeService = inject(ThemeService);
@@ -34,7 +36,7 @@ export class AreaWatchService implements ServiceWithState {
 
   readonly groupId = 'area-watches';
   readonly sourceId = this.groupId;
-  readonly sourceLayer: string = undefined; // only for vector layers
+  readonly sourceLayer: string | undefined = undefined; // only for vector layers
 
   public constructor() {
     effect(() => {
@@ -112,7 +114,7 @@ export class AreaWatchService implements ServiceWithState {
 
     return fid;
   }
-  public toFeatureIdentifier(aw: AreaWatch) : FeatureIdentifier | null {
+  public toFeatureIdentifier(aw: AreaWatch) : FeatureIdentifier {
     return {
       source: this.sourceId,
       sourceLayer: this.sourceLayer,
@@ -178,9 +180,11 @@ export class AreaWatchService implements ServiceWithState {
     if (cache) return of(cache);
 
     //console.log('AWS: Thumbnail cache miss; downloading', theme, id);
+    const params = new HttpParams()
+      .append('theme', theme);
 
     return this.http.get<ThumbnailUrl>
-    (`api/areawatch/${id}/thumbnail?theme=${theme}`)
+    (`api/areawatch/${id}/thumbnail`, {params})
     .pipe(
       catchError((error) => throwError(() => {
 
@@ -250,7 +254,7 @@ export class AreaWatchService implements ServiceWithState {
       )
   }
 
-  patch$(pat : Partial<AreaWatch>) {
+  patch$(pat : AreaWatchPatch) {
     this._state.assertReady();
 
     const original = {...this.get(pat.id)};

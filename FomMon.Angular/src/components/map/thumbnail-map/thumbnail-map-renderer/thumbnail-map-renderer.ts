@@ -1,10 +1,6 @@
 import {Component, computed, DestroyRef, effect, inject, OnInit, signal} from '@angular/core';
 import {GeoJSONSourceComponent, LayerComponent, MapComponent} from "@maplibre/ngx-maplibre-gl";
-import {
-  GeneratedThumbnail,
-  GenerateThumbnailCommand,
-  ThumbnailMapService
-} from "../thumbnail-map.service";
+import {GeneratedThumbnail, GenerateThumbnailCommand, ThumbnailMapService} from "../thumbnail-map.service";
 import {takeUntilDestroyed} from "@angular/core/rxjs-interop";
 import {concatMap, Subject} from "rxjs";
 import {boundingBox} from "../../map-util";
@@ -39,7 +35,7 @@ export class ThumbnailMapRenderer implements OnInit {
   private destroyRef =  inject(DestroyRef)
 
   protected command = signal<{request: GenerateThumbnailCommand, response$: Subject<GeneratedThumbnail>} | undefined>(undefined);
-  protected commandThemeOrDefault = computed(() => this.command() ? this.command()?.request.theme : this.themeService.theme())
+  protected commandThemeOrDefault = computed<Theme>(() => this.command() ? this.command()!.request.theme : this.themeService.theme())
 
   // STATE
   private readonly state = signal<State>('initializing');
@@ -72,7 +68,7 @@ export class ThumbnailMapRenderer implements OnInit {
       const state = this.state();
       const map = this.map();
       // start processing
-      if (cmd && state === 'idle') {
+      if (map && cmd && state === 'idle') {
         const source = map.getSource(this.sourceId()) as GeoJSONSource;
         if (!source) this.errorService.handleError(new Error('Source not found: ' + this.sourceId()));
 
@@ -86,8 +82,9 @@ export class ThumbnailMapRenderer implements OnInit {
     effect(() => {
       const dims = this.mapDimensions();
       const req = this.command()?.request;
+      const bounds = this.bounds();
       const map = this.map();
-      if (!req || !map) return;
+      if (!req || !map || !bounds) return;
 
       const changed = req && (dims.width !== req.width || dims.height !== req.height);
 
@@ -96,7 +93,7 @@ export class ThumbnailMapRenderer implements OnInit {
         queueMicrotask(() => {
           this.map()?.resize();
           queueMicrotask(() => {
-            map.fitBounds(this.bounds().bbox, this.bounds().options)
+            map.fitBounds(bounds.bbox, bounds.options)
           })
         })
       }
@@ -138,8 +135,8 @@ export class ThumbnailMapRenderer implements OnInit {
       case 'idle': break;
       case 'map-loading':
         const setReadyFn = () => this.setState('map-ready')
-        this.map().once('idle', setReadyFn);
-        this._cleanupStateFn = () => this.map().off('idle', setReadyFn);
+        this.map()!.once('idle', setReadyFn);
+        this._cleanupStateFn = () => this.map()!.off('idle', setReadyFn);
         break;
       case 'map-ready':
         const abortController = new AbortController();
@@ -169,10 +166,15 @@ export class ThumbnailMapRenderer implements OnInit {
   }
 
   private saveMapToImage(signal: AbortSignal) {
-    this.map().redraw();
+    const map = this.map();
+    if (!map) throw new Error("Map not initialized");
 
     const genCommand = this.command();
-    htmlToPng(this.map().getContainer(), {
+    if (!genCommand) throw new Error("No command to process");
+
+    map.redraw();
+
+    htmlToPng(map.getContainer(), {
       style: {
         opacity: "1",
       }

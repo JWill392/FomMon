@@ -1,4 +1,4 @@
-import {Component, computed, ContentChildren, input, QueryList, ViewChildren} from '@angular/core';
+import {Component, computed, ContentChildren, input, QueryList} from '@angular/core';
 
 @Component({
   selector: 'app-card-label',
@@ -99,7 +99,8 @@ export class CardAction {
 })
 export class Card {
   isOdd = input.required<boolean>();
-  hasActions = computed(() => this.childActions?.length > 0)
+  hasActions = computed(() => this.childActions?.length ?? 0 > 0)
 
-  @ContentChildren(CardAction, {descendants: true}) childActions: QueryList<CardAction>;
+  @ContentChildren(CardAction, {descendants: true})
+  childActions: QueryList<CardAction> | undefined;
 }

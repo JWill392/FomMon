@@ -42,13 +42,13 @@ public class OsmService(AppDbContext db, IClockService clock) : IOsmService
     
     public async Task SetStepCompletedAsync(OsmSetupStep step, CancellationToken c = default)
     {
-        var osm = await GetAsync();
+        var osm = await GetAsync(c);
         osm.SetupStep = step;
         osm.UpdatedAt = clock.Now;
         if (step == OsmSetupStep.Initialized)
         {
             osm.InitializedAt = clock.Now;
         }
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(c);
     }
 }

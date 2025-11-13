@@ -17,7 +17,7 @@
 <dialog #menu closedby="any" class="menu-dialog">
   <div class="menu">
     <div class="menu-header">
-      <span>{{ user().displayName }}</span>
+      <span>{{ user()?.displayName }}</span>
     </div>
     <mat-action-list class="menu-body">
       <mat-list-item  class="menu-item" (click)="toggleDarkMode($event)" >

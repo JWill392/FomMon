@@ -1,11 +1,11 @@
-import {Directive, ElementRef, Output, EventEmitter, OnInit, DestroyRef, inject} from '@angular/core';
+import {DestroyRef, Directive, ElementRef, EventEmitter, inject, OnInit, Output} from '@angular/core';
 
 @Directive({
   selector: '[appInViewport]'
 })
 export class InViewportDirective implements OnInit {
   @Output() inViewport = new EventEmitter<boolean>();
-  private observer: IntersectionObserver;
+  private observer: IntersectionObserver | undefined;
   private destroyRef = inject(DestroyRef)
 
   constructor(private el: ElementRef) {}

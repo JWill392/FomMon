@@ -22,6 +22,7 @@ public static class LayerRegistry
         new ("objectid", Visibility.Hidden)
     ];
 
+    // TODO objectid changes so we need layer-specific identifiers
     static LayerRegistry()
     {
         SqlUtil.ValidateSqlIdentifier(GeometryColumn);

@@ -86,7 +86,7 @@ export class MapLayerService {
     if (!this.visStack.hasIn(this.visDefault, group.id)) {
       this.visStack.setIn(this.visDefault, group.id, group.visible);
     }
-    group.visible = this.visStack.get(group.id);
+    group.visible = this.visStack.get(group.id)!;
 
     this._groups.update(groups => [...groups, {
       ...group,
@@ -132,17 +132,23 @@ export class MapLayerService {
 
     this._layers.update(layers =>
       MapLayerService._withOrderedInsert(layers, added, (a, b) =>
+        // group order
         a.order - b.order ||
+        // make deterministic, but groups shouldn't really have same order
         a.source.localeCompare(b.source) ||
-        a.sourceLayer?.localeCompare(b.sourceLayer) ||
+        a.sourceLayer?.localeCompare(b.sourceLayer ?? '') ||
+
+        // layer within group order
         a.subOrder - b.subOrder))
   }
 
   removeLayer(id: string): void {
-    const group = this.getLayer(id)?.groupId;
+    const layer = this.getLayer(id);
+    if (!layer) return;
+
     this._layers.update(layers => layers.filter(l => l.id !== id));
-    if (!this._layers().some(l => l.groupId === group)) {
-      this._removeGroup(group);
+    if (!this._layers().some(l => l.groupId === layer.groupId)) {
+      this._removeGroup(layer.groupId);
     }
   }
 
@@ -230,7 +236,7 @@ export class MapLayerService {
     }
 
     if (changedSnapshot === this.visDefault) {
-      const visDefaultValue = this.visStack.getAllIn(this.visDefault)
+      const visDefaultValue = this.visStack.getAllIn(this.visDefault) ?? new Map<string, boolean>();
       this.localStorageService.set(MapLayerService.layerVisibilityKey, visDefaultValue);
     }
   }

@@ -4,13 +4,12 @@ using NodaTime;
 
 namespace FomMon.ApiService.Contracts;
 
-public class FeatureReferenceDto
+public record FeatureReferenceDto
 {
     public int Id { get; set; }
     public LayerKind LayerKind { get; set; } = null!;
 
-    [MaxLength(100)]
-    public string SourceFeatureId { get; set; } = null!; // Value from the layer's source ID column
+    public int SourceFeatureId { get; set; } // Value from the layer's source ID column
 
     public Instant FirstSeenAt { get; set; }
     public Instant LastSeenAt { get; set; }

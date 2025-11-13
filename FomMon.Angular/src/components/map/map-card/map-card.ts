@@ -44,7 +44,7 @@ export class MapCard extends Card {
 
   private isMapSelected = computed(() => fidEquals(this.mapStateService.selected()?.featureId, this.featureId()));
   private isMapHovered = computed(() => this.mapStateService.hovered()?.some(f => fidEquals(f.featureId, this.featureId())));
-  protected isInViewport: boolean;
+  protected isInViewport = false;
 
   selected = output<(MapCardEvent)>();
   hovered = output<MapCardEvent>();
