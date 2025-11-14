@@ -19,20 +19,21 @@
               [groupId]="groupId()"
               type="fill"
               [interactivity]="{select: true, hover: true}"
+              (beforeSelect)="onBeforeSelect($event)"
               [source]="layer().source"
               [sourceLayer]="layer().tileSource"
               [paint]="{
               'fill-color': [
                 'case',
-                isState('selected'), '#FFB347',
-                isState('alert'), '#f54a00',
+                'selected' | isState, '#FFB347',
+                'alert' | isState, '#f54a00',
                 layer().color
               ],
               'fill-opacity': [
                 'case',
-                isState('hide'), 0,
-                isState('selected'), 0.7,
-                isState('hover'), 0.5,
+                'hide' | isState, 0,
+                'selected' | isState, 0.7,
+                'hover' | isState, 0.5,
                 0.2
               ]
             }"
@@ -48,19 +49,19 @@
           [paint]="{
             'line-color': [
               'case',
-              isState('selected'), '#F58F00',
-              isState('alert'), '#f54a00',
+              'selected' | isState, '#F58F00',
+              'alert' | isState, '#f54a00',
               layer().color
             ],
             'line-width': [
               'case',
-              isState('selected'), 3,
-              isState('hover'), 2,
+              'selected' | isState, 3,
+              'hover' | isState, 2,
               1
             ],
             'line-opacity': [
               'case',
-              isState('hide'), 0,
+              'hide' | isState, 0,
               0.3
             ]
           }"
@@ -76,28 +77,29 @@
         [id]="layer().tileSource + '-line'"
         type="line"
         [interactivity]="{select: true, hover: true}"
+        (beforeSelect)="onBeforeSelect($event)"
         [source]="layer().source"
         [sourceLayer]="layer().tileSource"
         [minzoom]="8"
         [paint]="{
       'line-color': [
           'case',
-          isState('selected'), '#F58F00',
-          isState('alert'), '#f54a00',
+          'selected' | isState, '#F58F00',
+          'alert' | isState, '#f54a00',
           layer().color
         ],
       'line-width': [
         'case',
-        isState('selected'), 3,
-        isState('hover'), 2,
+        'selected' | isState, 3,
+        'hover' | isState, 2,
         2
       ],
       'line-dasharray': [2, 0.5],
       'line-opacity': [
         'case',
-        isState('hide'), 0,
-        isState('selected'), 1,
-        isState('hover'), 0.8,
+        'hide' | isState, 0,
+        'selected' | isState, 1,
+        'hover' | isState, 0.8,
         0.5
       ]
 

@@ -107,7 +107,7 @@ Authorization: Bearer {{access_token}}
 
 ### WFS Download
 @kind = FomCutblock
-@limit = 1000000
+@limit = 100000000
 # @no-log
 # @timeout = 360000
 POST http://localhost:5389/Wfs/download?kind={{kind}}&limit={{limit}}

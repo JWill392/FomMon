@@ -19,6 +19,8 @@ import {MatInput} from "@angular/material/input";
 import {CdkTextareaAutosize} from "@angular/cdk/text-field";
 import {LoaderComponent} from "../../shared/loader/loader.component";
 import {AppFeature} from "../feature.model";
+import {MapStateService} from "../../map/map-state.service";
+import {fidEquals} from "../../map/map-util";
 
 export const featureDetailTitleResolver: ResolveFn<string> = (route) => {
 
@@ -56,6 +58,7 @@ export const featureDetailTitleResolver: ResolveFn<string> = (route) => {
 export class FeatureDetail implements OnInit, OnDestroy {
   private readonly layerConfigService = inject(LayerConfigService);
   private readonly mapFeatureService = inject(MapFeatureService);
+  private readonly mapStateService = inject(MapStateService);
 
   kindStringInput = input.required<string>({alias: 'kind'});
   kind = computed(() => this.kindStringInput() as LayerKind);
@@ -106,14 +109,26 @@ export class FeatureDetail implements OnInit, OnDestroy {
       const fid = this.fid();
       if (!fid) return;
 
-      const sub = this.mapFeatureService.get$(fid)
-        .subscribe({
-          next: (feature) => untracked(() => this.appFeature.set(feature))
+      untracked(() => {
+        const loadedFeature = this.appFeature();
+
+        // select
+        if (!this.mapStateService.isSelected(fid)) this.mapStateService.select(fid)
+
+        if (fidEquals(loadedFeature, fid)) return; // already loaded
+
+        // load
+        this.appFeature.set(undefined);
+        const sub = this.mapFeatureService.get$(fid)
+          .subscribe({
+            next: (feature) => this.appFeature.set(feature)
+          })
+        onCleanup(() => {
+          sub.unsubscribe();
+          this.mapFeatureService.removeCache(fid);
         })
-      onCleanup(() => {
-        sub.unsubscribe();
-        this.mapFeatureService.removeCache(fid);
-      })
+
+      });
     })
   }
 

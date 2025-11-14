@@ -1,7 +1,6 @@
-import {FeatureIdentifier, LngLatBoundsLike} from "maplibre-gl";
+import {FeatureIdentifier, LngLatBoundsLike, MapGeoJSONFeature} from "maplibre-gl";
 import {bbox} from '@turf/bbox';
 import {Feature, FeatureCollection, Geometry, GeometryCollection} from "geojson";
-
 
 
 export function fidEquals(
@@ -14,4 +13,12 @@ export function fidEquals(
 
 export function boundingBox(geom : FeatureCollection | Feature | Geometry | GeometryCollection) : LngLatBoundsLike {
   return bbox(geom) as [number, number, number, number];
+}
+
+export function asFid(f: MapGeoJSONFeature): FeatureIdentifier {
+  return {
+    source: f.source,
+    sourceLayer: f.sourceLayer,
+    id: f.id,
+  };
 }

@@ -23,13 +23,13 @@
           [paint]="{
           'fill-color': [
             'case',
-            isState('selected'), selectedColor,
+            'selected' | isState, selectedColor,
             color
           ],
           'fill-opacity': [
             'case',
-            isState('hide'), 0,
-            isState('hover'), 0.5,
+            'hide' | isState, 0,
+            'hover' | isState, 0.5,
             0.2
           ]
         }"
@@ -44,14 +44,14 @@
 
         'line-color': [
           'case',
-          isState('selected'), selectedColor,
+          'selected' | isState, selectedColor,
           color
         ],
         'line-width': [
           'case',
-          isState('hide'), 0,
-          isState('selected'), 3,
-          isState('hover'), 2,
+          'hide' | isState, 0,
+          'selected' | isState, 3,
+          'hover' | isState, 2,
           0.5
         ]
       }"
@@ -70,7 +70,7 @@
         'text-halo-width': 2,
         'text-halo-blur': 1,
         'text-opacity': ['case',
-          isState('hide'), 0,
+          'hide' | isState, 0,
           1
         ]
       }"

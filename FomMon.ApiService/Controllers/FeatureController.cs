@@ -1,9 +1,11 @@
 using FomMon.ApiService.Services;
 using FomMon.Common.Configuration.Layer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FomMon.ApiService.Controllers;
 
+[AllowAnonymous]
 [ApiController]
 [Route("[controller]")]
 public class FeatureController(IFeatureService featureService) : Controller
