@@ -1,3 +1,5 @@
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 using FomMon.ApiService.FomApi;
 using FomMon.ApiService.Infrastructure;
 using FomMon.ApiService.Jobs;
@@ -49,7 +51,44 @@ builder.Services.AddMinioObjectStorageService();
 builder.Services.AddScoped<IEntityObjectStorageService, VersionedEntityObjectStorageService>();
 
 // Outgoing API
-builder.Services.AddHttpClient<FomApiClient>(c => c.BaseAddress = new Uri("https://fom.nrs.gov.bc.ca/")); // TODO put in config
+
+const string fomHost = "fom.nrs.gov.bc.ca"; // TODO configure
+builder.Services.AddHttpClient<FomApiClient>(c =>
+    {
+        c.BaseAddress = new Uri($"https://{fomHost}/");
+    })
+    // temporary workaround for .NET 10 SSL intermediate chain validation regression.
+    // PartialChain exceptions on this host only, while openssl works fine.
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
+        {
+            // If everything is fine, accept
+            if (errors == SslPolicyErrors.None)
+                return true;
+
+            // Only special-case this specific host
+            if (!string.Equals(message.RequestUri?.Host, fomHost, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            // Only tolerate *chain* errors (no name mismatch, etc.)
+            if ((errors & ~SslPolicyErrors.RemoteCertificateChainErrors) != 0)
+                return false;
+
+            // Make sure the only chain issue is PartialChain
+            if (chain?.ChainStatus is { Length: > 0 } statuses &&
+                statuses.All(s => s.Status == X509ChainStatusFlags.PartialChain))
+            {
+                // Sanity-check subject
+                if (!cert.Subject.Contains($"CN={fomHost}", StringComparison.OrdinalIgnoreCase))
+                    return false;
+
+                return true;
+            }
+
+            return false;
+        }
+    });
 
 
 // Hangfire 

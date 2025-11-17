@@ -120,7 +120,7 @@ public class AreaWatchController(
         if (result.IsFailed) return ToActionResult(result);
         var thumbnailName = result.Value;
 
-        if (thumbnailName.IsNullOrEmpty()) return NotFound();
+        if (String.IsNullOrEmpty(thumbnailName)) return NotFound();
         
         var urlResult = await imageStorageService.GetImageUrlAsync(thumbnailName, ThumbnailUrlExpirySeconds, c);
         if (urlResult.IsFailed) return ToActionResult(urlResult);

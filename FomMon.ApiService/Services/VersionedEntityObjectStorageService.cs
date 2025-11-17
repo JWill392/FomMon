@@ -33,7 +33,7 @@ public class VersionedEntityObjectStorageService(IImageStorageService imageStora
         var objectName = propertyExpression.Compile().Invoke(entity);
         
         // version existing image by using same object name; see minio policy for deletion schedule
-        bool addNewObject = objectName.IsNullOrEmpty();
+        bool addNewObject = String.IsNullOrEmpty(objectName);
         if (addNewObject)
         {
             objectName = nameFactory.Invoke(entity);

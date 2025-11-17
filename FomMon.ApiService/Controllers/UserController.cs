@@ -5,7 +5,6 @@ using FomMon.ApiService.Services;
 using FomMon.Data.Models;
 using MapsterMapper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 using SixLabors.ImageSharp;
 
 namespace FomMon.ApiService.Controllers;
@@ -56,7 +55,7 @@ public class UserController(
         var userResult = await userService.GetAsync(currentUser.Id!.Value, c);
         if (userResult.IsFailed) return ToActionResult(userResult);
 
-        if (userResult.Value.ProfileImageObjectName.IsNullOrEmpty()) return NotFound();
+        if (String.IsNullOrEmpty(userResult.Value.ProfileImageObjectName)) return NotFound();
         
         var urlResult = await imageStorageService.GetImageUrlAsync(userResult.Value.ProfileImageObjectName, 3600, c:c);
         if (urlResult.IsFailed) return ToActionResult(urlResult);
