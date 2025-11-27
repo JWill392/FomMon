@@ -56,7 +56,7 @@ internal static class CurrentUserHttpContextAccessor
 /// Action filter that maps external authentication claims to internal user records.
 /// </summary>
 /// <param name="userService">The user service for managing user records.</param>
-public sealed class UserMapperFilter(IUserService userService, AppDbContext db) : IAsyncActionFilter
+public sealed class UserMapperFilter(UserService userService, AppDbContext db) : IAsyncActionFilter
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {

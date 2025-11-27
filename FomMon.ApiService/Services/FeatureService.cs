@@ -5,30 +5,25 @@ using FomMon.Data.Models;
 using FomMon.ServiceDefaults;
 using FomMon.ApiService.Shared;
 using FomMon.Common.Configuration.Layer;
+using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
 using Npgsql;
 
 namespace FomMon.ApiService.Services;
 
-public interface IFeatureService
-{
-    public Task<List<FeatureReference>> GetIntersectingAsync(LayerKind kind, Geometry geometry,
-        CancellationToken c = default);
-
-    public Task<FeatureDto?> GetDtoAsync(LayerKind kind, int sourceFeatureId, CancellationToken c = default);
-}
 
 public sealed class FeatureService(
     AppDbContext db, 
-    IClockService clock) : IFeatureService
+    IClockService clock)
 {
+    [UsedImplicitly]
     private record FeatureSourceRecord(
         int Id, 
         Geometry Geometry, 
         JsonDocument Properties) : IDisposable
     {
-        public void Dispose() => Properties?.Dispose();
+        public void Dispose() => Properties.Dispose();
     }
     
     public async Task<List<FeatureReference>> GetIntersectingAsync(
@@ -103,7 +98,7 @@ public sealed class FeatureService(
     }
     
     /// <summary>
-    /// Copy interesting feature from 'warehouse' layers into stable application table; FeatureReference
+    /// Copy interesting feature from 'warehouse' layers into a stable application table; FeatureReference
     /// </summary>
     /// <returns>Found or created feature reference</returns>
     private async Task<FeatureReference> GetOrCreateAsync(
@@ -134,7 +129,7 @@ public sealed class FeatureService(
             LayerKind = kind,
             SourceFeatureId = featureSource.Id,
             Geometry = featureSource.Geometry,
-            Properties = featureSource.Properties?.WithRemovedProperties(LayerRegistry.GeometryColumn, layerCfg.SourceIdColumn),
+            Properties = featureSource.Properties.WithRemovedProperties(LayerRegistry.GeometryColumn, layerCfg.SourceIdColumn),
             FirstSeenAt = clock.Now,
             LastSeenAt = clock.Now
         };
@@ -158,6 +153,7 @@ public sealed class FeatureService(
         foreach (var featureRef in existingRefs)
         {
             var exists = await db.Database
+#pragma warning disable EF1002
                 .SqlQueryRaw<int>(
                     $"""
                      SELECT 1 
@@ -166,6 +162,7 @@ public sealed class FeatureService(
                      """,
                     new NpgsqlParameter("sourceFeatureId", featureRef.SourceFeatureId))
                 .AnyAsync(c);
+#pragma warning restore EF1002
         
             if (!exists)
             {

@@ -13,7 +13,7 @@ public interface IAlertService
 
 public sealed class AlertService(
     AppDbContext db, 
-    IFeatureService featureService,
+    FeatureService featureService,
     IClockService clock,
     ILogger<AlertService> logger) : IAlertService
 {

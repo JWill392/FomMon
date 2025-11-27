@@ -142,7 +142,7 @@ public class GdalWfsDownloadJob(
             
             var downloadedCount = await RunOgr2Ogr(limit, layerCfg, layer, c);
             Activity.Current?.SetTag("feature.count", downloadedCount);
-            
+            // TODO failed to complete updating ,but still marked layer as updated. Possible ogr2ogr doesn't wait for transaction to commit? seems unlikely.
             if (layer.FeatureCount > 0 && downloadedCount == 0 && zeroFeatureAttempts <= _settings.AcceptZeroFeaturesAfterAttempts)
             {
                 logger.LogWarning("Skipped saving because remote layer {kind} returned no features.  " +
@@ -261,7 +261,7 @@ public class GdalWfsDownloadJob(
         var res = await db.Database.SqlQueryRaw<long>(sql).ToListAsync(c);
         return res.FirstOrDefault();
     }
-    
+
     private async Task CreateIndexAsync(string schema, string tableName, string columnName, CancellationToken c)
     {
         SqlUtil.ValidateSqlIdentifier(schema);

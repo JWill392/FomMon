@@ -14,10 +14,10 @@ namespace FomMon.ApiService.Controllers;
 [ApiController]
 [Route("[controller]")]
 public class AreaWatchController(
-    IAreaWatchService service, 
+    AreaWatchService service, 
     IMapper mapper, 
     ICurrentUser currentUser,
-    IImageStorageService imageStorageService,
+    MinioImageStorageService imageStorageService,
     ILogger<AreaWatchController> logger) : ControllerBase
 {
     /* Expire thumbnail image access URL periodically.  Obviously not actually sensitive data,

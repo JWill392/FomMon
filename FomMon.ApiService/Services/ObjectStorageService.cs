@@ -10,22 +10,13 @@ using SixLabors.ImageSharp;
 
 namespace FomMon.ApiService.Services;
 
-public interface IImageStorageService
-{
-    Task<Result> UploadImageAsync(string objectName, Stream imageStream, long length, string? paramHash = null,
-        CancellationToken c = default);
-
-    Task<Result<string>> GetParamHashAsync(string objectName, CancellationToken c = default);
-    Task<Result<string>> GetImageUrlAsync(string objectName, int expiresInSeconds = 3600, CancellationToken c = default);
-    Task<Result> DeleteImageAsync(string objectName, CancellationToken c = default);
-}
 
 
 public static class MinioObjectStorageServiceExtensions
 {
     public static IServiceCollection AddMinioObjectStorageService(this IServiceCollection services)
     {
-        services.AddSingleton<IImageStorageService, MinioImageStorageService>();
+        services.AddSingleton<MinioImageStorageService>();
 
         services.ConfigureOpenTelemetryTracerProvider(t => t.AddSource(MinioImageStorageService.ActivitySourceName));
         
@@ -40,7 +31,6 @@ public class ObjectNotTaggedError(string message) : Error(message);
 public class MinioImageStorageService(
     IMinioClient minioClient,
     ILogger<MinioImageStorageService> logger)
-    : IImageStorageService
 {
     private const int MaxSizeMb = 5;
     

@@ -48,7 +48,7 @@ builder.AddAppDbContext();
 // Object storage
 builder.AddMinio("minio");
 builder.Services.AddMinioObjectStorageService();
-builder.Services.AddScoped<IEntityObjectStorageService, VersionedEntityObjectStorageService>();
+builder.Services.AddScoped<VersionedEntityObjectStorageService>();
 
 // Outgoing API
 
@@ -80,7 +80,7 @@ builder.Services.AddHttpClient<FomApiClient>(c =>
                 statuses.All(s => s.Status == X509ChainStatusFlags.PartialChain))
             {
                 // Sanity-check subject
-                if (!cert.Subject.Contains($"CN={fomHost}", StringComparison.OrdinalIgnoreCase))
+                if (cert is not null && !cert.Subject.Contains($"CN={fomHost}", StringComparison.OrdinalIgnoreCase))
                     return false;
 
                 return true;
@@ -102,10 +102,10 @@ builder.Services.AddWfsDownloadJob();
 builder.Services.AddProcessRunner();
 
 // Business logic services
-builder.Services.AddScoped<IAreaWatchService, AreaWatchService>();
-builder.Services.AddScoped<IAlertService, AlertService>(); 
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IFeatureService, FeatureService>();
+builder.Services.AddScoped<AreaWatchService>();
+builder.Services.AddScoped<AlertService>(); 
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<FeatureService>();
 
 // Hosted APIs
 builder.Services.AddControllers(o =>

@@ -8,27 +8,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FomMon.ApiService.Services;
 
-
-public interface IAreaWatchService
-{
-    Task<Result<AreaWatch>> CreateAsync(CreateAreaWatchRequest dto, Guid userId, CancellationToken c = default);
-    
-    Task<Result<AreaWatch>> GetByIdAsync(Guid id, Guid userId, CancellationToken c = default);
-    Task<Result<AreaWatch>> UpdateAsync(Guid id,  UpdateAreaWatchRequest dto, Guid userId, CancellationToken c);
-    Task<Result<ICollection<AreaWatch>>> ListAsync(Guid userId, CancellationToken c = default);
-    
-    Task<Result> DeleteAsync(Guid id, Guid userId, CancellationToken c = default);
-    
-    public Task<Result<string>> UploadThumbnailImageAsync(Guid id, Guid userId, ThumbnailTheme theme, Stream image, long length, string paramHash, CancellationToken c = default);
-    public Task<Result<string>> GetThumbnailImageNameAsync(Guid id, Guid userId, ThumbnailTheme theme, CancellationToken c = default);
-}
-
 public sealed class AreaWatchService(
     AppDbContext db, 
     IClockService clock, 
     IMapper mapper,
     ILogger<AreaWatchService> logger,
-    IImageStorageService imageStorageService) : IAreaWatchService
+    MinioImageStorageService imageStorageService)
 {
 
     public async Task<Result<AreaWatch>> CreateAsync(CreateAreaWatchRequest dto, Guid userId, CancellationToken c = default)

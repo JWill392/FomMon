@@ -8,7 +8,7 @@ namespace FomMon.ApiService.Controllers;
 [AllowAnonymous]
 [ApiController]
 [Route("[controller]")]
-public class FeatureController(IFeatureService featureService) : Controller
+public class FeatureController(FeatureService featureService) : Controller
 {
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById([FromQuery] LayerKind kind, int id, CancellationToken c = default)
@@ -18,4 +18,6 @@ public class FeatureController(IFeatureService featureService) : Controller
 
         return Ok(feat);
     }
+    
+    
 }

@@ -103,6 +103,22 @@ public static class LayerRegistry
                     .._wfsColumns
                 ] 
             ),
+            // TODO get this layer data; common usecase is checking daily until burning is allowed
+            // new(
+            //     Kind: LayerKind.From("BurnVentingIndex"),
+            //     Name: "Burn Venting Index",
+            //     FeatureName: "Venting Zone",
+            //     Description: "",
+            //     TableName: "burn_venting_index",
+            //     SourceIdColumn: "id",
+            //     WfsUrl: "https://envistaweb.env.gov.bc.ca/aqo/files/Venting_Index.kml", // TODO support direct kml download
+            //     WfsLayer: null,
+            //     TileSource: "burn_venting_index",
+            //     Color: "#000000",
+            //     GeometryType: "POLYGON",
+            //     Attribution: "Environment Canada",
+            //     Columns: []
+            //     )
         ];
         ByKind = All.ToDictionary(k=>k.Kind);
         AllKind = All.Select(m => m.Kind).ToImmutableHashSet();

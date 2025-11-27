@@ -22,24 +22,11 @@ public class DuplicateEmailError : Error
     }
 }
 public class NotFoundError : Error;
-public interface IUserService
-{
-    Task<Result<User>> CreateAsync(CreateUserRequest dto, CancellationToken c = default);
-    Task<Result<User>> GetAsync(Guid id, CancellationToken c = default);
-    Task<Result<User>> UpsertAsync(CreateUserRequest dto, CancellationToken c = default);
-    
-    Task<Result<User>> UpdateAsync(Guid id, CreateUserRequest dto, CancellationToken c = default);
-    
-    public Task<Result<string>> UploadProfileImage(Guid id, Stream image, long length, CancellationToken c = default);
-    public Task<Result<Image<Rgba32>>> GenerateIdenticonAsync(Guid id, CancellationToken c = default);
-
-    public Task<Result<string>> SetProfileImageIdenticonAsync(Guid id, CancellationToken c = default);
-}
 
 public sealed class UserService(AppDbContext db, 
     IMapper mapper, 
     ILogger<UserService> logger,
-    IEntityObjectStorageService entityObjectStorageService) : IUserService
+    VersionedEntityObjectStorageService entityObjectStorageService)
 {
     
     public async Task<Result<User>> CreateAsync(CreateUserRequest dto, CancellationToken c = default)

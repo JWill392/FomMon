@@ -12,8 +12,8 @@ namespace FomMon.ApiService.Controllers;
 [ApiController]
 [Route("[controller]")]
 public class UserController(
-    IUserService userService,
-    IImageStorageService imageStorageService,
+    UserService userService,
+    MinioImageStorageService imageStorageService,
     IMapper mapper,
     ICurrentUser currentUser) : ControllerBase
 {
@@ -72,9 +72,9 @@ public class UserController(
         if (result.IsFailed) return ToActionResult(result);
         
         using var imgStream = new MemoryStream();
-        await result.Value.SaveAsWebpAsync(imgStream, c);
+        await result.Value.SaveAsPngAsync(imgStream, c);
         imgStream.Position = 0;
-        return File(imgStream.ToArray(), "image/webp");
+        return File(imgStream.ToArray(), "image/png");
     }
 
     [HttpPost("profile-image/identicon")]

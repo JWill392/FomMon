@@ -1,22 +1,14 @@
 using System.Linq.Expressions;
 using FluentResults;
 using FomMon.Data.Contexts;
-using Microsoft.IdentityModel.Tokens;
 
 namespace FomMon.ApiService.Services;
 
-public interface IEntityObjectStorageService
-{
-    public Task<Result<string>> UploadImageAsync<T>(T entity,
-        Expression<Func<T, string>> propertyExpression,
-        Func<T, string> nameFactory,
-        Stream imageStream, long length, CancellationToken c = default) where T : class;
-}
 
 /// <summary>
 /// Uploads an image to object storage and updates the entity with the object name.
 /// </summary>
-public class VersionedEntityObjectStorageService(IImageStorageService imageStorageService, AppDbContext db) : IEntityObjectStorageService
+public class VersionedEntityObjectStorageService(MinioImageStorageService imageStorageService, AppDbContext db)
 {
     public async Task<Result<string>> UploadImageAsync<T>(T entity, 
         Expression<Func<T, string>> propertyExpression,
